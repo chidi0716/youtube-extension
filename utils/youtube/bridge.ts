@@ -3,15 +3,22 @@
 // - 兩邊以 document 上的 CustomEvent 溝通，detail 一律是 JSON 字串
 //   （字串可以安全跨越 Firefox 的 Xray 邊界）。
 // - 只接受固定的幾種請求，其他一律忽略。頁面上的其他程式也能發出同名事件，
-//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉。
+//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉、讀取/設定畫質。
 import {
+  AUTO_QUALITY,
+  isQualityCode,
+  readAvailableQualities,
   readCurrentTime,
+  readQuality,
   readVideoData,
   readVolume,
+  writeQuality,
   writeSeek,
   writeVolume,
+  type QualityCode,
   type VideoData,
   type YtPlayerApi,
+  type YtQualityApi,
 } from './dom';
 
 export const BRIDGE_REQUEST_EVENT = 'yte-bridge:request';
@@ -22,7 +29,11 @@ export type BridgeRequest =
   | { id: string; type: 'getVolume' }
   | { id: string; type: 'setVolume'; volume: number }
   | { id: string; type: 'seekTo'; seconds: number }
-  | { id: string; type: 'getCurrentTime' };
+  | { id: string; type: 'getCurrentTime' }
+  // 鎖定畫質（004 第 1 節、plan 3.5）：setQuality 只接受 YouTube 畫質代號白名單與 auto。
+  | { id: string; type: 'getAvailableQualities' }
+  | { id: string; type: 'getQuality' }
+  | { id: string; type: 'setQuality'; quality: QualityCode | typeof AUTO_QUALITY };
 
 export type BridgeRequestType = BridgeRequest['type'];
 
@@ -32,7 +43,13 @@ export interface BridgeResults {
   setVolume: null;
   seekTo: null;
   getCurrentTime: number;
+  getAvailableQualities: QualityCode[];
+  getQuality: QualityCode | null;
+  setQuality: null;
 }
+
+/** 頁面橋接腳本會用到的播放器方法。 */
+export type BridgePlayer = YtPlayerApi & YtQualityApi;
 
 export type BridgeResponse =
   | { id: string; ok: true; result: unknown }
@@ -65,7 +82,13 @@ export function parseBridgeRequest(raw: unknown): BridgeRequest | null {
     case 'getVideoData':
     case 'getVolume':
     case 'getCurrentTime':
+    case 'getAvailableQualities':
+    case 'getQuality':
       return { id, type: obj.type };
+    case 'setQuality':
+      return isQualityCode(obj.quality) || obj.quality === AUTO_QUALITY
+        ? { id, type: 'setQuality', quality: obj.quality }
+        : null;
     case 'setVolume':
       return isFiniteNumber(obj.volume) && obj.volume >= 0 && obj.volume <= 100
         ? { id, type: 'setVolume', volume: obj.volume }
@@ -87,7 +110,7 @@ export function parseBridgeResponse(raw: unknown): BridgeResponse | null {
 }
 
 /** main world 端：對播放器執行請求並產生回應。player 為 null 表示找不到播放器。 */
-export function handleBridgeRequest(req: BridgeRequest, player: YtPlayerApi | null): BridgeResponse {
+export function handleBridgeRequest(req: BridgeRequest, player: BridgePlayer | null): BridgeResponse {
   if (!player) return { id: req.id, ok: false, error: 'NO_PLAYER' };
   try {
     switch (req.type) {
@@ -102,6 +125,13 @@ export function handleBridgeRequest(req: BridgeRequest, player: YtPlayerApi | nu
         return { id: req.id, ok: true, result: null };
       case 'seekTo':
         writeSeek(player, req.seconds);
+        return { id: req.id, ok: true, result: null };
+      case 'getAvailableQualities':
+        return { id: req.id, ok: true, result: readAvailableQualities(player) };
+      case 'getQuality':
+        return { id: req.id, ok: true, result: readQuality(player) };
+      case 'setQuality':
+        writeQuality(player, req.quality);
         return { id: req.id, ok: true, result: null };
     }
   } catch {

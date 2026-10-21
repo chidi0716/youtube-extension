@@ -277,6 +277,22 @@
     "message": "Hides the comment section below the video.",
     "description": "More panel: hide comments description."
   },
+  "moreQualityLock": {
+    "message": "Lock quality",
+    "description": "More panel: quality lock dropdown."
+  },
+  "moreQualityLockDesc": {
+    "message": "Plays every video in this quality, or the highest lower one when it isn't available.",
+    "description": "More panel: quality lock description."
+  },
+  "qualityOff": {
+    "message": "Off (automatic)",
+    "description": "Quality lock option: let YouTube choose the quality."
+  },
+  "qualityMax": {
+    "message": "Highest available",
+    "description": "Quality lock option: always use the highest quality of the video."
+  },
   "volumeHint": {
     "message": "Volume",
     "description": "Accessible label of the volume indicator shown over the player."

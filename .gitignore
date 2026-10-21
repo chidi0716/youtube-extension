@@ -47,3 +47,6 @@ spikes/T06b/.cache/
 
 # T07a 實測的瀏覽器設定檔與暫存截圖
 spikes/T07a/.cache/
+
+# 階段 2b、2c 實測的暫存檔與開發用小工具
+spikes/stage2c/.cache/

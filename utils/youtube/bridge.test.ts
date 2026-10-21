@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleBridgeRequest, parseBridgeRequest, parseBridgeResponse } from './bridge';
-import type { YtPlayerApi } from './dom';
+import type { BridgePlayer } from './bridge';
 
 const req = (obj: unknown) => parseBridgeRequest(JSON.stringify(obj));
 
@@ -49,7 +49,7 @@ describe('parseBridgeResponse', () => {
   });
 });
 
-function fakePlayer(overrides: Partial<YtPlayerApi> = {}): YtPlayerApi {
+function fakePlayer(overrides: Partial<BridgePlayer> = {}): BridgePlayer {
   let volume = 40;
   let muted = true;
   return {
@@ -123,5 +123,62 @@ describe('handleBridgeRequest', () => {
       },
     });
     expect(handleBridgeRequest({ id: 'a', type: 'getCurrentTime' }, p)).toEqual({ id: 'a', ok: false, error: 'FAILED' });
+  });
+});
+
+describe('畫質請求（004 第 1 節、plan 3.5）', () => {
+  it('接受 getAvailableQualities、getQuality 與白名單內的 setQuality', () => {
+    expect(req({ id: 'q', type: 'getAvailableQualities' })).toEqual({ id: 'q', type: 'getAvailableQualities' });
+    expect(req({ id: 'q', type: 'getQuality' })).toEqual({ id: 'q', type: 'getQuality' });
+    for (const quality of ['tiny', 'small', 'medium', 'large', 'hd720', 'hd1080', 'hd1440', 'hd2160', 'hd2880', 'highres', 'auto']) {
+      expect(req({ id: 'q', type: 'setQuality', quality })).toEqual({ id: 'q', type: 'setQuality', quality });
+    }
+  });
+
+  it('拒絕白名單以外的畫質參數', () => {
+    for (const quality of ['1080p', 'HD1080', 'hd1080 ', '', 'unknown', 'toString', '__proto__', 1080, null, ['hd720'], { q: 1 }]) {
+      expect(req({ id: 'q', type: 'setQuality', quality })).toBeNull();
+    }
+    expect(req({ id: 'q', type: 'setQuality' })).toBeNull();
+  });
+
+  function qualityPlayer(levels: unknown, current: unknown) {
+    return fakePlayer({
+      getAvailableQualityLevels: () => levels,
+      getPlaybackQuality: () => current,
+      setPlaybackQuality: vi.fn(),
+      setPlaybackQualityRange: vi.fn(),
+    });
+  }
+
+  it('getAvailableQualities 只回傳已知的代號（去掉 auto 與未知值）', () => {
+    const p = qualityPlayer(['hd1080', 'hd720', 'weird', 'auto', 7], 'hd720');
+    expect(handleBridgeRequest({ id: 'a', type: 'getAvailableQualities' }, p)).toEqual({ id: 'a', ok: true, result: ['hd1080', 'hd720'] });
+    expect(handleBridgeRequest({ id: 'a', type: 'getAvailableQualities' }, qualityPlayer(undefined, null))).toEqual({
+      id: 'a',
+      ok: true,
+      result: [],
+    });
+  });
+
+  it('getQuality 回傳目前畫質；未知時為 null', () => {
+    expect(handleBridgeRequest({ id: 'a', type: 'getQuality' }, qualityPlayer([], 'hd720'))).toEqual({ id: 'a', ok: true, result: 'hd720' });
+    expect(handleBridgeRequest({ id: 'a', type: 'getQuality' }, qualityPlayer([], 'unknown'))).toEqual({ id: 'a', ok: true, result: null });
+  });
+
+  it('setQuality 把畫質範圍與畫質設成同一個代號', () => {
+    const p = qualityPlayer(['hd1080'], 'hd720');
+    expect(handleBridgeRequest({ id: 'a', type: 'setQuality', quality: 'hd1080' }, p)).toEqual({ id: 'a', ok: true, result: null });
+    expect(p.setPlaybackQualityRange).toHaveBeenCalledWith('hd1080', 'hd1080');
+    expect(p.setPlaybackQuality).toHaveBeenCalledWith('hd1080');
+    handleBridgeRequest({ id: 'b', type: 'setQuality', quality: 'auto' }, p);
+    expect(p.setPlaybackQualityRange).toHaveBeenLastCalledWith('auto', 'auto');
+  });
+
+  it('播放器沒有畫質方法時不會出錯', () => {
+    const p = fakePlayer();
+    expect(handleBridgeRequest({ id: 'a', type: 'getAvailableQualities' }, p)).toEqual({ id: 'a', ok: true, result: [] });
+    expect(handleBridgeRequest({ id: 'a', type: 'getQuality' }, p)).toEqual({ id: 'a', ok: true, result: null });
+    expect(handleBridgeRequest({ id: 'a', type: 'setQuality', quality: 'hd720' }, p)).toEqual({ id: 'a', ok: true, result: null });
   });
 });

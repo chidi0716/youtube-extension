@@ -13,6 +13,7 @@ const root = join(here, '..', '..');
 const extDir = join(root, '.output', 'chrome-mv3');
 const shots = process.env.SHOTS ?? join(root, 'specs', 'notes', 'screenshots');
 const fixture = readFileSync(join(here, 'fixtures', 'watch.html'), 'utf8');
+const fixtureAddon = readFileSync(join(here, 'fixtures', 'stage2c-watch.js'), 'utf8');
 const video = readFileSync(join(here, 'fixtures', 'test.webm'));
 const EXT_ID = 'bkjlangdjfpllnkcpfpdlajchbginjdj';
 const WATCH = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
@@ -40,6 +41,9 @@ async function launch(lang) {
     if (url.protocol === 'chrome-extension:') return route.continue();
     if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/test.webm') {
       return route.fulfill({ status: 200, contentType: 'video/webm', body: video });
+    }
+    if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/stage2c-watch.js') {
+      return route.fulfill({ status: 200, contentType: 'text/javascript', body: fixtureAddon });
     }
     if (url.hostname === 'www.youtube.com') {
       return route.fulfill({ status: 200, contentType: 'text/html', body: fixture });

@@ -52,4 +52,9 @@ export const player = {
   setVolume: (volume: number) => callPageBridge('setVolume', { volume }),
   seekTo: (seconds: number) => callPageBridge('seekTo', { seconds }),
   getCurrentTime: () => callPageBridge('getCurrentTime', {}),
+  getAvailableQualities: () => callPageBridge('getAvailableQualities', {}),
+  getQuality: () => callPageBridge('getQuality', {}),
+  setQuality: (quality: BridgeQuality) => callPageBridge('setQuality', { quality }),
 };
+
+type BridgeQuality = Extract<BridgeRequest, { type: 'setQuality' }>['quality'];

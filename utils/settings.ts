@@ -31,3 +31,10 @@ export const wheelVolume = storage.defineItem<boolean>('sync:wheelVolume', { fal
 
 /** 隱藏留言（003 FR-64）。 */
 export const hideComments = storage.defineItem<boolean>('sync:hideComments', { fallback: false });
+
+/** 鎖定畫質的選項（004 FR-1）：關閉、最高可用畫質，或指定的解析度（畫面高度）。 */
+export const QUALITY_LOCK_VALUES = ['off', 'max', '2160', '1440', '1080', '720', '480'] as const;
+export type QualityLock = (typeof QUALITY_LOCK_VALUES)[number];
+
+/** 鎖定畫質（004 FR-1、FR-5）。 */
+export const qualityLock = storage.defineItem<QualityLock>('sync:qualityLock', { fallback: 'off' });

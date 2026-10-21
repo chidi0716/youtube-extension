@@ -6,8 +6,9 @@ import {
   BRIDGE_RESPONSE_EVENT,
   handleBridgeRequest,
   parseBridgeRequest,
+  type BridgePlayer,
 } from '@/utils/youtube/bridge';
-import { findPlayer, type YtPlayerApi } from '@/utils/youtube/dom';
+import { findPlayer } from '@/utils/youtube/dom';
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/*'],
@@ -17,7 +18,7 @@ export default defineContentScript({
     document.addEventListener(BRIDGE_REQUEST_EVENT, (event) => {
       const req = parseBridgeRequest((event as CustomEvent<unknown>).detail);
       if (!req) return;
-      const player = findPlayer() as (HTMLElement & YtPlayerApi) | null;
+      const player = findPlayer() as (HTMLElement & BridgePlayer) | null;
       const res = handleBridgeRequest(req, player);
       document.dispatchEvent(new CustomEvent(BRIDGE_RESPONSE_EVENT, { detail: JSON.stringify(res) }));
     });

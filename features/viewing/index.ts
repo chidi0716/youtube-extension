@@ -8,6 +8,7 @@ import { createLoop, type LoopController } from './loop';
 import { createAudioOnly, createAutoplay, createHideComments, createSmartPause, createWheelVolume, type AutoplayFeature } from './more';
 import type { SettingFeature } from './setting-feature';
 import { createPip } from './pip';
+import { createQualityLock, type QualityLockFeature } from './quality';
 import type { Store, ToggleState, ViewingFeature } from './store';
 
 export interface ViewingController {
@@ -30,6 +31,8 @@ export interface ViewingController {
     audioOnly: SettingFeature;
     wheelVolume: SettingFeature;
     hideComments: SettingFeature;
+    /** 鎖定畫質（004 第 1 節）。 */
+    quality: QualityLockFeature;
   };
   /** 工具列（重新）掛載或重新繪製時呼叫，讓功能可以在宿主元素上加 class。 */
   decorateToolbarHost(host: HTMLElement): void;
@@ -49,6 +52,7 @@ export function createViewingController(): ViewingController {
     audioOnly: createAudioOnly(),
     wheelVolume: createWheelVolume(),
     hideComments: createHideComments(),
+    quality: createQualityLock(),
   };
   const features: ViewingFeature[] = [dark, pip, cinema, floating, loop, ...Object.values(more)];
   const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state, floating.state, loop.status];

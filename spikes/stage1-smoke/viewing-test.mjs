@@ -673,7 +673,8 @@ await section('T10', async (page, context) => {
   const v = (expr) => page.evaluate(new Function(`const v = document.querySelector('video'); return ${expr};`));
 
   await openMore();
-  const names = await page.locator('yte-toolbar .yte-more-name').allInnerTexts();
+  // 003 的 5 個開關（004 的「鎖定畫質」是下拉選單，另見 convenience-test.mjs）
+  const names = await page.locator('yte-toolbar .yte-more-item:has([role="switch"]) .yte-more-name').allInnerTexts();
   check('更多面板列出 5 個開關（FR-60 至 FR-64）', names.length === 5, names.join(', '));
   await shot(page, 'T10-more-panel.png');
 

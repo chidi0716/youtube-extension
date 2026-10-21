@@ -9,14 +9,15 @@ import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 import { HelpPanel } from '@/components/panels/HelpPanel';
 import { LoopPanel } from '@/components/panels/LoopPanel';
-import { MorePanel, type MoreItem } from '@/components/panels/MorePanel';
+import { MorePanel, type MoreItem, type MoreSwitchItem } from '@/components/panels/MorePanel';
 import panelsCss from '@/components/panels/panels.css?inline';
 import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import controlsCss from '@/components/controls/controls.css?inline';
 import toolbarCss from '@/components/toolbar/toolbar.css?inline';
 import { createViewingController } from '@/features/viewing';
-import { enabled } from '@/utils/settings';
+import { t } from '@/utils/i18n';
+import { enabled, QUALITY_LOCK_VALUES, type QualityLock } from '@/utils/settings';
 import { WATCH_HOSTS, findPlayer, findToolbarAnchor } from '@/utils/youtube/dom';
 import { getVideoId, isWatchPage, onNavigate } from '@/utils/youtube/page';
 
@@ -24,7 +25,14 @@ const LOG_PREFIX = '[youtube-extension]';
 /** 首次載入時等待錨點出現的上限；超過就安靜放棄（constitution 第 7 點）。 */
 const ANCHOR_WAIT_MS = 20_000;
 
-const pick = (f: { state: MoreItem['state']; toggle: () => void }) => ({ state: f.state, toggle: f.toggle });
+const pick = (f: { state: MoreSwitchItem['state']; toggle: () => void }) => ({ state: f.state, toggle: f.toggle });
+
+/** 鎖定畫質下拉選單的選項（004 FR-1）。 */
+const qualityOptions = () =>
+  QUALITY_LOCK_VALUES.map((value: QualityLock) => ({
+    value,
+    label: value === 'off' ? t('qualityOff') : value === 'max' ? t('qualityMax') : `${value}p`,
+  }));
 
 export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   let isEnabled = await enabled.getValue();
@@ -79,6 +87,16 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     { id: 'audioOnly', icon: 'headphones', label: 'moreAudioOnly', description: 'moreAudioOnlyDesc', ...pick(more.audioOnly) },
     { id: 'wheelVolume', icon: 'mouse', label: 'moreWheelVolume', description: 'moreWheelVolumeDesc', ...pick(more.wheelVolume) },
     { id: 'hideComments', icon: 'comments_disabled', label: 'moreHideComments', description: 'moreHideCommentsDesc', ...pick(more.hideComments) },
+    {
+      kind: 'select',
+      id: 'qualityLock',
+      icon: 'hd',
+      label: 'moreQualityLock',
+      description: 'moreQualityLockDesc',
+      state: more.quality.state,
+      options: qualityOptions(),
+      onChange: (value) => more.quality.setLock(value as QualityLock),
+    },
   ];
   const refreshMore = () => more.autoplay.refresh();
 

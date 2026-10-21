@@ -1,0 +1,67 @@
+== guide shorts entry
+ytd-guide-entry-renderer attrs=[class,is-primary,line-end-style] a.attrs=[id=endpoint class=yt-simple-endpoint style-scope ytd-guide-entry-renderer tabindex=-1 role=link title=Shorts] endpoint={"clickTrackingParams":"CBcQnIEJGAEiEwj42efD6suXAxX103IJHVF8JOGaAQIIOsoBBO-HhUc=","commandMetadata":{"webCommandMetadata":{"url":"/shorts/","webPageType":"WEB_PAGE_TYPE_SHORTS","rootVe":37414}},"reelWatchEndpoint":{"playerParams":"8AEBuAQPkAcC","overlay":{"reelPlayerOverlayRenderer":{"style":"REEL_P
+
+== search: shorts shelf ancestors
+grid-shelf-view-model attrs=[class,style,data-resize-observer-id]
+  < div#contents attrs=[id,class]
+  < ytd-item-section-renderer attrs=[class,first-lockup-no-top-margin,lockup-container-type,not-sticky,exp-fix-playlist-header,enable-related-chips-caching,secondary-grid-columns,use-height-hack,top-spacing-zero,is-bottom-separator-hidden,header-style]
+  < div#contents attrs=[id,class]
+  < ytd-section-list-renderer attrs=[class,is-bottom-separator-hidden]
+  < div#primary attrs=[id,class]
+  < ytd-two-column-search-results-renderer attrs=[is-search,class,use-bigger-thumbs,bigger-thumbs-style,page-subtype,guide-persistent-and-visible]
+  < div#container attrs=[id,class]
+  < ytd-search attrs=[class,has-bigger-thumbs,reset-stacking-context,page-subtype,guide-persistent-and-visible,role,has-search-header]
+  < ytd-page-manager#page-manager attrs=[id,class]
+  section children: ytd-channel-renderer, ytd-shelf-renderer, grid-shelf-view-model, ytd-shelf-renderer, ytd-channel-renderer, ytd-video-renderer, grid-shelf-view-model, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, grid-shelf-view-model, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, yt-lockup-view-model, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer, ytd-video-renderer
+  grid-shelf attrs: class=ytGridShelfViewModelHost ytd-item-section-renderer grid-shelf-with-top-margin yt style=margin-left: 0px; margin-right: 0px; data-resize-observer-id=0
+
+== search: other result types containing /shorts/ links
+[["ytm-shorts-lockup-view-model",30],["ytd-video-renderer",22]]
+
+== search: title inner styles
+ytd-video-renderer a#video-title: a.yt-simple-endpoint.style-scope.ytd-video-renderer clamp=2 display=flow-root overflow=hidden maxH=52px h=26
+    child: yt-icon.style-scope.ytd-video-renderer clamp=none display=none overflow=visible maxH=none h=0
+    parent: h3.title-and-badge.style-scope.ytd-video-renderer clamp=none display=block overflow=hidden maxH=none h=26
+yt-lockup-view-model h3 a: a.ytLockupMetadataViewModelTitle clamp=2 display=flow-root overflow=hidden maxH=52px h=26
+    child: span.ytAttributedStringHost.ytAttributedStringWhiteSpacePreWrap clamp=none display=inline overflow=visible maxH=none h=21
+    parent: h3.ytLockupMetadataViewModelHeadingReset clamp=none display=block overflow=visible maxH=none h=26
+ytm-shorts-lockup-view-model h3: h3.shortsLockupViewModelHostMetadataTitle.shortsLockupViewModelHostOutsideMetadataTitle clamp=2 display=flow-root overflow=hidden maxH=none h=22
+    child: a.shortsLockupViewModelHostEndpoint.shortsLockupViewModelHostOutsideMetadataEndpoint clamp=none display=block overflow=visible maxH=none h=22
+    parent: div. clamp=none display=block overflow=visible maxH=none h=46
+
+== search: preview ancestors
+div#video-preview < ytd-app
+  first child: ytd-video-preview-loader
+  moving thumbnails: 0
+
+== watch https://www.youtube.com/watch?v=RE3_PGwDwhw
+methods: addEmbedsConversionTrackingParams, getAudioQualitySettingState, getAudioTrack, getAudioTrackState, getAvailableAudioTracks, getAvailableQualityData, getAvailableQualityDataAndMessaging, getAvailableQualityLabels, getAvailableQualityLevels, getMaxPlaybackQuality, getPaygatedAudioQualityData, getPlaybackQuality, getPlaybackQualityLabel, getPreferredQuality, getUserAudioQualitySetting, getUserPlaybackQualityPreference, hasDrcAudioTrack, hasHqaAudioTrack, setAudioTrack, setPlaybackQuality, setPlaybackQualityRange, setTrackingParams, setUserAudioQualitySetting, supportsGaplessAudio
+getAvailableQualityLevels: []
+getPlaybackQuality: "unknown"
+getAvailableQualityData: []
+getPlaybackQualityLabel: ""
+getAvailableAudioTracks: []
+getAudioTrack: {"id":"und","Nb":{"name":"Default","id":"und","isDefault":true,"isAutoDubbed":false},"captionTracks":[],"D":null,"B":null,"xtags":"","J":false,"L":false,"j":null,"C":"UNKNOWN","captionsInitialState":"CAPTIONS_INITIAL_STATE_UNKNOWN"}
+video: readyState=0 duration=NaN paused=true
+error text: Video unavailable
+
+== watch: player overlay elements
+.ytp-ce-element: 0
+.ytp-ce-video: 0
+.ytp-ce-channel: 0
+.ytp-endscreen-content: 0
+.html5-endscreen: 0
+.ytp-autonav-endscreen: 0
+.ytp-autonav-endscreen-countdown-overlay: 0
+.ytp-cards-teaser: 2
+.ytp-cards-button: 2
+.ytp-suggestion-set: 12
+.ytp-fullscreen-grid: 1
+.ytp-videowall-still: 0
+player children: div.html5-video-container, div.ytp-gradient-top, div.ytp-chrome-top, button.ytp-unmute.ytp-popup, div.ytp-gated-actions-overlay, div.ytp-overlay.ytp-speedmaster-overlay, div.ytp-suggested-action, div.ytp-cued-thumbnail-overlay, div.ytp-overlays-container, div.ytp-spinner, div.ytp-storyboard-framepreview, div., div.ytp-seek-overlay, div., div.ytp-player-content.ytp-iv-player-content, div.ytp-miniplayer-ui, div.ytp-remote, div.ytp-mdx-popup-dialog, div.ytp-error, div.ytp-playlist-menu, div.ytp-share-panel, div.ytp-overflow-panel, div.ytp-popup.ytp-settings-menu, div.ytp-gradient-bottom, div.ytp-chrome-bottom, div.ytp-fullscreen-grid
+
+== watch: popup container and secondary
+popup container: ytd-popup-container parent=ytd-app children=0
+related kinds: [["ytd-item-section-renderer",1],["yt-lockup-view-model",20],["ytd-reel-shelf-renderer",1],["yt-horizontal-list-renderer",1],["ytm-shorts-lockup-view-model-v2",6],["ytd-continuation-item-renderer",1]]
+shorts links in related: 12
+first shorts chain: a < ytm-shorts-lockup-view-model < ytm-shorts-lockup-view-model-v2 < div < div < div < yt-horizontal-list-renderer < div < ytd-reel-shelf-renderer < div

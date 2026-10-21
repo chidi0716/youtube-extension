@@ -277,6 +277,22 @@
     "message": "隱藏影片下方的留言區。",
     "description": "More panel: hide comments description."
   },
+  "moreQualityLock": {
+    "message": "鎖定畫質",
+    "description": "More panel: quality lock dropdown."
+  },
+  "moreQualityLockDesc": {
+    "message": "每部影片都以這個畫質播放；影片沒有這個畫質時，使用低於它的最高畫質。",
+    "description": "More panel: quality lock description."
+  },
+  "qualityOff": {
+    "message": "關閉（自動）",
+    "description": "Quality lock option: let YouTube choose the quality."
+  },
+  "qualityMax": {
+    "message": "最高可用畫質",
+    "description": "Quality lock option: always use the highest quality of the video."
+  },
   "volumeHint": {
     "message": "音量",
     "description": "Accessible label of the volume indicator shown over the player."

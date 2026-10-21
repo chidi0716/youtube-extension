@@ -1,6 +1,6 @@
 // 本機假觀看頁測試共用的工具：啟動載入擴充功能的 Chromium、以 route 提供假頁面與測試影片。
 // 瀏覽器對 www.youtube.com 的請求全部由本機檔案回應，其他網址一律拒絕，不會連外。
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -14,10 +14,26 @@ export const WATCH = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 mkdirSync(shots, { recursive: true });
 
 const fixture = readFileSync(join(here, 'fixtures', 'watch.html'), 'utf8');
+// 階段 2b、2c：觀看頁的附加模擬，以及首頁、搜尋、Shorts 的假頁面。
+const fixtureFile = (name) => (existsSync(join(here, 'fixtures', name)) ? readFileSync(join(here, 'fixtures', name), 'utf8') : null);
+const pageFixtures = {
+  addon: fixtureFile('stage2c-watch.js'),
+  home: fixtureFile('home.html'),
+  search: fixtureFile('search.html'),
+  shorts: fixtureFile('shorts.html'),
+};
+/** 依網址路徑選擇假頁面：首頁、訂閱、頻道用首頁；搜尋；Shorts；其他都是觀看頁。 */
+export function fixtureFor(pathname) {
+  if (pathname === '/' || pathname.startsWith('/feed/') || pathname.startsWith('/@')) return pageFixtures.home ?? fixture;
+  if (pathname === '/results') return pageFixtures.search ?? fixture;
+  if (pathname.startsWith('/shorts/')) return pageFixtures.shorts ?? fixture;
+  return fixture;
+}
 const video = readFileSync(join(here, 'fixtures', 'test.webm'));
 const thumb = readFileSync(join(here, 'fixtures', 'thumb.jpg'));
 
-export async function launch({ lang = 'en-US', name = 'fixture', viewport = { width: 1280, height: 900 }, colorScheme } = {}) {
+export async function launch({ lang = 'en-US', name = 'fixture', viewport, colorScheme } = {}) {
+  viewport ??= { width: 1280, height: 900 };
   const profile = join(here, '.cache', `profile-${name}-${lang}`);
   rmSync(profile, { recursive: true, force: true });
   const context = await chromium.launchPersistentContext(profile, {
@@ -58,11 +74,14 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport = { wi
         body: video.subarray(start, end + 1),
       });
     }
+    if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/stage2c-watch.js') {
+      return route.fulfill({ status: 200, contentType: 'text/javascript', body: pageFixtures.addon });
+    }
     if (url.hostname === 'www.youtube.com') {
-      return route.fulfill({ status: 200, contentType: 'text/html', body: fixture });
+      return route.fulfill({ status: 200, contentType: 'text/html', body: fixtureFor(url.pathname) });
     }
     // 純音訊模式的縮圖：以測試影片的一格畫面代替。
-    if (url.hostname === 'i.ytimg.com' && /^\/vi\/[A-Za-z0-9_-]{11}\/hqdefault\.jpg$/.test(url.pathname)) {
+    if (url.hostname === 'i.ytimg.com' && /^\/vi\/[A-Za-z0-9_-]{11}\/(?:hq|mq)default\.jpg$/.test(url.pathname)) {
       return route.fulfill({ status: 200, contentType: 'image/jpeg', body: thumb });
     }
     return route.abort();

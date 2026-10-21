@@ -28,6 +28,7 @@ import repeat from '@material-symbols/svg-400/outlined/repeat.svg?raw';
 import settings from '@material-symbols/svg-400/outlined/settings.svg?raw';
 import subtitles from '@material-symbols/svg-400/outlined/subtitles.svg?raw';
 import brandingWatermark from '@material-symbols/svg-400/outlined/branding_watermark.svg?raw';
+import hd from '@material-symbols/svg-400/outlined/hd.svg?raw';
 
 const SOURCES = {
   autoplay: autoplay,
@@ -43,6 +44,7 @@ const SOURCES = {
   dark_mode: darkMode,
   drag_indicator: dragIndicator,
   error,
+  hd,
   help,
   image,
   keep,

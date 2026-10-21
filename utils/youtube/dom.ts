@@ -433,3 +433,68 @@ export function writeVolume(player: YtPlayerApi, volume: number): void {
 export function writeSeek(player: YtPlayerApi, seconds: number): void {
   player.seekTo?.(seconds, true);
 }
+
+// ---------------------------------------------------------------------------
+// 鎖定畫質（004 第 1 節、plan 3.7.1）
+// 播放器方法依 2026-10-22 在真實觀看頁（站內換頁進入）上列出的 #movie_player 方法確認存在
+// （spikes/stage2c/results-watch.txt）；畫質代號與解析度的對應來自 YouTube IFrame Player API
+// 的公開文件。實際切換的效果在本環境無法驗證（影片無法播放），見 specs/notes/T27-quality-lock.md。
+// ---------------------------------------------------------------------------
+
+/** YouTube 播放器的畫質代號與對應的畫面高度。 */
+export const QUALITY_HEIGHTS = {
+  tiny: 144,
+  small: 240,
+  medium: 360,
+  large: 480,
+  hd720: 720,
+  hd1080: 1080,
+  hd1440: 1440,
+  hd2160: 2160,
+  hd2880: 2880,
+  highres: 4320,
+} as const;
+
+export type QualityCode = keyof typeof QUALITY_HEIGHTS;
+
+/** 交還給 YouTube 自動決定畫質時使用的代號。 */
+export const AUTO_QUALITY = 'auto';
+
+export function isQualityCode(value: unknown): value is QualityCode {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(QUALITY_HEIGHTS, value);
+}
+
+/** 播放器上與畫質相關的方法；每個都可能不存在，呼叫前要檢查。 */
+export interface YtQualityApi {
+  getAvailableQualityLevels?: () => unknown;
+  getPlaybackQuality?: () => unknown;
+  setPlaybackQuality?: (quality: string) => void;
+  setPlaybackQualityRange?: (min: string, max?: string) => void;
+}
+
+/** 目前影片可用的畫質（只回傳已知的代號，不含 auto）；影片還沒載入時為空陣列。 */
+export function readAvailableQualities(player: YtQualityApi): QualityCode[] {
+  const levels = player.getAvailableQualityLevels?.();
+  return Array.isArray(levels) ? levels.filter(isQualityCode) : [];
+}
+
+/** 目前的播放畫質；不是已知的代號時（例如 "unknown"）回傳 null。 */
+export function readQuality(player: YtQualityApi): QualityCode | null {
+  const q = player.getPlaybackQuality?.();
+  return isQualityCode(q) ? q : null;
+}
+
+/**
+ * 設定畫質：把畫質範圍的上下限都設成同一個代號（YouTube 的自動調整不會再改變它），並切換到該畫質。
+ * `auto` 表示交還給 YouTube 自動決定。
+ */
+export function writeQuality(player: YtQualityApi, quality: QualityCode | typeof AUTO_QUALITY): void {
+  player.setPlaybackQualityRange?.(quality, quality);
+  player.setPlaybackQuality?.(quality);
+}
+
+/** 便利功能與頁面整理使用的 YouTube 選擇器（004、005）。 */
+export const CONVENIENCE_SELECTORS = {
+  /** 播放器的設定（齒輪）選單；使用者在這裡手動改畫質或語音軌（004 FR-4、005 FR-12）。 */
+  settingsMenu: '#movie_player .ytp-settings-menu',
+} as const;
