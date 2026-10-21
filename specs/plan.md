@@ -138,7 +138,7 @@ host/                           橋接程式（Go），見第 4 節
 
 | 功能 | 做法 |
 |---|---|
-| 深色模式 | 修改 YouTube 自己的主題偏好後重新載入頁面（網址帶上目前時間點）。偏好的儲存位置與格式由實作方依公開資料與實測確認，只改動主題相關的部分，其他偏好原樣保留；不需要額外權限。按鈕狀態只讀取 `<html>` 的 `dark` 屬性，以 `MutationObserver` 同步，不另存狀態。若無法可靠修改偏好，在 QUESTIONS.md 回報，不得退回只切換屬性的做法 |
+| 深色模式 | 由頁面橋接腳本觸發 YouTube 自己「外觀」選單切換主題時所用的頁面內機制，達到不重新載入的即時切換；機制由實作方**觀察 YouTube 網站本身的行為**確認（例如在 YouTube 首頁操作外觀選單時，觀察 DOM 變化、頁面事件與網路請求），不得參考第三方擴充功能或使用者腳本的程式碼。橋接腳本新增 `setTheme` 請求，參數只接受 `dark`／`light`。同時修改主題偏好（見下）以便重新整理後維持；即時機制失效時才退回重新載入（FR-16）。以下為偏好部分：修改 YouTube 自己的主題偏好（網址帶上目前時間點）。偏好的儲存位置與格式由實作方依公開資料與實測確認，只改動主題相關的部分，其他偏好原樣保留；不需要額外權限。按鈕狀態只讀取 `<html>` 的 `dark` 屬性，以 `MutationObserver` 同步，不另存狀態。若無法可靠修改偏好，在 QUESTIONS.md 回報，不得退回只切換屬性的做法 |
 | 劇院模式 | 在頁面加入固定定位的遮罩元素；暫時提高播放器容器與工具列的 `z-index`；Esc 或點遮罩關閉 |
 | 子母畫面 | 對 `<video>` 呼叫 `requestPictureInPicture()`；監聽 `enterpictureinpicture`／`leavepictureinpicture`；`document.pictureInPictureEnabled` 為 false 時停用按鈕 |
 | 浮動播放器 | `IntersectionObserver` 觀察播放器原位置；離開畫面時對播放器容器加上固定定位的 class，並觸發 `resize` 事件讓 YouTube 重新計算尺寸；拖曳使用 Pointer Events，放開時貼齊最近角落 |
