@@ -51,8 +51,11 @@ npm run dev:firefox   # Firefox
 ## Build
 
 ```bash
+npm run compile         # type check
+npm test                # unit tests (Vitest)
 npm run build           # Chrome  → .output/chrome-mv3
-npm run build:firefox   # Firefox → .output/firefox-*
+npm run build:firefox   # Firefox → .output/firefox-mv3
+npm run build:host      # local helper → host/dist/ (macOS arm64/amd64, Windows amd64; requires Go)
 npm run zip
 npm run zip:firefox
 ```
@@ -60,7 +63,7 @@ npm run zip:firefox
 ## Load the extension manually
 
 - **Chrome:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose `.output/chrome-mv3`.
-- **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `manifest.json` inside the Firefox build folder under `.output/`.
+- **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `.output/firefox-mv3/manifest.json`.
 
 ## Project documents
 

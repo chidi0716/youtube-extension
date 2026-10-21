@@ -51,8 +51,11 @@ npm run dev:firefox   # Firefox
 ## 建置
 
 ```bash
+npm run compile         # 型別檢查
+npm test                # 單元測試（Vitest）
 npm run build           # Chrome  → .output/chrome-mv3
-npm run build:firefox   # Firefox → .output/firefox-*
+npm run build:firefox   # Firefox → .output/firefox-mv3
+npm run build:host      # 本機橋接程式 → host/dist/（macOS arm64/amd64、Windows amd64；需要 Go）
 npm run zip
 npm run zip:firefox
 ```
@@ -60,7 +63,7 @@ npm run zip:firefox
 ## 手動載入擴充功能
 
 - **Chrome**：開啟 `chrome://extensions`，打開「開發人員模式」，點「載入未封裝項目」，選擇 `.output/chrome-mv3`。
-- **Firefox**：開啟 `about:debugging#/runtime/this-firefox`，點「載入臨時附加元件」，選擇 `.output/` 底下 Firefox 建置資料夾內的 `manifest.json`。
+- **Firefox**：開啟 `about:debugging#/runtime/this-firefox`，點「載入臨時附加元件」，選擇 `.output/firefox-mv3/manifest.json`。
 
 ## 專案文件
 
