@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "T00 spike",
+  "version": "0.0.1",
+  "description": "Firefox MV3 event page + native messaging lifetime test",
+  "background": { "scripts": ["mode.js", "background.js"] },
+  "permissions": ["nativeMessaging", "storage", "alarms"],
+  "browser_specific_settings": {
+    "gecko": { "id": "t00-spike@chidi0716", "strict_min_version": "128.0" }
+  }
+}

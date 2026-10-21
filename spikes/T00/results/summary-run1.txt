@@ -1,0 +1,20 @@
+== results/run1-silent.host.log
++    0.0s pid=1977   start
++    0.0s pid=1977   msg   {'type': 'hello'}
++  119.4s pid=2838   start
++  119.4s pid=2838   msg   {'type': 'report', 'starts': 1, 'thisInstanceUptimeSec': 120.211, 'portStillOpen': True, 'suspendAfterSec': None}
++  119.4s pid=2838   eof  
+== results/run1-heartbeat.host.log
++    0.0s pid=1999   start
++    0.0s pid=1999   msg   {'type': 'hello'}
++  118.9s pid=2837   start
++  118.9s pid=2837   msg   {'type': 'report', 'starts': 1, 'thisInstanceUptimeSec': 120.171, 'portStillOpen': True, 'suspendAfterSec': None}
++  118.9s pid=2837   eof  
+  (15 heartbeat ticks received over the port)
+== results/run1-control.host.log
++    0.0s pid=2000   start
++    0.0s pid=2000   msg   {'type': 'hello'}
++    1.3s pid=2000   eof  
++  119.7s pid=2840   start
++  119.7s pid=2840   msg   {'type': 'report', 'starts': 1, 'thisInstanceUptimeSec': 0.015, 'portStillOpen': False, 'suspendAfterSec': 30.45}
++  119.7s pid=2840   eof  
