@@ -8,6 +8,7 @@ import { render } from 'preact';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 import { Toolbar } from '@/components/toolbar/Toolbar';
+import controlsCss from '@/components/controls/controls.css?inline';
 import toolbarCss from '@/components/toolbar/toolbar.css?inline';
 import { enabled } from '@/utils/settings';
 import { findPlayer, findToolbarAnchor } from '@/utils/youtube/dom';
@@ -36,7 +37,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     position: 'inline',
     anchor: () => findToolbarAnchor()?.before ?? null,
     append: 'before',
-    css: toolbarCss,
+    css: `${toolbarCss}\n${controlsCss}`,
     // 工具列內的按鍵不要冒泡到 YouTube，避免觸發 YouTube 的鍵盤快捷鍵（FR-19）。
     isolateEvents: true,
     onMount(container, _shadow, host) {

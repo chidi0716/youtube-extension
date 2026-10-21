@@ -1,5 +1,6 @@
 // 面板內容的共通狀態（001 FR-14）：載入中、錯誤與重試、尚未推出。
 import { t } from '@/utils/i18n';
+import { Button } from '../controls/Button';
 import { Icon } from '../icons';
 
 export function PanelLoading() {
@@ -18,10 +19,10 @@ export function PanelError({ message, onRetry }: { message?: string; onRetry: ()
     <div class="yte-status yte-status-error" role="alert">
       <Icon name="error" />
       <span>{message ?? t('errorGeneric')}</span>
-      <button type="button" class="yte-button yte-button-secondary" onClick={onRetry}>
+      <Button variant="secondary" onClick={onRetry}>
         <Icon name="refresh" size={18} />
         <span>{t('retry')}</span>
-      </button>
+      </Button>
     </div>
   );
 }

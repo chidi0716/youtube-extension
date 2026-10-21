@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Controls gallery</title>
+    <style>
+      /* YouTube 2026-10 實測值（淺色主題） */
+      html {
+        --yt-sys-color-baseline--text-primary: #0f0f0f;
+        --yt-sys-color-baseline--text-secondary: #606060;
+        --yt-sys-color-baseline--menu-background: #fff;
+        --yt-sys-color-baseline--additive-background: rgba(0, 0, 0, 0.05);
+        --yt-sys-color-baseline--button-chip-background-hover: rgba(0, 0, 0, 0.1);
+        --yt-sys-color-baseline--call-to-action: #065fd4;
+        --yt-sys-color-baseline--outline: rgba(0, 0, 0, 0.1);
+        --yt-sys-color-baseline--text-primary-inverse: #fff;
+        --yt-sys-color-baseline--text-disabled: #909090;
+        background: #fff;
+        font-family: Roboto, Arial, sans-serif;
+      }
+      /* 深色主題 */
+      html[dark] {
+        --yt-sys-color-baseline--text-primary: #f1f1f1;
+        --yt-sys-color-baseline--text-secondary: #aaa;
+        --yt-sys-color-baseline--menu-background: #282828;
+        --yt-sys-color-baseline--additive-background: rgba(255, 255, 255, 0.1);
+        --yt-sys-color-baseline--button-chip-background-hover: rgba(255, 255, 255, 0.2);
+        --yt-sys-color-baseline--call-to-action: #3ea6ff;
+        --yt-sys-color-baseline--outline: rgba(255, 255, 255, 0.2);
+        --yt-sys-color-baseline--text-primary-inverse: #0f0f0f;
+        --yt-sys-color-baseline--text-disabled: #717171;
+        background: #0f0f0f;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="yte-root"></div>
+    <script>
+      // 展示頁沒有擴充功能 API：介面文字直接顯示訊息名稱。
+      window.browser = { i18n: { getMessage: (key) => key } };
+    </script>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

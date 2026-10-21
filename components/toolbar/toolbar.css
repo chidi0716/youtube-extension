@@ -28,6 +28,12 @@
   --yte-shadow: var(--yt-sys-color-baseline--shadow-medium, rgba(0, 0, 0, 0.25));
   --yte-tooltip-background: var(--yt-sys-color-baseline--static-grey, #606060);
   --yte-tooltip-text: var(--yt-sys-color-baseline--overlay-text-primary, #fff);
+  --yte-on-call-to-action: var(--yt-spec-text-primary-inverse, var(--yt-sys-color-baseline--text-primary-inverse, #fff));
+  --yte-badge-background: var(--yt-sys-color-baseline--static-grey, #606060);
+  --yte-badge-text: var(--yt-sys-color-baseline--static-brand-white, #fff);
+  --yte-switch-track: var(--yt-sys-color-baseline--text-disabled, #909090);
+  --yte-error: var(--yt-spec-error-indicator, var(--yt-sys-color-baseline--error-indicator, #c30027));
+  --yte-range-rail: var(--yte-active-background);
 
   font-family: var(--yte-font-family, 'Roboto', 'Arial', sans-serif);
   font-size: 14px;
