@@ -58,12 +58,24 @@ npm run build:firefox   # Firefox → .output/firefox-mv3
 npm run build:host      # 本機橋接程式 → host/dist/（macOS arm64/amd64、Windows amd64；需要 Go）
 npm run zip
 npm run zip:firefox
+npm run sign:firefox    # Firefox → 簽署後的 .xpi，輸出到 .output/firefox-signed（見下方）
 ```
 
 ## 手動載入擴充功能
 
 - **Chrome**：開啟 `chrome://extensions`，打開「開發人員模式」，點「載入未封裝項目」，選擇 `.output/chrome-mv3`。
-- **Firefox**：開啟 `about:debugging#/runtime/this-firefox`，點「載入臨時附加元件」，選擇 `.output/firefox-mv3/manifest.json`。
+- **Firefox（開發用）**：開啟 `about:debugging#/runtime/this-firefox`，點「載入臨時附加元件」，選擇 `.output/firefox-mv3/manifest.json`。臨時附加元件在 Firefox 重新啟動後會被移除。
+- **Firefox（永久安裝，Firefox 128 以上，含 Zen）**：正式版 Firefox 只能安裝經 Mozilla 簽署的附加元件，因此本擴充功能以 addons.mozilla.org 的「不公開（unlisted）」頻道簽署，不在 AMO 網站上架。用 Firefox 開啟簽署後的 `.xpi` 檔（或拖進 Firefox 視窗），在安裝提示中確認即可。
+
+### 簽署 Firefox 版（維護者）
+
+1. 在 <https://addons.mozilla.org/developers/addon/api/key/> 建立 API 金鑰。
+2. 以環境變數提供金鑰（不得提交進 repo，也不要寫進任何設定檔）：
+   ```bash
+   export WEB_EXT_API_KEY=user:12345:67
+   export WEB_EXT_API_SECRET=...
+   ```
+3. 執行 `npm run sign:firefox`。它會建置 `.output/firefox-mv3` 並執行 `web-ext sign --channel unlisted`，簽署後的 `.xpi` 存到 `.output/firefox-signed/`。加上 `-- --dry-run` 只印出指令、不送出。
 
 ## 專案文件
 

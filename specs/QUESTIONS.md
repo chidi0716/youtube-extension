@@ -28,3 +28,18 @@
 - **狀況**：規格沒有定義擴充功能的顯示名稱與說明文字。現有程式碼使用 “YouTube Extension” / “A browser extension for YouTube”。
 - **目前做法**：沿用現有名稱，`en` 與 `zh_TW` 名稱相同，說明文字翻成「YouTube 瀏覽器擴充功能」。
 - **請規格方決定**：正式名稱與兩種語言的說明文字。
+
+## 階段 1（T01a、T02–T05）
+
+### Q5 `strict_min_version: 128` 與「web-ext lint 無警告」互相矛盾（T01a）
+
+- **狀況**：plan 3.3.1 指定 `strict_min_version: "128.0"` 並宣告 `data_collection_permissions`。但 `data_collection_permissions` 是 Firefox 140（Android 142）才支援的欄位，所以 `web-ext lint` 會出現 2 個警告：`KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION`、`KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION`（0 個錯誤）。tasks T01a 的完成條件要求「沒有錯誤與警告」，兩者無法同時成立。
+- **Mozilla 文件**（<https://extensionworkshop.com/documentation/develop/firefox-builtin-data-consent/>）：新擴充功能建議把 `strict_min_version` 設為 140（`gecko_android` 為 142）；舊版 Firefox 會忽略這個欄位。本專案宣告不收集資料（`none`），在 128–139 版上不需要額外處理。
+- **目前做法**：依 plan 3.3.1 維持 128，接受這 2 個警告。
+- **請規格方決定**：改成最低 Firefox 140（同時修改 constitution 第 5 點），或接受這 2 個警告並修改 T01a 的完成條件。
+
+### Q6 AMO 是否需要上傳原始碼（T01a）
+
+- **狀況**：WXT 建置出的 JavaScript 經過壓縮（minify）。Mozilla 的原始碼提交說明（<https://extensionworkshop.com/documentation/publish/source-code-submission/>）要求「經過處理而無法閱讀」的程式碼附上原始碼與建置說明；文件沒有明確說明 unlisted 簽署是否同樣適用。plan 3.3.1 沒有提到原始碼。
+- **目前做法**：`npm run sign:firefox` 只依 plan 3.3.1 組出 `web-ext sign --channel unlisted`，不附原始碼。
+- **請規格方決定**：是否 (a) Firefox 版關閉壓縮，或 (b) 送簽署時以 `wxt zip -b firefox` 產生的原始碼壓縮檔加上 `--upload-source-code`，或 (c) 維持現狀，等 AMO 要求時再處理。

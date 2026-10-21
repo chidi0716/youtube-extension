@@ -58,12 +58,24 @@ npm run build:firefox   # Firefox → .output/firefox-mv3
 npm run build:host      # local helper → host/dist/ (macOS arm64/amd64, Windows amd64; requires Go)
 npm run zip
 npm run zip:firefox
+npm run sign:firefox    # Firefox → signed .xpi in .output/firefox-signed (see below)
 ```
 
 ## Load the extension manually
 
 - **Chrome:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose `.output/chrome-mv3`.
-- **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `.output/firefox-mv3/manifest.json`.
+- **Firefox (development):** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `.output/firefox-mv3/manifest.json`. Temporary add-ons are removed when Firefox restarts.
+- **Firefox (permanent, Firefox 128 or later, including Zen):** release builds of Firefox only install add-ons signed by Mozilla, so the extension is signed through the *unlisted* channel of addons.mozilla.org (it is not published on the AMO website). Open the signed `.xpi` file in Firefox (or drag it onto a Firefox window) and confirm the install prompt.
+
+### Signing the Firefox build (maintainers)
+
+1. Create an API key at <https://addons.mozilla.org/developers/addon/api/key/>.
+2. Export it as environment variables (never commit it or put it in a config file):
+   ```bash
+   export WEB_EXT_API_KEY=user:12345:67
+   export WEB_EXT_API_SECRET=...
+   ```
+3. Run `npm run sign:firefox`. It builds `.output/firefox-mv3` and runs `web-ext sign --channel unlisted`; the signed `.xpi` is saved to `.output/firefox-signed/`. Add `-- --dry-run` to only print the command.
 
 ## Project documents
 

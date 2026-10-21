@@ -32,8 +32,15 @@ export default defineConfig({
     host_permissions: ['*://*.youtube.com/*', 'https://i.ytimg.com/*'],
     ...(browser === 'firefox'
       ? {
+          // plan 3.3.1：以 AMO 不公開頻道送簽署。
           browser_specific_settings: {
-            gecko: { id: GECKO_ID },
+            gecko: {
+              id: GECKO_ID,
+              // main world 內容腳本需要 Firefox 128（constitution 第 5 點）。
+              strict_min_version: '128.0',
+              // 不收集任何資料（constitution 第 2 點）。
+              data_collection_permissions: { required: ['none'] },
+            },
           },
         }
       : { key: CHROME_PUBLIC_KEY }),
