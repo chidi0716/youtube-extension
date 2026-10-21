@@ -1,0 +1,6 @@
+initial {"dark":false,"pref":"PREF=f5=30000&f6=8&hl=en&gl=US&tz=UTC"}
+after "Dark theme" {"dark":true,"pref":"PREF=f5=30000&f6=408&hl=en&gl=US&tz=UTC"} https://www.youtube.com/
+after "Light theme" {"dark":false,"pref":"PREF=f5=30000&f6=80008&hl=en&gl=US&tz=UTC"} https://www.youtube.com/
+option "Use device theme" not in menu
+after "Dark theme" {"dark":true,"pref":"PREF=f5=30000&f6=408&hl=en&gl=US&tz=UTC"} https://www.youtube.com/
+cookie attributes {"name":"PREF","domain":".youtube.com","path":"/","expires":1827133852.614163,"httpOnly":false,"secure":true,"sameSite":"Lax","expiresInDays":400}

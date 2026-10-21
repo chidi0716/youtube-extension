@@ -1,8 +1,19 @@
-// 深色模式（003 FR-10 至 FR-12，plan 3.7）：切換 YouTube 本身的深色主題並記住。
-import { darkMode } from '@/utils/settings';
-import { DARK_THEME_ATTRIBUTE, isDarkTheme, setDarkTheme } from '@/utils/youtube/dom';
+// 深色模式（003 FR-10 至 FR-15，plan 3.7）：修改 YouTube 自己的主題偏好（PREF cookie）後
+// 重新載入頁面，效果等同使用者從 YouTube「外觀」選單選擇深色或淺色主題。
+// 擴充功能不另外記住狀態；按鈕只反映 <html dark> 的實際狀態。
+import {
+  DARK_THEME_ATTRIBUTE,
+  findVideo,
+  isDarkTheme,
+  prefCookieString,
+  readPrefCookie,
+  readThemePreference,
+  urlWithTime,
+  withThemePreference,
+} from '@/utils/youtube/dom';
 import { createStore, type ToggleState, type ViewingFeature } from './store';
-import { decideThemeChange } from './theme-logic';
+
+const LOG_PREFIX = '[youtube-extension]';
 
 export interface DarkModeFeature extends ViewingFeature {
   state: ReturnType<typeof createStore<ToggleState>>;
@@ -11,77 +22,39 @@ export interface DarkModeFeature extends ViewingFeature {
 
 export function createDarkMode(): DarkModeFeature {
   const state = createStore<ToggleState>({ active: isDarkTheme() });
-  let remembered: boolean | null = null;
   let observer: MutationObserver | null = null;
-  let lastUserInteraction: number | null = null;
-  let running = false;
 
-  const apply = (dark: boolean) => {
-    if (isDarkTheme() !== dark) {
-      // 先停止觀察，避免把自己的修改當成使用者從 YouTube 選單切換。
-      observer?.disconnect();
-      setDarkTheme(dark);
-      observe();
-    }
-    state.set({ active: dark });
-  };
-
-  const onExternalChange = () => {
-    const current = isDarkTheme();
-    switch (decideThemeChange(remembered, current, Date.now(), lastUserInteraction)) {
-      case 'remember':
-        remembered = current;
-        void darkMode.setValue(current);
-        state.set({ active: current });
-        break;
-      case 'reapply':
-        apply(remembered!);
-        break;
-      case 'follow':
-        state.set({ active: current });
-        break;
-    }
-  };
-
-  const observe = () => {
-    if (!running) return;
-    observer ??= new MutationObserver(onExternalChange);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: [DARK_THEME_ATTRIBUTE] });
-  };
-
-  // 記錄頁面上的使用者操作時間，用來判斷主題變更是不是使用者從 YouTube 選單切換的。
-  const onUserInteraction = (event: Event) => {
-    if (event.isTrusted) lastUserInteraction = Date.now();
-  };
+  // 使用者從 YouTube 選單切換主題時，按鈕跟著更新（FR-12）。
+  const sync = () => state.set({ active: isDarkTheme() });
 
   return {
     state,
     start() {
-      if (running) return;
-      running = true;
-      document.addEventListener('pointerdown', onUserInteraction, true);
-      document.addEventListener('keydown', onUserInteraction, true);
-      observe();
-      state.set({ active: isDarkTheme() });
-      void darkMode.getValue().then((value) => {
-        if (!running) return;
-        remembered = value;
-        // 下次打開影片頁時自動套用記住的狀態（003 FR-1）。
-        if (value !== null) apply(value);
-      });
+      observer ??= new MutationObserver(sync);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: [DARK_THEME_ATTRIBUTE] });
+      sync();
     },
     stop() {
-      running = false;
+      // 工具列關閉時不改變 YouTube 的主題（FR-14），只停止觀察。
       observer?.disconnect();
       observer = null;
-      document.removeEventListener('pointerdown', onUserInteraction, true);
-      document.removeEventListener('keydown', onUserInteraction, true);
     },
     toggle() {
-      const next = !isDarkTheme();
-      remembered = next;
-      void darkMode.setValue(next);
-      apply(next);
+      // 依目前實際顯示的主題切換；「使用裝置主題」時改為明確的深色或淺色（FR-13）。
+      const next = isDarkTheme() ? 'light' : 'dark';
+      const updated = withThemePreference(readPrefCookie(document.cookie), next);
+      if (updated === null) {
+        console.info(`${LOG_PREFIX} dark mode: unexpected theme preference format; not changed`);
+        return;
+      }
+      document.cookie = prefCookieString(updated);
+      if (readThemePreference(readPrefCookie(document.cookie)) !== next) {
+        console.info(`${LOG_PREFIX} dark mode: could not update the theme preference`);
+        return;
+      }
+      // 重新載入，讓 YouTube 以新的偏好繪製整頁；保留目前影片與時間點（FR-11）。
+      const time = findVideo()?.currentTime ?? null;
+      location.replace(urlWithTime(location.href, time));
     },
   };
 }

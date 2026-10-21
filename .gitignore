@@ -38,3 +38,6 @@ host/dist/
 
 # 階段 1 煙霧測試的瀏覽器設定檔與暫存截圖
 spikes/stage1-smoke/.cache/
+
+# T06a 實測的暫存截圖
+spikes/T06a/.cache/

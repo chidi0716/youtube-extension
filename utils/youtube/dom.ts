@@ -111,8 +111,94 @@ export function isDarkTheme(doc: Document = document): boolean {
   return doc.documentElement.hasAttribute(DARK_THEME_ATTRIBUTE);
 }
 
-export function setDarkTheme(dark: boolean, doc: Document = document): void {
-  doc.documentElement.toggleAttribute(DARK_THEME_ATTRIBUTE, dark);
+// ---------------------------------------------------------------------------
+// 主題偏好（003 FR-10 至 FR-13，plan 3.7）：YouTube 把「外觀」設定存在 PREF cookie。
+// 格式依實測與公開資料確認，見 specs/notes/T06a-dark-mode.md：
+// - cookie 值是以 & 分隔的 key=value，例如 "f5=30000&f6=400&hl=en&tz=UTC"；
+// - f6 是十六進位的旗標；0x400 為深色主題、0x80000 為淺色主題，兩者都沒有時依 YouTube 預設
+//   （帳號設為「使用裝置主題」時也是如此）；其他位元與其他欄位屬於別的偏好，必須原樣保留。
+// - cookie 屬性：網域 .youtube.com、路徑 /、Secure、SameSite=Lax，YouTube 設定的期限為 400 天。
+// ---------------------------------------------------------------------------
+
+export const PREF_COOKIE = 'PREF';
+export const PREF_THEME_FIELD = 'f6';
+export const THEME_DARK_FLAG = 0x400;
+export const THEME_LIGHT_FLAG = 0x80000;
+const PREF_COOKIE_ATTRIBUTES = 'domain=.youtube.com; path=/; max-age=34560000; secure; samesite=lax';
+
+/** YouTube「外觀」設定：深色、淺色，或沒有明確設定（依 YouTube 預設或裝置主題）。 */
+export type ThemePreference = 'dark' | 'light' | 'device';
+
+/** 從 document.cookie 字串取出 PREF 的值；沒有時回傳 null。 */
+export function readPrefCookie(cookieString: string): string | null {
+  for (const part of cookieString.split(';')) {
+    const trimmed = part.trim();
+    if (trimmed.startsWith(`${PREF_COOKIE}=`)) return trimmed.slice(PREF_COOKIE.length + 1);
+  }
+  return null;
+}
+
+/** 解析 PREF 值為依序排列的欄位；值保持原始文字（不做 URL 解碼），以便原樣寫回。 */
+export function parsePref(value: string | null): Array<[key: string, value: string]> {
+  if (!value) return [];
+  return value
+    .split('&')
+    .filter((part) => part.length > 0)
+    .map((part) => {
+      const eq = part.indexOf('=');
+      return eq === -1 ? [part, ''] : [part.slice(0, eq), part.slice(eq + 1)];
+    });
+}
+
+export function serializePref(fields: ReadonlyArray<readonly [string, string]>): string {
+  return fields.map(([k, v]) => `${k}=${v}`).join('&');
+}
+
+/** 解析 f6 旗標；欄位不存在時為 0，格式不對時回傳 null（不能安全地修改）。 */
+function themeFlags(fields: ReadonlyArray<readonly [string, string]>): number | null {
+  const raw = fields.find(([k]) => k === PREF_THEME_FIELD)?.[1];
+  if (raw === undefined || raw === '') return 0;
+  return /^[0-9a-fA-F]{1,8}$/.test(raw) ? Number.parseInt(raw, 16) : null;
+}
+
+/** 目前 PREF 中的主題偏好；f6 格式不對時視為沒有明確設定。 */
+export function readThemePreference(prefValue: string | null): ThemePreference {
+  const flags = themeFlags(parsePref(prefValue));
+  if (flags === null) return 'device';
+  if (flags & THEME_DARK_FLAG) return 'dark';
+  if (flags & THEME_LIGHT_FLAG) return 'light';
+  return 'device';
+}
+
+/**
+ * 回傳把主題改成深色或淺色後的 PREF 值：只改 f6 的兩個主題位元，其他位元與欄位（含順序）原樣保留；
+ * 原本沒有 f6 時加在最後。f6 格式不對時回傳 null，不修改。
+ */
+export function withThemePreference(prefValue: string | null, theme: 'dark' | 'light'): string | null {
+  const fields = parsePref(prefValue);
+  const flags = themeFlags(fields);
+  if (flags === null) return null;
+  // >>> 0：以無號 32 位元處理，最高位元被設定時也不會變成負數。
+  const next = ((flags & ~(THEME_DARK_FLAG | THEME_LIGHT_FLAG)) | (theme === 'dark' ? THEME_DARK_FLAG : THEME_LIGHT_FLAG)) >>> 0;
+  const hex = next.toString(16);
+  const index = fields.findIndex(([k]) => k === PREF_THEME_FIELD);
+  if (index === -1) fields.push([PREF_THEME_FIELD, hex]);
+  else fields[index] = [PREF_THEME_FIELD, hex];
+  return serializePref(fields);
+}
+
+/** 寫入 PREF cookie 用的 document.cookie 字串（屬性與 YouTube 自己設定的相同）。 */
+export function prefCookieString(prefValue: string): string {
+  return `${PREF_COOKIE}=${prefValue}; ${PREF_COOKIE_ATTRIBUTES}`;
+}
+
+/** 重新載入時保留目前影片與播放時間點的網址（YouTube 的 t 參數，單位秒）。 */
+export function urlWithTime(href: string, seconds: number | null): string {
+  const url = new URL(href);
+  if (url.pathname !== '/watch' || seconds === null || !Number.isFinite(seconds)) return url.href;
+  if (seconds >= 1) url.searchParams.set('t', `${Math.floor(seconds)}s`);
+  else url.searchParams.delete('t');
+  return url.href;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,20 @@
+# spikes/T06a/probe-pref.sh 與 probe-theme-config.sh 的輸出（2026-10-21，curl 取 https://www.youtube.com/）
+PREF=[] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate system-icons color-version="v2_0" typography typography-spacing>
+PREF=[f6=400] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate dark system-icons color-version="v2_0" typography typography-spacing>
+PREF=[f6=80000] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate system-icons color-version="v2_0" typography typography-spacing>
+PREF=[f6=480] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate dark system-icons color-version="v2_0" typography typography-spacing>
+PREF=[f6=80400] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate dark system-icons color-version="v2_0" typography typography-spacing>
+PREF=[f6=8] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate system-icons color-version="v2_0" typography typography-spacing>
+PREF=[f6=40000400] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate dark system-icons color-version="v2_0" typography typography-spacing>
+PREF=[f4=4000000&f6=400&hl=en] <html style="font-size: 62.5%;font-family: Roboto, Arial, sans-serif;" lang="en" darker-dark-theme darker-dark-theme-deprecate dark system-icons color-version="v2_0" typography typography-spacing>
+
+== probe-theme-config.sh
+== PREF=[]
+"userInterfaceTheme":"USER_INTERFACE_THEME_LIGHT"
+"web_watch_panel_content_match_theme":true
+== PREF=[f6=400]
+"userInterfaceTheme":"USER_INTERFACE_THEME_DARK"
+"web_watch_panel_content_match_theme":true
+== PREF=[f6=80000]
+"userInterfaceTheme":"USER_INTERFACE_THEME_LIGHT"
+"web_watch_panel_content_match_theme":true

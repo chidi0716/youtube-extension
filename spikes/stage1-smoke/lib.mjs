@@ -17,7 +17,7 @@ const fixture = readFileSync(join(here, 'fixtures', 'watch.html'), 'utf8');
 const video = readFileSync(join(here, 'fixtures', 'test.webm'));
 const thumb = readFileSync(join(here, 'fixtures', 'thumb.jpg'));
 
-export async function launch({ lang = 'en-US', name = 'fixture', viewport = { width: 1280, height: 900 } } = {}) {
+export async function launch({ lang = 'en-US', name = 'fixture', viewport = { width: 1280, height: 900 }, colorScheme } = {}) {
   const profile = join(here, '.cache', `profile-${name}-${lang}`);
   rmSync(profile, { recursive: true, force: true });
   const context = await chromium.launchPersistentContext(profile, {
@@ -26,6 +26,7 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport = { wi
     headless: !process.env.HEADED,
     locale: lang,
     viewport,
+    ...(colorScheme ? { colorScheme } : {}),
     args: [
       `--lang=${lang}`,
       `--disable-extensions-except=${extDir}`,

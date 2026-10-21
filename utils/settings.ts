@@ -7,12 +7,7 @@ export const enabled = storage.defineItem<boolean>('sync:enabled', {
   fallback: true,
 });
 
-/**
- * 深色模式（003 FR-10、FR-1）。null 表示使用者還沒用工具列切換過，不改變 YouTube 原本的主題。
- */
-export const darkMode = storage.defineItem<boolean | null>('sync:darkMode', {
-  fallback: null,
-});
+// 深色模式不另外存設定：以 YouTube 自己的主題偏好為準（003 FR-12）。
 
 /** 浮動播放器是否開啟（003 FR-40、FR-1）。 */
 export const floatingPlayer = storage.defineItem<boolean>('sync:floatingPlayer', {

@@ -43,17 +43,21 @@ try {
   });
   console.log('player', JSON.stringify(playerState));
 
-  // ---- 深色模式 ----
+  // ---- 深色模式（T06a：改寫 PREF 後重新載入）----
   const darkBefore = await page.evaluate(() => document.documentElement.hasAttribute('dark'));
+  const reloaded = page.waitForEvent('load', { timeout: 30_000 });
   await button('darkMode').click();
-  await page.waitForTimeout(500);
+  await reloaded;
+  await page.waitForSelector('yte-toolbar', { state: 'attached', timeout: 30_000 });
+  await page.waitForTimeout(1500);
   const dark = {
     attr: await page.evaluate(() => document.documentElement.hasAttribute('dark')),
-    bg: await page.evaluate(() => getComputedStyle(document.querySelector('ytd-app') ?? document.body).backgroundColor),
+    pref: (await context.cookies('https://www.youtube.com/')).find((c) => c.name === 'PREF')?.value ?? null,
     pressed: await pressedOf('darkMode'),
+    url: page.url(),
   };
-  check('真實 YouTube：深色模式切換 YouTube 本身的深色主題（T06）', darkBefore === false && dark.attr && dark.pressed === 'true', JSON.stringify(dark));
-  await page.screenshot({ path: join(shots, 'T06-real-dark-mode.png'), clip: { x: 0, y: 0, width: 1000, height: 760 } });
+  check('真實 YouTube：深色模式改寫 YouTube 的主題偏好並重新載入（T06a）', dark.attr === !darkBefore && dark.pressed === String(!darkBefore), JSON.stringify(dark));
+  await page.screenshot({ path: join(shots, 'T06a-real-dark-mode.png'), clip: { x: 0, y: 0, width: 1000, height: 760 } });
 
   // ---- 劇院模式 ----
   await button('cinema').click();

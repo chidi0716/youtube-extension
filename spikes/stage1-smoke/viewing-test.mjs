@@ -8,10 +8,13 @@ const { check, skip, summary } = reporter();
 const only = process.env.ONLY;
 const want = (task) => !only || only.split(',').includes(task);
 
-async function section(task, fn) {
+async function section(task, fn, options = {}) {
   if (!want(task)) return;
   console.log(`\n== ${task}`);
-  const context = await launch({ name: task });
+  const context = await launch({ name: task, colorScheme: options.colorScheme });
+  if (options.pref) {
+    await context.addCookies([{ name: 'PREF', value: options.pref, domain: '.youtube.com', path: '/', secure: true, sameSite: 'Lax' }]);
+  }
   const page = context.pages()[0] ?? (await context.newPage());
   page.on('pageerror', (err) => console.log('  pageerror:', String(err).slice(0, 200)));
   try {
@@ -28,36 +31,109 @@ async function section(task, fn) {
 // ---------------------------------------------------------------------------
 // T06 深色模式、子母畫面
 // ---------------------------------------------------------------------------
+// 深色模式（T06a）：改寫 YouTube 的 PREF 偏好後重新載入。假觀看頁依 PREF 決定主題。
+const prefOf = (page) =>
+  page.context().cookies('https://www.youtube.com/').then((cs) => cs.find((c) => c.name === 'PREF')?.value ?? null);
+const isDarkPage = (page) => page.evaluate(() => document.documentElement.hasAttribute('dark'));
+
+/** 按深色模式按鈕並等重新載入完成。 */
+async function pressDarkAndWaitReload(page) {
+  const reloaded = page.waitForEvent('load', { timeout: 10_000 });
+  await button(page, 'darkMode').click();
+  await reloaded;
+  await openWatch(page, page.url());
+  await page.waitForTimeout(500);
+}
+
+await section(
+  'T06',
+  async (page) => {
+    // 起始：YouTube 外觀為淺色（f6 含淺色旗標），另有其他偏好欄位。
+    let p = await pressed(page, 'darkMode');
+    check('起始為淺色時按鈕為關閉（FR-12）', !(await isDarkPage(page)) && p.pressed === 'false');
+
+    await page.evaluate(() => {
+      const v = document.querySelector('video');
+      v.muted = true;
+      return v.play();
+    });
+    await page.waitForTimeout(3500);
+    await pressDarkAndWaitReload(page);
+    const t = await page.evaluate(() => document.querySelector('video').currentTime);
+    p = await pressed(page, 'darkMode');
+    const url = new URL(page.url());
+    check(
+      '按按鈕後改成深色並重新載入，保留影片與時間點（FR-10、FR-11）',
+      (await isDarkPage(page)) && p.pressed === 'true' && url.searchParams.get('v') === 'jNQXAC9IVRw' && /^\d+s$/.test(url.searchParams.get('t') ?? '') && t >= 2,
+      `url=${url.search} time=${t.toFixed(1)}`,
+    );
+    check('只改主題旗標，其他偏好原樣保留', (await prefOf(page)) === 'f5=30000&f6=408&hl=en&tz=UTC', await prefOf(page));
+    await shot(page, 'T06a-dark-from-light.png');
+
+    await page.reload();
+    await openWatch(page, page.url());
+    check('重新整理後仍是深色（FR-10）', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true');
+
+    await pressDarkAndWaitReload(page);
+    check(
+      '再按一次回到淺色，重新整理後仍是淺色',
+      !(await isDarkPage(page)) && (await prefOf(page)) === 'f5=30000&f6=80008&hl=en&tz=UTC',
+      await prefOf(page),
+    );
+
+    // 使用者從 YouTube 選單切換主題（不重新載入）
+    await page.locator('#fixture-theme-toggle').click();
+    await page.waitForTimeout(300);
+    check('從 YouTube 選單切換主題時按鈕同步（FR-12）', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true');
+    await page.locator('#fixture-theme-toggle').click();
+    await page.waitForTimeout(300);
+    check('再從選單切回淺色，按鈕同步', !(await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'false');
+
+    // 工具列關閉時不改變主題（FR-14）
+    await page.locator('#fixture-theme-toggle').click();
+    await page.waitForTimeout(200);
+    await button(page, 'close').click();
+    await page.waitForTimeout(300);
+    check('工具列關閉時不改變 YouTube 的主題（FR-14）', (await isDarkPage(page)) && (await page.locator('yte-toolbar').count()) === 0);
+  },
+  { pref: 'f5=30000&f6=80008&hl=en&tz=UTC' },
+);
+
+await section(
+  'T06',
+  async (page) => {
+    // 起始：外觀為深色（專案擁有者回報的情境）
+    check('起始為深色時按鈕為開啟', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true');
+    await pressDarkAndWaitReload(page);
+    check(
+      'YouTube 外觀為深色時按按鈕，整頁變成淺色（Q14 回報的情境）',
+      !(await isDarkPage(page)) && (await prefOf(page)) === 'f6=80000' && (await pressed(page, 'darkMode')).pressed === 'false',
+      await prefOf(page),
+    );
+    await shot(page, 'T06a-light-from-dark.png');
+    await pressDarkAndWaitReload(page);
+    check('再按一次回到深色', (await isDarkPage(page)) && (await prefOf(page)) === 'f6=400');
+  },
+  { pref: 'f6=400' },
+);
+
+await section(
+  'T06',
+  async (page) => {
+    // 起始：沒有明確的主題偏好（使用裝置主題），裝置為深色
+    check('使用裝置主題時，按鈕依目前實際顯示的主題（FR-13）', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true', String(await prefOf(page)));
+    await pressDarkAndWaitReload(page);
+    check(
+      '按下後改為明確的淺色主題，不再跟隨裝置（FR-13）',
+      !(await isDarkPage(page)) && (await prefOf(page)) === 'hl=en&f6=80000',
+      await prefOf(page),
+    );
+  },
+  { pref: 'hl=en', colorScheme: 'dark' },
+);
+
 await section('T06', async (page) => {
-  const isDark = () => page.evaluate(() => document.documentElement.hasAttribute('dark'));
-
-  await button(page, 'darkMode').click();
-  await page.waitForTimeout(200);
-  let p = await pressed(page, 'darkMode');
-  check('深色模式按鈕切換 YouTube 主題，按鈕顯示開啟狀態（FR-10、001 FR-9）', (await isDark()) && p.pressed === 'true' && p.on);
-  await shot(page, 'T06-dark-mode-on.png');
-
-  await page.reload();
-  await openWatch(page);
-  await page.waitForTimeout(500);
-  p = await pressed(page, 'darkMode');
-  check('重新整理後自動套用記住的深色模式（FR-1）', (await isDark()) && p.pressed === 'true');
-
-  await page.locator('#fixture-theme-toggle').click();
-  await page.waitForTimeout(300);
-  p = await pressed(page, 'darkMode');
-  check('從 YouTube 選單切換主題時按鈕同步（FR-12）', !(await isDark()) && p.pressed === 'false');
-
-  await page.reload();
-  await openWatch(page);
-  await page.waitForTimeout(500);
-  check('從 YouTube 選單切換後，記住的狀態也跟著更新', !(await isDark()) && (await pressed(page, 'darkMode')).pressed === 'false');
-
-  await button(page, 'darkMode').click();
-  await spaNavigate(page);
-  check('換頁後深色模式持續生效（FR-3）', (await isDark()) && (await pressed(page, 'darkMode')).pressed === 'true');
-  await button(page, 'darkMode').click();
-
+  let p;
   // 子母畫面
   const pipEnabled = await page.evaluate(() => document.pictureInPictureEnabled);
   await button(page, 'pip').click();

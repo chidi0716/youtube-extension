@@ -1,0 +1,3 @@
+OK   深色 → 淺色: before.dark=true after={"dark":false,"pref":"PREF=f5=30000&f6=80008&hl=en&tz=UTC"} cookies=1 (.youtube.com)
+OK   淺色 → 深色: before.dark=false after={"dark":true,"pref":"PREF=f6=400&hl=en&tz=UTC"} cookies=1 (.youtube.com)
+OK   未設定 → 深色: before.dark=false after={"dark":true,"pref":"PREF=hl=en&f6=400&tz=UTC"} cookies=1 (.youtube.com)

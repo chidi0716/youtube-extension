@@ -1,0 +1,6 @@
+initial {"dark":false,"pref":"PREF=tz=UTC"}
+after "Dark theme" {"dark":true,"pref":"PREF=tz=UTC&f6=400"} https://www.youtube.com/
+after "Light theme" {"dark":false,"pref":"PREF=tz=UTC&f6=80000"} https://www.youtube.com/
+option "Use device theme" not in menu
+after "Dark theme" {"dark":true,"pref":"PREF=tz=UTC&f6=400"} https://www.youtube.com/
+cookie attributes {"name":"PREF","domain":".youtube.com","path":"/","expires":1827133794.157446,"httpOnly":false,"secure":true,"sameSite":"Lax","expiresInDays":400}
