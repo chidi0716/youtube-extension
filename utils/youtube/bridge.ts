@@ -1,0 +1,110 @@
+// 內容腳本（isolated world）與頁面橋接腳本（main world）之間的事件協定（plan 3.5）。
+//
+// - 兩邊以 document 上的 CustomEvent 溝通，detail 一律是 JSON 字串
+//   （字串可以安全跨越 Firefox 的 Xray 邊界）。
+// - 只接受固定的幾種請求，其他一律忽略。頁面上的其他程式也能發出同名事件，
+//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉。
+import {
+  readCurrentTime,
+  readVideoData,
+  readVolume,
+  writeSeek,
+  writeVolume,
+  type VideoData,
+  type YtPlayerApi,
+} from './dom';
+
+export const BRIDGE_REQUEST_EVENT = 'yte-bridge:request';
+export const BRIDGE_RESPONSE_EVENT = 'yte-bridge:response';
+
+export type BridgeRequest =
+  | { id: string; type: 'getVideoData' }
+  | { id: string; type: 'getVolume' }
+  | { id: string; type: 'setVolume'; volume: number }
+  | { id: string; type: 'seekTo'; seconds: number }
+  | { id: string; type: 'getCurrentTime' };
+
+export type BridgeRequestType = BridgeRequest['type'];
+
+export interface BridgeResults {
+  getVideoData: VideoData | null;
+  getVolume: { volume: number; muted: boolean };
+  setVolume: null;
+  seekTo: null;
+  getCurrentTime: number;
+}
+
+export type BridgeResponse =
+  | { id: string; ok: true; result: unknown }
+  | { id: string; ok: false; error: BridgeError };
+
+export type BridgeError = 'NO_PLAYER' | 'FAILED';
+
+const ID_PATTERN = /^[A-Za-z0-9-]{1,64}$/;
+
+function parseJson(raw: unknown): Record<string, unknown> | null {
+  if (typeof raw !== 'string' || raw.length > 4096) return null;
+  try {
+    const value: unknown = JSON.parse(raw);
+    return value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+const isFiniteNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/** 驗證請求；不合法時回傳 null（直接忽略，不回覆）。 */
+export function parseBridgeRequest(raw: unknown): BridgeRequest | null {
+  const obj = parseJson(raw);
+  if (!obj || typeof obj.id !== 'string' || !ID_PATTERN.test(obj.id)) return null;
+  const id = obj.id;
+  switch (obj.type) {
+    case 'getVideoData':
+    case 'getVolume':
+    case 'getCurrentTime':
+      return { id, type: obj.type };
+    case 'setVolume':
+      return isFiniteNumber(obj.volume) && obj.volume >= 0 && obj.volume <= 100
+        ? { id, type: 'setVolume', volume: obj.volume }
+        : null;
+    case 'seekTo':
+      return isFiniteNumber(obj.seconds) && obj.seconds >= 0
+        ? { id, type: 'seekTo', seconds: obj.seconds }
+        : null;
+    default:
+      return null;
+  }
+}
+
+export function parseBridgeResponse(raw: unknown): BridgeResponse | null {
+  const obj = parseJson(raw);
+  if (!obj || typeof obj.id !== 'string' || typeof obj.ok !== 'boolean') return null;
+  if (obj.ok) return { id: obj.id, ok: true, result: obj.result ?? null };
+  return { id: obj.id, ok: false, error: obj.error === 'NO_PLAYER' ? 'NO_PLAYER' : 'FAILED' };
+}
+
+/** main world 端：對播放器執行請求並產生回應。player 為 null 表示找不到播放器。 */
+export function handleBridgeRequest(req: BridgeRequest, player: YtPlayerApi | null): BridgeResponse {
+  if (!player) return { id: req.id, ok: false, error: 'NO_PLAYER' };
+  try {
+    switch (req.type) {
+      case 'getVideoData':
+        return { id: req.id, ok: true, result: readVideoData(player) };
+      case 'getVolume':
+        return { id: req.id, ok: true, result: readVolume(player) };
+      case 'getCurrentTime':
+        return { id: req.id, ok: true, result: readCurrentTime(player) };
+      case 'setVolume':
+        writeVolume(player, Math.round(req.volume));
+        return { id: req.id, ok: true, result: null };
+      case 'seekTo':
+        writeSeek(player, req.seconds);
+        return { id: req.id, ok: true, result: null };
+    }
+  } catch {
+    return { id: req.id, ok: false, error: 'FAILED' };
+  }
+}
