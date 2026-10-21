@@ -29,6 +29,8 @@ export interface ToggleState {
   active: boolean;
   /** 不能使用時的原因（顯示在提示文字中，例如 003 FR-32）；undefined 表示可以使用。 */
   disabledReason?: string;
+  /** 短暫顯示在按鈕提示中的訊息（例如 003 FR-15 無法切換時）；undefined 表示沒有。 */
+  notice?: string;
 }
 
 /** 每個觀看輔助功能的共同介面。 */

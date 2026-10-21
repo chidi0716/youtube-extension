@@ -1,8 +1,11 @@
 // 觀看輔助功能加在 YouTube 頁面上的樣式（constitution 第 6 點：只用 yte- 前綴的 class，
 // 不改 YouTube 原本的屬性）。選擇器來自 utils/youtube/dom.ts。
-import { CINEMA_DIMMED_REGIONS, SELECTORS } from '@/utils/youtube/dom';
+import { APPEARANCE_MENU, CINEMA_DIMMED_REGIONS, SELECTORS } from '@/utils/youtube/dom';
 
 const STYLE_ID = 'yte-page-styles';
+
+/** 深色模式操作 YouTube 外觀選單期間加在 <html> 上的 class（003 FR-11：選單不得被看見）。 */
+export const THEME_MENU_BUSY_CLASS = 'yte-theme-menu-busy';
 
 /** 劇院模式時加在 <html> 上的 class。 */
 export const CINEMA_CLASS = 'yte-cinema';
@@ -22,6 +25,12 @@ html.${CINEMA_CLASS} ytd-app {
 html.${CINEMA_CLASS} :is(${CINEMA_DIMMED_REGIONS.join(', ')}) {
   opacity: ${CINEMA_DIM_OPACITY} !important;
   cursor: pointer;
+}
+
+/* 深色模式（003 FR-11）：擴充功能代替使用者操作 YouTube 外觀選單時，選單不可見也不可點。 */
+html.${THEME_MENU_BUSY_CLASS} ${APPEARANCE_MENU.popup} {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* 浮動播放器（003 FR-40）：位置與尺寸由 features/viewing/floating.ts 另外寫入。 */

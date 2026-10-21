@@ -119,6 +119,10 @@
     "message": "切換 YouTube 的深色與淺色主題。",
     "description": "Help panel: one-sentence description of the Dark mode button."
   },
+  "darkModeUnavailable": {
+    "message": "無法切換，請使用 YouTube 的外觀設定",
+    "description": "Dark mode button: shown briefly when YouTube's Appearance menu could not be found or used (spec 003 FR-15)."
+  },
   "helpCinema": {
     "message": "讓播放器以外的整個頁面變暗。",
     "description": "Help panel: one-sentence description of the Cinema mode button."

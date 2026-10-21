@@ -119,6 +119,10 @@
     "message": "Switch YouTube between the dark and light theme.",
     "description": "Help panel: one-sentence description of the Dark mode button."
   },
+  "darkModeUnavailable": {
+    "message": "Can't switch. Please use YouTube's Appearance setting.",
+    "description": "Dark mode button: shown briefly when YouTube's Appearance menu could not be found or used (spec 003 FR-15)."
+  },
   "helpCinema": {
     "message": "Dim everything on the page except the player.",
     "description": "Help panel: one-sentence description of the Cinema mode button."

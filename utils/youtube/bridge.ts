@@ -3,8 +3,10 @@
 // - 兩邊以 document 上的 CustomEvent 溝通，detail 一律是 JSON 字串
 //   （字串可以安全跨越 Firefox 的 Xray 邊界）。
 // - 只接受固定的幾種請求，其他一律忽略。頁面上的其他程式也能發出同名事件，
-//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉。
+//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉，
+//   以及在 YouTube 外觀子選單的選項上加上標記屬性（markThemeOptions，不點擊、不帶參數）。
 import {
+  markThemeOptions,
   readCurrentTime,
   readVideoData,
   readVolume,
@@ -22,7 +24,8 @@ export type BridgeRequest =
   | { id: string; type: 'getVolume' }
   | { id: string; type: 'setVolume'; volume: number }
   | { id: string; type: 'seekTo'; seconds: number }
-  | { id: string; type: 'getCurrentTime' };
+  | { id: string; type: 'getCurrentTime' }
+  | { id: string; type: 'markThemeOptions' };
 
 export type BridgeRequestType = BridgeRequest['type'];
 
@@ -32,6 +35,7 @@ export interface BridgeResults {
   setVolume: null;
   seekTo: null;
   getCurrentTime: number;
+  markThemeOptions: { dark: boolean; light: boolean };
 }
 
 export type BridgeResponse =
@@ -65,6 +69,7 @@ export function parseBridgeRequest(raw: unknown): BridgeRequest | null {
     case 'getVideoData':
     case 'getVolume':
     case 'getCurrentTime':
+    case 'markThemeOptions':
       return { id, type: obj.type };
     case 'setVolume':
       return isFiniteNumber(obj.volume) && obj.volume >= 0 && obj.volume <= 100
@@ -86,8 +91,18 @@ export function parseBridgeResponse(raw: unknown): BridgeResponse | null {
   return { id: obj.id, ok: false, error: obj.error === 'NO_PLAYER' ? 'NO_PLAYER' : 'FAILED' };
 }
 
-/** main world 端：對播放器執行請求並產生回應。player 為 null 表示找不到播放器。 */
-export function handleBridgeRequest(req: BridgeRequest, player: YtPlayerApi | null): BridgeResponse {
+/**
+ * main world 端：執行請求並產生回應。player 為 null 表示找不到播放器（播放器相關的請求回覆 NO_PLAYER）。
+ * doc 是外觀選單所在的文件（markThemeOptions 用，不需要播放器）。
+ */
+export function handleBridgeRequest(req: BridgeRequest, player: YtPlayerApi | null, doc?: Document): BridgeResponse {
+  if (req.type === 'markThemeOptions') {
+    try {
+      return { id: req.id, ok: true, result: doc ? markThemeOptions(doc) : { dark: false, light: false } };
+    } catch {
+      return { id: req.id, ok: false, error: 'FAILED' };
+    }
+  }
   if (!player) return { id: req.id, ok: false, error: 'NO_PLAYER' };
   try {
     switch (req.type) {

@@ -11,6 +11,13 @@ describe('parseBridgeRequest', () => {
     expect(req({ id: 'a1', type: 'getCurrentTime' })).toEqual({ id: 'a1', type: 'getCurrentTime' });
     expect(req({ id: 'a1', type: 'setVolume', volume: 55 })).toEqual({ id: 'a1', type: 'setVolume', volume: 55 });
     expect(req({ id: 'a1', type: 'seekTo', seconds: 12.5 })).toEqual({ id: 'a1', type: 'seekTo', seconds: 12.5 });
+    expect(req({ id: 'a1', type: 'markThemeOptions' })).toEqual({ id: 'a1', type: 'markThemeOptions' });
+  });
+
+  it('markThemeOptions 不接受任何參數（多餘的欄位被丟掉），也沒有其他外觀相關的請求', () => {
+    expect(req({ id: 'a1', type: 'markThemeOptions', theme: 'dark', selector: 'body' })).toEqual({ id: 'a1', type: 'markThemeOptions' });
+    expect(req({ id: 'a1', type: 'setTheme', theme: 'dark' })).toBeNull();
+    expect(req({ id: 'a1', type: 'click', selector: 'button' })).toBeNull();
   });
 
   it('多餘的欄位不會被帶進請求', () => {
@@ -71,6 +78,14 @@ function fakePlayer(overrides: Partial<YtPlayerApi> = {}): YtPlayerApi {
 }
 
 describe('handleBridgeRequest', () => {
+  it('markThemeOptions 不需要播放器；沒有文件時回報找不到選項', () => {
+    expect(handleBridgeRequest({ id: 'a', type: 'markThemeOptions' }, null)).toEqual({
+      id: 'a',
+      ok: true,
+      result: { dark: false, light: false },
+    });
+  });
+
   it('找不到播放器時回傳 NO_PLAYER', () => {
     expect(handleBridgeRequest({ id: 'a', type: 'getVolume' }, null)).toEqual({ id: 'a', ok: false, error: 'NO_PLAYER' });
   });

@@ -1,0 +1,248 @@
+
+######## en-US
+{
+ "toggle": {
+  "primaryIcon": {
+   "iconType": "DARK_THEME"
+  },
+  "secondaryIcon": {
+   "iconType": "CHEVRON_RIGHT"
+  },
+  "serviceEndpoint": {
+   "clickTrackingParams": "<48 chars>",
+   "commandMetadata": {
+    "webCommandMetadata": {
+     "sendPost": true
+    }
+   },
+   "signalServiceEndpoint": {
+    "signal": "CLIENT_SIGNAL",
+    "actions": [
+     {
+      "clickTrackingParams": "<48 chars>",
+      "getMultiPageMenuAction": {
+       "menu": {
+        "multiPageMenuRenderer": {
+         "header": {
+          "simpleMenuHeaderRenderer": {
+           "backButton": "…",
+           "title": "…"
+          }
+         },
+         "sections": [
+          {
+           "multiPageMenuSectionRenderer": "…"
+          }
+         ],
+         "trackingParams": "<40 chars>"
+        }
+       }
+      }
+     }
+    ]
+   }
+  },
+  "label": {
+   "runs": [
+    {
+     "text": "<17 chars>"
+    }
+   ]
+  }
+ },
+ "items": [
+  {
+   "hasCheckIcon": true,
+   "data": {
+    "title": {
+     "runs": [
+      {
+       "text": "<10 chars>"
+      }
+     ]
+    },
+    "trackingParams": "<40 chars>",
+    "serviceEndpoint": {
+     "clickTrackingParams": "<48 chars>",
+     "commandMetadata": {
+      "webCommandMetadata": {
+       "sendPost": true
+      }
+     },
+     "signalServiceEndpoint": {
+      "signal": "CLIENT_SIGNAL",
+      "actions": [
+       {
+        "clickTrackingParams": "<48 chars>",
+        "signalAction": {
+         "signal": "TOGGLE_DARK_THEME_ON"
+        }
+       }
+      ]
+     }
+    },
+    "style": "COMPACT_LINK_STYLE_TYPE_SELECTION_MENU"
+   }
+  },
+  {
+   "hasCheckIcon": true,
+   "data": {
+    "icon": {
+     "iconType": "CHECK"
+    },
+    "title": {
+     "runs": [
+      {
+       "text": "<11 chars>"
+      }
+     ]
+    },
+    "trackingParams": "<40 chars>",
+    "serviceEndpoint": {
+     "clickTrackingParams": "<48 chars>",
+     "commandMetadata": {
+      "webCommandMetadata": {
+       "sendPost": true
+      }
+     },
+     "signalServiceEndpoint": {
+      "signal": "CLIENT_SIGNAL",
+      "actions": [
+       {
+        "clickTrackingParams": "<48 chars>",
+        "signalAction": {
+         "signal": "TOGGLE_DARK_THEME_OFF"
+        }
+       }
+      ]
+     }
+    },
+    "style": "COMPACT_LINK_STYLE_TYPE_SELECTION_MENU"
+   }
+  }
+ ]
+}
+
+######## zh-TW
+{
+ "toggle": {
+  "primaryIcon": {
+   "iconType": "DARK_THEME"
+  },
+  "secondaryIcon": {
+   "iconType": "CHEVRON_RIGHT"
+  },
+  "serviceEndpoint": {
+   "clickTrackingParams": "<48 chars>",
+   "commandMetadata": {
+    "webCommandMetadata": {
+     "sendPost": true
+    }
+   },
+   "signalServiceEndpoint": {
+    "signal": "CLIENT_SIGNAL",
+    "actions": [
+     {
+      "clickTrackingParams": "<48 chars>",
+      "getMultiPageMenuAction": {
+       "menu": {
+        "multiPageMenuRenderer": {
+         "header": {
+          "simpleMenuHeaderRenderer": {
+           "backButton": "…",
+           "title": "…"
+          }
+         },
+         "sections": [
+          {
+           "multiPageMenuSectionRenderer": "…"
+          }
+         ],
+         "trackingParams": "<40 chars>"
+        }
+       }
+      }
+     }
+    ]
+   }
+  },
+  "label": {
+   "runs": [
+    {
+     "text": "<7 chars>"
+    }
+   ]
+  }
+ },
+ "items": [
+  {
+   "hasCheckIcon": true,
+   "data": {
+    "title": {
+     "runs": [
+      {
+       "text": "<4 chars>"
+      }
+     ]
+    },
+    "trackingParams": "<40 chars>",
+    "serviceEndpoint": {
+     "clickTrackingParams": "<48 chars>",
+     "commandMetadata": {
+      "webCommandMetadata": {
+       "sendPost": true
+      }
+     },
+     "signalServiceEndpoint": {
+      "signal": "CLIENT_SIGNAL",
+      "actions": [
+       {
+        "clickTrackingParams": "<48 chars>",
+        "signalAction": {
+         "signal": "TOGGLE_DARK_THEME_ON"
+        }
+       }
+      ]
+     }
+    },
+    "style": "COMPACT_LINK_STYLE_TYPE_SELECTION_MENU"
+   }
+  },
+  {
+   "hasCheckIcon": true,
+   "data": {
+    "icon": {
+     "iconType": "CHECK"
+    },
+    "title": {
+     "runs": [
+      {
+       "text": "<4 chars>"
+      }
+     ]
+    },
+    "trackingParams": "<40 chars>",
+    "serviceEndpoint": {
+     "clickTrackingParams": "<48 chars>",
+     "commandMetadata": {
+      "webCommandMetadata": {
+       "sendPost": true
+      }
+     },
+     "signalServiceEndpoint": {
+      "signal": "CLIENT_SIGNAL",
+      "actions": [
+       {
+        "clickTrackingParams": "<48 chars>",
+        "signalAction": {
+         "signal": "TOGGLE_DARK_THEME_OFF"
+        }
+       }
+      ]
+     }
+    },
+    "style": "COMPACT_LINK_STYLE_TYPE_SELECTION_MENU"
+   }
+  }
+ ]
+}

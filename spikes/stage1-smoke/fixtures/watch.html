@@ -16,8 +16,14 @@
       `[dark]`、`[light]` 兩組覆寫，以及以 `:root:root` 固定的少數變數（這裡是「訂閱」按鈕的文字色）；
     - 頂端列（ytd-masthead[dark][page-dark-theme]）與 ytd-watch-flexy[is-dark-theme] 的屬性依載入時的主題設定；
     - 站內換頁時，依記憶中（載入時）的主題把頂端列的 dark 改回去，並以記憶中的偏好改寫 PREF（另加 f7=100）。
-  - 網址帶 fixture_static_theme=1 時不輸出 [dark]／[light] 覆寫，模擬「只切換屬性無法改變顏色」
-    （用來測試退回重新載入，003 FR-16）。
+  - YouTube 的「外觀」選單（T06d，依 specs/notes/T06d-dark-mode-menu.md 的實測結構）：頂端列右側的
+    ytd-topbar-menu-button-renderer 按鈕 → ytd-popup-container 中的 tp-yt-iron-dropdown →
+    ytd-toggle-theme-compact-link-renderer（外觀）→ #submenu 中的 ytd-compact-link-renderer 選項，
+    選項的 data 帶有動作代號（TOGGLE_DARK_THEME_ON／OFF）。選項的順序與文字刻意和 YouTube 不同，
+    確認擴充功能不靠順序或文字辨識。網址參數：
+    - fixture_menu_reload=1：選擇後改寫 PREF 並重新載入頁面（模擬未登入時的 YouTube）；
+      否則立即套用主題、選單維持打開（模擬可能的已登入行為，由擴充功能負責關閉選單）；
+    - fixture_no_appearance=1：選單中沒有「外觀」項目；fixture_no_menu_button=1：頂端列沒有選單按鈕（003 FR-15）。
 -->
 <html>
   <head>
@@ -68,10 +74,8 @@
             .join(' ');
         let css = `:root { ${decl(dark ? darkVars : lightVars)} }`;
         css += ` :root:root { --fixture-pinned-inverse: ${dark ? '#0f0f0f' : '#f1f1f1'}; }`;
-        if (new URL(location.href).searchParams.get('fixture_static_theme') !== '1') {
-          css += ` [dark] { ${decl(darkVars)} --fixture-pinned-inverse: #0f0f0f; }`;
-          css += ` [light] { ${decl(lightVars)} --fixture-pinned-inverse: #fff; }`;
-        }
+        css += ` [dark] { ${decl(darkVars)} --fixture-pinned-inverse: #0f0f0f; }`;
+        css += ` [light] { ${decl(lightVars)} --fixture-pinned-inverse: #fff; }`;
         const style = document.createElement('style');
         style.id = 'fixture-load-theme';
         style.textContent = css;
@@ -120,6 +124,23 @@
         background: var(--yt-sys-color-baseline--text-primary);
         color: var(--fixture-pinned-inverse);
         font: inherit;
+      }
+      tp-yt-iron-dropdown {
+        position: fixed;
+        top: 48px;
+        right: 16px;
+        z-index: 2202;
+        width: 280px;
+        padding: 8px 0;
+        border-radius: 12px;
+        background: var(--yt-sys-color-baseline--menu-background);
+        box-shadow: 0 4px 32px rgba(0, 0, 0, 0.2);
+      }
+      tp-yt-iron-dropdown [role='link'],
+      tp-yt-iron-dropdown a {
+        display: block;
+        padding: 8px 16px;
+        cursor: pointer;
       }
       body {
         margin: 0;
@@ -254,6 +275,11 @@
           <strong>Fixture</strong>
           <span id="fixture-search">Search</span>
           <button id="fixture-theme-toggle" type="button">Theme (YouTube menu)</button>
+          <div id="end">
+            <div id="buttons">
+              <ytd-topbar-menu-button-renderer><button id="fixture-menu-button" type="button" aria-label="Settings">⋮</button></ytd-topbar-menu-button-renderer>
+            </div>
+          </div>
         </ytd-masthead>
       </div>
       <div id="page-manager">
@@ -305,6 +331,9 @@
           </div>
         </ytd-watch-flexy>
       </div>
+      <ytd-popup-container>
+        <tp-yt-iron-dropdown id="fixture-dropdown" aria-hidden="true" style="display: none"></tp-yt-iron-dropdown>
+      </ytd-popup-container>
     </ytd-app>
     <script>
       const player = document.getElementById('movie_player');
@@ -349,10 +378,9 @@
         document.cookie = 'PREF=' + value + '; domain=.youtube.com; path=/; max-age=34560000; secure; samesite=lax';
       };
 
-      // 模擬使用者從 YouTube 選單切換主題（假設可即時切換，例如登入帳號）：改寫 PREF 的 f6 旗標並立即套用。
-      // （未登入時真實的 YouTube 選單會重新載入頁面，見 T06b 筆記。）
-      document.getElementById('fixture-theme-toggle').addEventListener('click', () => {
-        const dark = !document.documentElement.hasAttribute('dark');
+      // YouTube 套用使用者選擇的主題：改寫 PREF 的 f6 旗標並立即套用（假設可即時切換，例如登入帳號）。
+      // （未登入時真實的 YouTube 選單會重新載入頁面，見 T06b、T06d 筆記；以 fixture_menu_reload=1 模擬。）
+      const themePrefValue = (dark) => {
         const pref = (document.cookie.split('; ').find((c) => c.startsWith('PREF=')) || 'PREF=').slice(5);
         const fields = pref ? pref.split('&').map((p) => p.split('=')) : [];
         const i = fields.findIndex(([k]) => k === 'f6');
@@ -360,13 +388,85 @@
         const next = ((flags & ~0x80400) | (dark ? 0x400 : 0x80000)).toString(16);
         if (i === -1) fields.push(['f6', next]);
         else fields[i] = ['f6', next];
-        const value = fields.map((f) => f.join('=')).join('&');
+        return fields.map((f) => f.join('=')).join('&');
+      };
+      const applyYouTubeTheme = (dark) => {
+        const value = themePrefValue(dark);
         writePref(value);
         window.__fixturePrefMemory = value;
         window.__fixtureThemeMemoryDark = dark;
         document.documentElement.toggleAttribute('dark', dark);
         document.documentElement.toggleAttribute('light', !dark && window.__fixtureLoadDark);
         setElementTheme(dark);
+      };
+
+      // 模擬使用者自己從 YouTube 選單切換主題（直接套用，不經過下面的選單）。
+      document.getElementById('fixture-theme-toggle').addEventListener('click', () => {
+        applyYouTubeTheme(!document.documentElement.hasAttribute('dark'));
+      });
+
+      // 模擬 YouTube 的帳號／設定選單與「外觀」子選單（結構依 T06d 實測）。window.__fixtureMenuLog 記錄操作。
+      const params = new URL(location.href).searchParams;
+      const menuButton = document.getElementById('fixture-menu-button');
+      const dropdown = document.getElementById('fixture-dropdown');
+      window.__fixtureMenuLog = [];
+      if (params.get('fixture_no_menu_button') === '1') menuButton.closest('ytd-topbar-menu-button-renderer').remove();
+      const isOpen = () => dropdown.style.display !== 'none';
+      const closeMenu = () => {
+        dropdown.style.display = 'none';
+        dropdown.setAttribute('aria-hidden', 'true');
+        dropdown.replaceChildren();
+        window.__fixtureMenuLog.push('close');
+      };
+      const el = (tag, attrs = {}, ...children) => {
+        const e = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        e.append(...children);
+        return e;
+      };
+      const linkItem = (label, signal) => {
+        const item = el('ytd-compact-link-renderer', { 'compact-link-style': 'compact-link-style-type-selection-menu' }, el('a', { id: 'endpoint', role: 'link' }, label));
+        // YouTube 元件的 data（頁面 JavaScript 的屬性，不是 DOM 屬性）
+        item.data = { title: { runs: [{ text: label }] }, serviceEndpoint: { signalServiceEndpoint: { signal: 'CLIENT_SIGNAL', actions: [{ signalAction: { signal } }] } } };
+        return item;
+      };
+      const openAppearanceSubmenu = () => {
+        window.__fixtureMenuLog.push('appearance');
+        // 刻意與 YouTube 不同的順序與文字
+        const items = [linkItem('選項甲', 'TOGGLE_DARK_THEME_DEVICE_FIXTURE'), linkItem('選項乙', 'TOGGLE_DARK_THEME_OFF'), linkItem('選項丙', 'TOGGLE_DARK_THEME_ON')];
+        for (const item of items) {
+          item.querySelector('a').addEventListener('click', () => {
+            const signal = item.data.serviceEndpoint.signalServiceEndpoint.actions[0].signalAction.signal;
+            window.__fixtureMenuLog.push(`select:${signal}`);
+            if (signal === 'TOGGLE_DARK_THEME_DEVICE_FIXTURE') return;
+            const dark = signal === 'TOGGLE_DARK_THEME_ON';
+            if (params.get('fixture_menu_reload') === '1') {
+              writePref(themePrefValue(dark));
+              location.reload();
+              return;
+            }
+            applyYouTubeTheme(dark);
+          });
+        }
+        dropdown.replaceChildren(el('ytd-multi-page-menu-renderer', {}, el('div', { id: 'submenu' }, el('ytd-multi-page-menu-renderer', {}, el('div', { id: 'sections' }, ...items)))));
+      };
+      menuButton.addEventListener('click', () => {
+        if (isOpen()) return closeMenu();
+        window.__fixtureMenuLog.push('open');
+        dropdown.style.display = '';
+        dropdown.removeAttribute('aria-hidden');
+        dropdown.replaceChildren(el('div', { id: 'spinner' }, '…'));
+        // 模擬選單內容向伺服器載入（已登入時）
+        setTimeout(() => {
+          if (!isOpen()) return;
+          const items = [el('ytd-compact-link-renderer', {}, el('a', { id: 'endpoint', role: 'link' }, 'Your data'))];
+          if (params.get('fixture_no_appearance') !== '1') {
+            const toggle = el('ytd-toggle-theme-compact-link-renderer', { role: 'link', tabindex: '0' }, el('div', { id: 'label' }, '外觀'));
+            toggle.addEventListener('click', openAppearanceSubmenu);
+            items.push(toggle);
+          }
+          dropdown.replaceChildren(el('ytd-multi-page-menu-renderer', {}, el('div', { id: 'sections' }, ...items)));
+        }, 300);
       });
 
       // 模擬站內換頁時 YouTube 依記憶中的狀態改回主題：頂端列的 dark 屬性，以及以記憶中的偏好
