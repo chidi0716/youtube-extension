@@ -31,32 +31,32 @@
 
 ## 階段 1（T01a、T02–T05）
 
-### Q5 `strict_min_version: 128` 與「web-ext lint 無警告」互相矛盾（T01a）
+### Q5 `strict_min_version: 128` 與「web-ext lint 無警告」互相矛盾（T01a） — 已回答：最低版本改 140，Android 警告可接受（plan 3.3.1、tasks T01b）
 
 - **狀況**：plan 3.3.1 指定 `strict_min_version: "128.0"` 並宣告 `data_collection_permissions`。但 `data_collection_permissions` 是 Firefox 140（Android 142）才支援的欄位，所以 `web-ext lint` 會出現 2 個警告：`KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION`、`KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION`（0 個錯誤）。tasks T01a 的完成條件要求「沒有錯誤與警告」，兩者無法同時成立。
 - **Mozilla 文件**（<https://extensionworkshop.com/documentation/develop/firefox-builtin-data-consent/>）：新擴充功能建議把 `strict_min_version` 設為 140（`gecko_android` 為 142）；舊版 Firefox 會忽略這個欄位。本專案宣告不收集資料（`none`），在 128–139 版上不需要額外處理。
 - **目前做法**：依 plan 3.3.1 維持 128，接受這 2 個警告。
 - **請規格方決定**：改成最低 Firefox 140（同時修改 constitution 第 5 點），或接受這 2 個警告並修改 T01a 的完成條件。
 
-### Q6 AMO 是否需要上傳原始碼（T01a）
+### Q6 AMO 是否需要上傳原始碼（T01a） — 已回答：需要，以 git archive 產生並上傳（plan 3.3.1、tasks T01b）
 
 - **狀況**：WXT 建置出的 JavaScript 經過壓縮（minify）。Mozilla 的原始碼提交說明（<https://extensionworkshop.com/documentation/publish/source-code-submission/>）要求「經過處理而無法閱讀」的程式碼附上原始碼與建置說明；文件沒有明確說明 unlisted 簽署是否同樣適用。plan 3.3.1 沒有提到原始碼。
 - **目前做法**：`npm run sign:firefox` 只依 plan 3.3.1 組出 `web-ext sign --channel unlisted`，不附原始碼。
 - **請規格方決定**：是否 (a) Firefox 版關閉壓縮，或 (b) 送簽署時以 `wxt zip -b firefox` 產生的原始碼壓縮檔加上 `--upload-source-code`，或 (c) 維持現狀，等 AMO 要求時再處理。
 
-### Q7 YouTube 劇院模式下的工具列寬度（T03）
+### Q7 YouTube 劇院模式下的工具列寬度（T03） — 已回答：維持與標題欄對齊（001 FR-3）
 
 - **狀況**：001 FR-2 要求工具列「寬度與播放器相同」，FR-3 要求切換劇院模式時「跟著播放器寬度調整」。工具列插在播放器下方、標題上方的欄位（plan 3.4 的錨點）。一般模式下這個欄位與播放器同寬（實測 967px = 967px）；YouTube 劇院模式下播放器變成整個視窗寬（實測 1400px），但標題所在的欄位仍是左欄寬度，工具列也就跟著標題欄（967px），不會與播放器同寬。
 - **目前做法**：工具列維持在標題欄、與標題同寬（截圖 `specs/notes/screenshots/T03-youtube-theater.png`）。若要與劇院模式的播放器同寬，就得把工具列移到播放器容器內或另外蓋在頁面上，會與右側推薦影片欄重疊。
 - **請規格方決定**：劇院模式下維持現狀（與標題欄同寬），或改成與播放器同寬（並說明與右側欄重疊時的處理方式）。
 
-### Q8 plan 3.6 列出的 `--yt-spec-*` 變數在目前的 YouTube 不存在（T03）
+### Q8 plan 3.6 列出的 `--yt-spec-*` 變數在目前的 YouTube 不存在（T03） — 已回答：接受目前做法（plan 3.6）
 
 - **狀況**：實測 2026-10-21 的 YouTube（未登入，淺色與深色主題），`--yt-spec-text-primary`、`--yt-spec-menu-background`、`--yt-spec-badge-chip-background`、`--yt-spec-call-to-action` 等變數都沒有定義；YouTube 目前使用 `--yt-sys-color-baseline--text-primary`、`--yt-sys-color-baseline--menu-background` 等名稱（深色主題下會自動換值，例如選單背景 `#282828`）。
 - **目前做法**：每個顏色依序使用 plan 3.6 的 `--yt-spec-*` → `--yt-sys-color-baseline--*` → 固定備用值（淺色主題的值），集中定義在 `components/toolbar/toolbar.css` 開頭。深色主題下實測圖示為 `#f1f1f1`、面板背景為 `#282828`，符合 001 的外觀規格。
 - **請規格方確認**：這個做法可以接受；或在 plan 3.6 改列新的變數名稱。
 
-### Q9 釘選面板的細節（T03）
+### Q9 釘選面板的細節（T03） — 已回答：四點解讀皆正確，已寫入 001 FR-13
 
 001 FR-10 與 FR-13 有幾處沒有寫清楚，目前依下列解讀實作（`components/toolbar/panel-state.ts`，都有單元測試）：
 
@@ -67,7 +67,7 @@
 
 - **請規格方確認**以上 4 點，或修改 001 FR-10、FR-13。
 
-### Q10 Preact 的 innerHTML 造成 web-ext lint 警告（T03）
+### Q10 Preact 的 innerHTML 造成 web-ext lint 警告（T03） — 已回答：接受，記錄於 lint-exceptions.md，禁止使用 dangerouslySetInnerHTML（plan 第 2 節）
 
 - **狀況**：加入工具列後，`web-ext lint` 多了 1 個警告 `UNSAFE_VAR_ASSIGNMENT`（`content-scripts/youtube.js`，「Unsafe assignment to innerHTML」）。來源是 Preact 本身的 diff 程式碼：它支援 `dangerouslySetInnerHTML` 屬性，所以程式中有 `e.innerHTML = ...`。本專案沒有使用 `dangerouslySetInnerHTML`（圖示也是取出 path 後用 JSX 畫，不用 innerHTML），這段程式在執行時不會被走到。
 - **目前做法**：維持 plan 第 2 節選定的 Preact，不修改或替換套件程式碼。

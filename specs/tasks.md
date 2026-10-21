@@ -41,6 +41,11 @@
 
 ## 階段 2：觀看輔助（003）
 
+- **T01b Firefox 簽署調整**（QUESTIONS Q5、Q6、Q10 的回答）
+  - 最低版本改為 140；`sign:firefox` 加入原始碼壓縮檔與 `--upload-source-code`；README 補充審查者建置方式。
+  - 建立 `specs/notes/lint-exceptions.md`，記錄可接受的 lint 警告（Android 相關、Preact 的 innerHTML）與理由。
+  - **完成條件**：`web-ext lint` 0 錯誤，所有警告都列在 lint-exceptions.md。
+
 T06 至 T10 都依賴 T03，彼此之間可以同時進行。
 
 - **T06 [P] 深色模式、子母畫面**

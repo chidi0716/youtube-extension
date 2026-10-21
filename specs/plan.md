@@ -37,8 +37,8 @@
 |---|---|---|
 | 擴充功能框架 | WXT（現有） | 一份程式碼打包 Chrome 與 Firefox |
 | Manifest 版本 | Chrome 與 Firefox 都用 MV3 | 兩邊都能使用 main world 內容腳本，程式碼一致（見風險 R1） |
-| UI | Preact + TSX | 面板與表單元件多，用元件寫比較好維護；體積約 4KB |
-| 樣式隔離 | WXT `createShadowRootUi` | 避免影響 YouTube 版面；CSS 自訂變數會穿透 Shadow DOM，所以仍能使用 YouTube 的 `--yt-spec-*` 顏色 |
+| UI | Preact + TSX | 面板與表單元件多，用元件寫比較好維護；體積約 4KB。Preact 內部支援 `dangerouslySetInnerHTML` 會產生一個 `web-ext lint` 警告，本專案不得使用該屬性，此警告記錄於 `specs/notes/lint-exceptions.md` 並接受 |
+| 樣式隔離 | WXT `createShadowRootUi` | 避免影響 YouTube 版面；CSS 自訂變數會穿透 Shadow DOM，所以仍能使用 YouTube 的顏色變數 |
 | 圖示 | `@material-symbols/svg-400`（Apache 2.0） | 以 Vite `?raw` 匯入 SVG，打包進擴充功能 |
 | 多語系 | `browser.i18n` + `public/_locales/{en,zh_TW}` | 瀏覽器原生機制，依瀏覽器語言自動切換 |
 | 單元測試 | Vitest | 與 Vite 相容 |
@@ -103,8 +103,10 @@ host/                           橋接程式（Go），見第 4 節
 
 - Firefox 正式版與 Zen 只能永久安裝經 Mozilla 簽署的附加元件，因此以 AMO「不公開（unlisted）」頻道送簽署，取得 `.xpi` 自行發佈；不在 AMO 網站上架。
 - manifest 的 `browser_specific_settings.gecko` 加入：
-  - `strict_min_version: "128.0"`（main world 內容腳本需要 Firefox 128）；
+  - `strict_min_version: "140.0"`（main world 內容腳本需要 128，`data_collection_permissions` 需要 140；140 為 ESR 版本）；
   - `data_collection_permissions: { "required": ["none"] }`（依 constitution 第 2 點，不收集任何資料）。
+- 不支援 Firefox Android；`web-ext lint` 中只與 Android 相關的警告可以接受，需在 `specs/notes/lint-exceptions.md` 記錄。
+- 送簽署時一併上傳原始碼：`sign:firefox` 先以 `git archive` 產生原始碼壓縮檔（不含 `node_modules`、`.output`、`host/dist`、`spikes`），再以 `--upload-source-code` 附上；README 寫明審查者如何從原始碼重現建置（`npm ci && npm run build:firefox`）。
 - 新增 `npm run sign:firefox`：以 `web-ext sign --channel unlisted` 送簽署。AMO API 金鑰從環境變數 `WEB_EXT_API_KEY`、`WEB_EXT_API_SECRET` 讀取，不得寫入 repo 或任何設定檔。實際送簽署由專案擁有者在自己的電腦上執行。
 - README 說明如何安裝簽署後的 `.xpi`，以及開發時用「臨時附加元件」載入。
 
@@ -129,12 +131,8 @@ host/                           橋接程式（Go），見第 4 節
 - 點外面收起：在 Shadow DOM 外層監聽 `pointerdown`，用 `event.composedPath()` 判斷是否點在工具列或面板內。
 - 切換按鈕的開啟狀態由各功能模組回報。
 - 顏色只使用 YouTube 變數，例如：
-  - 面板背景 `--yt-spec-menu-background`
-  - 文字 `--yt-spec-text-primary`、`--yt-spec-text-secondary`
-  - 懸停背景 `--yt-spec-badge-chip-background`
-  - 藍色強調 `--yt-spec-call-to-action`
-
-  每個變數都設定合理的備用值，YouTube 改名時不會整個失去顏色。
+  - 依序嘗試 `--yt-spec-*`、`--yt-sys-color-baseline--*`，最後是固定備用值（例如面板背景、主要與次要文字、懸停背景、藍色強調）。
+  - 對應關係集中在一個 CSS 檔，YouTube 改名時只需修改該檔。
 
 ### 3.7 觀看輔助功能的做法
 
