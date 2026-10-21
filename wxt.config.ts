@@ -36,8 +36,8 @@ export default defineConfig({
           browser_specific_settings: {
             gecko: {
               id: GECKO_ID,
-              // main world 內容腳本需要 Firefox 128（constitution 第 5 點）。
-              strict_min_version: '128.0',
+              // main world 內容腳本需要 128、data_collection_permissions 需要 140（constitution 第 5 點）。
+              strict_min_version: '140.0',
               // 不收集任何資料（constitution 第 2 點）。
               data_collection_permissions: { required: ['none'] },
             },

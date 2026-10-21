@@ -65,7 +65,7 @@ npm run sign:firefox    # Firefox → signed .xpi in .output/firefox-signed (see
 
 - **Chrome:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose `.output/chrome-mv3`.
 - **Firefox (development):** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `.output/firefox-mv3/manifest.json`. Temporary add-ons are removed when Firefox restarts.
-- **Firefox (permanent, Firefox 128 or later, including Zen):** release builds of Firefox only install add-ons signed by Mozilla, so the extension is signed through the *unlisted* channel of addons.mozilla.org (it is not published on the AMO website). Open the signed `.xpi` file in Firefox (or drag it onto a Firefox window) and confirm the install prompt.
+- **Firefox (permanent, Firefox 140 or later, including Zen):** release builds of Firefox only install add-ons signed by Mozilla, so the extension is signed through the *unlisted* channel of addons.mozilla.org (it is not published on the AMO website). Open the signed `.xpi` file in Firefox (or drag it onto a Firefox window) and confirm the install prompt.
 
 ### Signing the Firefox build (maintainers)
 
@@ -75,7 +75,19 @@ npm run sign:firefox    # Firefox → signed .xpi in .output/firefox-signed (see
    export WEB_EXT_API_KEY=user:12345:67
    export WEB_EXT_API_SECRET=...
    ```
-3. Run `npm run sign:firefox`. It builds `.output/firefox-mv3` and runs `web-ext sign --channel unlisted`; the signed `.xpi` is saved to `.output/firefox-signed/`. Add `-- --dry-run` to only print the command.
+3. Commit your changes, then run `npm run sign:firefox`. It builds `.output/firefox-mv3`, packs the source code of the current commit into `.output/firefox-sources.zip` with `git archive` (without `node_modules`, `.output`, `host/dist` and `spikes`), and runs `web-ext sign --channel unlisted --upload-source-code`. The signed `.xpi` is saved to `.output/firefox-signed/`. Add `-- --dry-run` to create the source archive and print the command without submitting.
+
+### Building from source (for add-on reviewers)
+
+The Firefox build is bundled and minified by [WXT](https://wxt.dev)/Vite. To reproduce it from the uploaded source archive:
+
+- Environment: Linux, macOS or Windows with Node.js 22 (npm 10). No other tools are needed for the extension itself.
+- Commands:
+  ```bash
+  npm ci
+  npm run build:firefox
+  ```
+- Output: `.output/firefox-mv3/`, the same files as the submitted package.
 
 ## Project documents
 
