@@ -14,6 +14,12 @@
   display: none !important;
 }
 
+/* 劇院模式（003 FR-20）：工具列維持在遮罩之上。 */
+:host(.yte-cinema-raised) {
+  position: relative !important;
+  z-index: 2201 !important;
+}
+
 .yte-root {
   --yte-text-primary: var(--yt-spec-text-primary, var(--yt-sys-color-baseline--text-primary, #0f0f0f));
   --yte-text-secondary: var(--yt-spec-text-secondary, var(--yt-sys-color-baseline--text-secondary, #606060));
@@ -297,6 +303,20 @@
 
 .yte-link:focus-visible {
   box-shadow: 0 0 0 2px var(--yte-call-to-action);
+}
+
+/* 劇院模式的遮罩是深色的：不論 YouTube 主題，工具列按鈕改用遮罩上的文字色，維持可見（003 FR-20）。 */
+:host(.yte-cinema-raised) .yte-btn {
+  color: var(--yt-sys-color-baseline--overlay-text-primary, #fff);
+}
+
+:host(.yte-cinema-raised) .yte-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:host(.yte-cinema-raised) .yte-btn[data-on],
+:host(.yte-cinema-raised) .yte-btn[data-on]:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* 不能使用的切換按鈕（003 FR-32）：仍可聚焦以顯示原因。 */

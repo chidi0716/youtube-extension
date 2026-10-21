@@ -1,6 +1,7 @@
 // 觀看輔助功能（003）的總控制：啟用／停用、換頁通知，並把各功能的狀態提供給工具列。
 import type { ButtonId } from '@/components/toolbar/buttons';
 import type { ToggleFeature } from '@/components/toolbar/Toolbar';
+import { createCinema } from './cinema';
 import { createDarkMode } from './dark-mode';
 import { createPip } from './pip';
 import type { Store, ToggleState, ViewingFeature } from './store';
@@ -14,6 +15,8 @@ export interface ViewingController {
   toggles(): Partial<Record<ButtonId, ToggleFeature>>;
   /** 任一功能狀態改變時通知。 */
   subscribe(listener: () => void): () => void;
+  /** 工具列（重新）掛載或重新繪製時呼叫，讓功能可以在宿主元素上加 class。 */
+  decorateToolbarHost(host: HTMLElement): void;
 }
 
 const toToggle = (state: Store<ToggleState>, toggle: () => void): ToggleFeature => ({ ...state.get(), toggle });
@@ -21,8 +24,9 @@ const toToggle = (state: Store<ToggleState>, toggle: () => void): ToggleFeature 
 export function createViewingController(): ViewingController {
   const dark = createDarkMode();
   const pip = createPip();
-  const features: ViewingFeature[] = [dark, pip];
-  const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state];
+  const cinema = createCinema();
+  const features: ViewingFeature[] = [dark, pip, cinema];
+  const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state];
   let active = false;
 
   return {
@@ -53,7 +57,11 @@ export function createViewingController(): ViewingController {
       return {
         darkMode: toToggle(dark.state, dark.toggle),
         pip: toToggle(pip.state, pip.toggle),
+        cinema: toToggle(cinema.state, cinema.toggle),
       };
+    },
+    decorateToolbarHost(host) {
+      cinema.decorateToolbarHost(host);
     },
     subscribe(listener) {
       const offs = stores.map((s) => s.subscribe(listener));

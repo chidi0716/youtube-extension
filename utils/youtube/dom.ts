@@ -21,6 +21,11 @@ export const SELECTORS = {
   belowPlayer: 'ytd-watch-flexy #below',
   /** 影片標題與資訊區塊（在 #below 之內，可能包在其他容器裡）。 */
   metadata: 'ytd-watch-metadata',
+  /**
+   * 包住播放器的容器（一般模式在 #player 內，YouTube 劇院模式時會被移到加寬的容器）。
+   * 劇院模式（003 FR-20）提高它的 z-index；浮動播放器（FR-40）把它改成固定定位。
+   */
+  playerContainer: 'ytd-watch-flexy #player-container',
 } as const;
 
 export interface ToolbarAnchor {
@@ -43,6 +48,10 @@ export function findToolbarAnchor(doc: Document = document): ToolbarAnchor | nul
 
 export function findPlayer(doc: Document = document): HTMLElement | null {
   return doc.querySelector<HTMLElement>(SELECTORS.player);
+}
+
+export function findPlayerContainer(doc: Document = document): HTMLElement | null {
+  return doc.querySelector<HTMLElement>(SELECTORS.playerContainer);
 }
 
 export function findVideo(doc: Document = document): HTMLVideoElement | null {

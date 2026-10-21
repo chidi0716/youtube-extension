@@ -74,5 +74,73 @@ await section('T06', async (page) => {
   check('子母畫面不記住狀態（FR-33）', (await pressed(page, 'pip')).pressed === 'false');
 });
 
+// ---------------------------------------------------------------------------
+// T07 劇院模式
+// ---------------------------------------------------------------------------
+await section('T07', async (page) => {
+  // 回傳畫面上某一點最上層的元素屬於哪個區域
+  const hitAt = (selector, dx = 0.5, dy = 0.5) =>
+    page.evaluate(
+      ({ selector, dx, dy }) => {
+        const el = document.querySelector(selector);
+        const r = el.getBoundingClientRect();
+        const top = document.elementFromPoint(r.left + r.width * dx, r.top + Math.min(r.height * dy, 20));
+        if (!top) return null;
+        if (top.closest('yte-toolbar')) return 'toolbar';
+        if (top.classList.contains('yte-cinema-overlay')) return 'overlay';
+        if (top.closest('#movie_player')) return 'player';
+        return top.tagName.toLowerCase() + (top.id ? `#${top.id}` : '');
+      },
+      { selector, dx, dy },
+    );
+
+  await button(page, 'cinema').click();
+  await page.waitForTimeout(200);
+  const p = await pressed(page, 'cinema');
+  const hits = {
+    player: await hitAt('#movie_player'),
+    toolbar: await hitAt('yte-toolbar', 0.02),
+    title: await hitAt('ytd-watch-metadata h1', 0.1),
+    masthead: await hitAt('#masthead-container', 0.02),
+    secondary: await hitAt('#secondary'),
+  };
+  check(
+    '劇院模式：播放器與工具列以外都被遮罩（FR-20）',
+    p.pressed === 'true' &&
+      hits.player === 'player' &&
+      hits.toolbar === 'toolbar' &&
+      hits.title === 'overlay' &&
+      hits.masthead === 'overlay' &&
+      hits.secondary === 'overlay',
+    JSON.stringify(hits),
+  );
+  const opacity = await page.evaluate(() => getComputedStyle(document.querySelector('.yte-cinema-overlay')).backgroundColor);
+  check('遮罩約 90% 不透明', opacity === 'rgba(0, 0, 0, 0.9)', opacity);
+  await page.screenshot({ path: `${(await import('./lib.mjs')).shots}/T07-cinema-on.png` });
+
+  // 工具列仍可用：在劇院模式中展開面板
+  await button(page, 'help').click();
+  await page.waitForTimeout(300);
+  const panelVisible = await page.evaluate(() => !!document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-panel'));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const stillOnAfterPanelEsc = (await pressed(page, 'cinema')).pressed === 'true';
+  check('劇院模式中工具列仍可用；Esc 先收起面板', panelVisible && stillOnAfterPanelEsc);
+
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  check('按 Esc 關閉劇院模式（FR-21）', (await pressed(page, 'cinema')).pressed === 'false' && (await page.locator('.yte-cinema-overlay').count()) === 0);
+
+  await button(page, 'cinema').click();
+  await page.mouse.click(1200, 700);
+  await page.waitForTimeout(200);
+  check('點遮罩關閉劇院模式（FR-21）', (await pressed(page, 'cinema')).pressed === 'false');
+
+  await button(page, 'cinema').click();
+  await page.reload();
+  await openWatch(page);
+  check('劇院模式不記住狀態（FR-22）', (await pressed(page, 'cinema')).pressed === 'false' && (await page.locator('.yte-cinema-overlay').count()) === 0);
+});
+
 if (!summary()) process.exitCode = 1;
 void WATCH;

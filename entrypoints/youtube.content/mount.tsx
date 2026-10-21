@@ -71,6 +71,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
 
   function renderInto(container: HTMLElement, host: HTMLElement) {
     if (!videoId) return;
+    viewing.decorateToolbarHost(host);
     render(
       <Toolbar
         host={host}
