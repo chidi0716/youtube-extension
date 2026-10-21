@@ -19,8 +19,8 @@ export const SELECTORS = {
   video: '#movie_player video.html5-main-video',
   /** 播放器下方的欄位；工具列插在這裡的最前面，也就是標題的上方。 */
   belowPlayer: 'ytd-watch-flexy #below',
-  /** 影片標題與資訊區塊（#below 的子元素）。 */
-  metadata: ':scope > ytd-watch-metadata',
+  /** 影片標題與資訊區塊（在 #below 之內，可能包在其他容器裡）。 */
+  metadata: 'ytd-watch-metadata',
 } as const;
 
 export interface ToolbarAnchor {
@@ -34,9 +34,11 @@ export interface ToolbarAnchor {
 export function findToolbarAnchor(doc: Document = document): ToolbarAnchor | null {
   const below = doc.querySelector(SELECTORS.belowPlayer);
   if (!below) return null;
-  const metadata = below.querySelector(SELECTORS.metadata);
-  if (!metadata) return null;
-  return { parent: below, before: metadata };
+  // 工具列插在「#below 中包含標題區塊的那個子元素」前面。
+  let before = below.querySelector(SELECTORS.metadata);
+  while (before && before.parentElement !== below) before = before.parentElement;
+  if (!before) return null;
+  return { parent: below, before };
 }
 
 export function findPlayer(doc: Document = document): HTMLElement | null {

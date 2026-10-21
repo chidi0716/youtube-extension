@@ -10,5 +10,141 @@
   "popupEnable": {
     "message": "Enable",
     "description": "Label of the popup switch that shows or hides the toolbar."
+  },
+  "toolbarLabel": {
+    "message": "Video tools",
+    "description": "Accessible label of the toolbar."
+  },
+  "btnVideo": {
+    "message": "Video",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnMp3": {
+    "message": "MP3",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnThumbnail": {
+    "message": "Thumbnail",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnSubtitles": {
+    "message": "Subtitles",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnScreenshot": {
+    "message": "Screenshot",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnDarkMode": {
+    "message": "Dark mode",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnCinema": {
+    "message": "Cinema mode",
+    "description": "Toolbar button name. Dims the page around the player; not YouTube's own theater mode."
+  },
+  "btnPip": {
+    "message": "Picture-in-picture",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnFloating": {
+    "message": "Floating player",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnLoop": {
+    "message": "Loop",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnMore": {
+    "message": "More",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnHelp": {
+    "message": "Help",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnClose": {
+    "message": "Close",
+    "description": "Toolbar button name. Hides the toolbar."
+  },
+  "panelTitleVideo": {
+    "message": "Download video",
+    "description": "Title of the video download panel."
+  },
+  "panelPin": {
+    "message": "Pin panel",
+    "description": "Button that keeps the panel open."
+  },
+  "panelUnpin": {
+    "message": "Unpin panel",
+    "description": "Button that releases a pinned panel and closes it."
+  },
+  "comingSoon": {
+    "message": "Coming soon.",
+    "description": "Placeholder for features that are not implemented yet."
+  },
+  "loading": {
+    "message": "Loading…",
+    "description": "Shown while panel content is loading."
+  },
+  "errorGeneric": {
+    "message": "Something went wrong.",
+    "description": "Generic panel error message."
+  },
+  "retry": {
+    "message": "Retry",
+    "description": "Button that retries loading panel content."
+  },
+  "helpVideo": {
+    "message": "Download this video in the quality you choose.",
+    "description": "Help panel: one-sentence description of the Video button."
+  },
+  "helpMp3": {
+    "message": "Download the audio as MP3, optionally only part of it.",
+    "description": "Help panel: one-sentence description of the MP3 button."
+  },
+  "helpThumbnail": {
+    "message": "Download the video thumbnail in different sizes.",
+    "description": "Help panel: one-sentence description of the Thumbnail button."
+  },
+  "helpSubtitles": {
+    "message": "Download subtitles as SRT, VTT or plain text.",
+    "description": "Help panel: one-sentence description of the Subtitles button."
+  },
+  "helpScreenshot": {
+    "message": "Save the current video frame as a PNG image.",
+    "description": "Help panel: one-sentence description of the Screenshot button."
+  },
+  "helpDarkMode": {
+    "message": "Switch YouTube between the dark and light theme.",
+    "description": "Help panel: one-sentence description of the Dark mode button."
+  },
+  "helpCinema": {
+    "message": "Dim everything on the page except the player.",
+    "description": "Help panel: one-sentence description of the Cinema mode button."
+  },
+  "helpPip": {
+    "message": "Play the video in a separate small window.",
+    "description": "Help panel: one-sentence description of the Picture-in-picture button."
+  },
+  "helpFloating": {
+    "message": "Keep the player in a corner of the screen while you scroll down.",
+    "description": "Help panel: one-sentence description of the Floating player button."
+  },
+  "helpLoop": {
+    "message": "Repeat the whole video or a part of it.",
+    "description": "Help panel: one-sentence description of the Loop button."
+  },
+  "helpMore": {
+    "message": "More options, such as pausing the video when you switch tabs.",
+    "description": "Help panel: one-sentence description of the More button."
+  },
+  "helpHelp": {
+    "message": "Show what each button does.",
+    "description": "Help panel: one-sentence description of the Help button."
+  },
+  "helpClose": {
+    "message": "Hide the toolbar. Turn it back on from the extension's popup.",
+    "description": "Help panel: one-sentence description of the Close button."
   }
 }

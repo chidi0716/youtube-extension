@@ -1,0 +1,229 @@
+/*
+ * 工具列與面板（001 外觀規格）。放在 Shadow DOM 內，不影響 YouTube 版面（constitution 第 6 點）。
+ *
+ * 顏色只使用 YouTube 頁面的 CSS 變數（會穿透 Shadow DOM），深色／淺色主題自動跟隨。
+ * 先找 plan 3.6 列出的 --yt-spec-*，再找 YouTube 目前使用的 --yt-sys-color-baseline--*，
+ * 兩者都不存在時才用固定的備用值（淺色主題的值）。下方 --yte-* 是本擴充功能內部使用的別名。
+ */
+
+:host {
+  display: block !important;
+}
+
+:host([hidden]) {
+  display: none !important;
+}
+
+.yte-root {
+  --yte-text-primary: var(--yt-spec-text-primary, var(--yt-sys-color-baseline--text-primary, #0f0f0f));
+  --yte-text-secondary: var(--yt-spec-text-secondary, var(--yt-sys-color-baseline--text-secondary, #606060));
+  --yte-menu-background: var(--yt-spec-menu-background, var(--yt-sys-color-baseline--menu-background, #fff));
+  --yte-hover-background: var(--yt-spec-badge-chip-background, var(--yt-sys-color-baseline--additive-background, rgba(0, 0, 0, 0.05)));
+  --yte-active-background: var(
+    --yt-spec-button-chip-background-hover,
+    var(--yt-sys-color-baseline--button-chip-background-hover, rgba(0, 0, 0, 0.1))
+  );
+  --yte-call-to-action: var(--yt-spec-call-to-action, var(--yt-sys-color-baseline--call-to-action, #065fd4));
+  --yte-outline: var(--yt-spec-10-percent-layer, var(--yt-sys-color-baseline--outline, rgba(0, 0, 0, 0.1)));
+  --yte-shadow: var(--yt-sys-color-baseline--shadow-medium, rgba(0, 0, 0, 0.25));
+  --yte-tooltip-background: var(--yt-sys-color-baseline--static-grey, #606060);
+  --yte-tooltip-text: var(--yt-sys-color-baseline--overlay-text-primary, #fff);
+
+  font-family: var(--yte-font-family, 'Roboto', 'Arial', sans-serif);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--yte-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.yte-root *,
+.yte-root *::before,
+.yte-root *::after {
+  box-sizing: border-box;
+}
+
+.yte-icon {
+  display: block;
+  flex: none;
+}
+
+/* ---------- 工具列 ---------- */
+
+.yte-toolbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  margin-top: 8px;
+  background: transparent;
+}
+
+.yte-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yte-btn-wrap {
+  position: relative;
+}
+
+.yte-btn,
+.yte-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--yte-text-primary);
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.yte-icon-btn {
+  width: 36px;
+  height: 36px;
+}
+
+.yte-btn:hover,
+.yte-icon-btn:hover {
+  background: var(--yte-hover-background);
+}
+
+/* 面板展開中、切換按鈕開啟中：維持圓形背景，顏色稍深（FR-9）。 */
+.yte-btn[data-on],
+.yte-btn[data-on]:hover,
+.yte-icon-btn[aria-pressed='true'] {
+  background: var(--yte-active-background);
+}
+
+.yte-btn:focus-visible,
+.yte-icon-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--yte-text-primary);
+}
+
+/* ---------- 提示文字 ---------- */
+
+.yte-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 3;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--yte-tooltip-background);
+  color: var(--yte-tooltip-text);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.1s;
+}
+
+.yte-btn-wrap[data-tooltip-align='start'] .yte-tooltip {
+  left: 0;
+  transform: none;
+}
+
+.yte-btn-wrap[data-tooltip-align='end'] .yte-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.yte-btn-wrap:hover .yte-tooltip,
+.yte-btn:focus-visible + .yte-tooltip {
+  opacity: 1;
+  transition-delay: 0.3s;
+}
+
+/* 「即將推出」等暫時訊息立即顯示。 */
+.yte-btn-wrap .yte-tooltip[data-notice] {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.yte-tooltip[data-hidden] {
+  display: none;
+}
+
+/* ---------- 面板 ---------- */
+
+.yte-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  z-index: 2100;
+  width: max-content;
+  min-width: 280px;
+  padding: 16px 24px 24px;
+  border-radius: 12px;
+  background: var(--yte-menu-background);
+  color: var(--yte-text-primary);
+  box-shadow: 0 4px 32px 0 var(--yte-shadow);
+}
+
+.yte-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 -12px 8px 0;
+}
+
+.yte-panel-title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 500;
+}
+
+.yte-panel-body {
+  min-width: 0;
+}
+
+.yte-muted {
+  margin: 0;
+  color: var(--yte-text-secondary);
+}
+
+/* ---------- 面板共通狀態（FR-14） ---------- */
+
+.yte-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--yte-text-secondary);
+}
+
+.yte-status-error {
+  color: var(--yte-text-primary);
+}
+
+.yte-spinner {
+  display: inline-flex;
+  animation: yte-spin 1s linear infinite;
+}
+
+@keyframes yte-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yte-spinner {
+    animation-duration: 3s;
+  }
+
+  .yte-tooltip {
+    transition: none;
+  }
+}

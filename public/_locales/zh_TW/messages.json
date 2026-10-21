@@ -10,5 +10,141 @@
   "popupEnable": {
     "message": "啟用",
     "description": "Label of the popup switch that shows or hides the toolbar."
+  },
+  "toolbarLabel": {
+    "message": "影片工具列",
+    "description": "Accessible label of the toolbar."
+  },
+  "btnVideo": {
+    "message": "影片",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnMp3": {
+    "message": "MP3",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnThumbnail": {
+    "message": "縮圖",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnSubtitles": {
+    "message": "字幕",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnScreenshot": {
+    "message": "截圖",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnDarkMode": {
+    "message": "深色模式",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnCinema": {
+    "message": "劇院模式",
+    "description": "Toolbar button name. Dims the page around the player; not YouTube's own theater mode."
+  },
+  "btnPip": {
+    "message": "子母畫面",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnFloating": {
+    "message": "浮動播放器",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnLoop": {
+    "message": "循環播放",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnMore": {
+    "message": "更多",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnHelp": {
+    "message": "說明",
+    "description": "Toolbar button name (tooltip and accessible label)."
+  },
+  "btnClose": {
+    "message": "關閉",
+    "description": "Toolbar button name. Hides the toolbar."
+  },
+  "panelTitleVideo": {
+    "message": "下載影片",
+    "description": "Title of the video download panel."
+  },
+  "panelPin": {
+    "message": "釘選面板",
+    "description": "Button that keeps the panel open."
+  },
+  "panelUnpin": {
+    "message": "取消釘選",
+    "description": "Button that releases a pinned panel and closes it."
+  },
+  "comingSoon": {
+    "message": "即將推出。",
+    "description": "Placeholder for features that are not implemented yet."
+  },
+  "loading": {
+    "message": "載入中…",
+    "description": "Shown while panel content is loading."
+  },
+  "errorGeneric": {
+    "message": "發生錯誤。",
+    "description": "Generic panel error message."
+  },
+  "retry": {
+    "message": "重試",
+    "description": "Button that retries loading panel content."
+  },
+  "helpVideo": {
+    "message": "選擇畫質下載這部影片。",
+    "description": "Help panel: one-sentence description of the Video button."
+  },
+  "helpMp3": {
+    "message": "把聲音下載成 MP3，可以只下載其中一段。",
+    "description": "Help panel: one-sentence description of the MP3 button."
+  },
+  "helpThumbnail": {
+    "message": "下載不同尺寸的影片縮圖。",
+    "description": "Help panel: one-sentence description of the Thumbnail button."
+  },
+  "helpSubtitles": {
+    "message": "下載字幕，格式可選 SRT、VTT 或純文字。",
+    "description": "Help panel: one-sentence description of the Subtitles button."
+  },
+  "helpScreenshot": {
+    "message": "把目前的影片畫面存成 PNG 圖片。",
+    "description": "Help panel: one-sentence description of the Screenshot button."
+  },
+  "helpDarkMode": {
+    "message": "切換 YouTube 的深色與淺色主題。",
+    "description": "Help panel: one-sentence description of the Dark mode button."
+  },
+  "helpCinema": {
+    "message": "讓播放器以外的整個頁面變暗。",
+    "description": "Help panel: one-sentence description of the Cinema mode button."
+  },
+  "helpPip": {
+    "message": "在獨立的小視窗中播放影片。",
+    "description": "Help panel: one-sentence description of the Picture-in-picture button."
+  },
+  "helpFloating": {
+    "message": "往下捲動時，讓播放器固定在畫面角落繼續播放。",
+    "description": "Help panel: one-sentence description of the Floating player button."
+  },
+  "helpLoop": {
+    "message": "重複播放整部影片或其中一段。",
+    "description": "Help panel: one-sentence description of the Loop button."
+  },
+  "helpMore": {
+    "message": "更多選項，例如切換分頁時自動暫停影片。",
+    "description": "Help panel: one-sentence description of the More button."
+  },
+  "helpHelp": {
+    "message": "顯示每個按鈕的用途。",
+    "description": "Help panel: one-sentence description of the Help button."
+  },
+  "helpClose": {
+    "message": "隱藏工具列，可以從擴充功能的彈出視窗重新開啟。",
+    "description": "Help panel: one-sentence description of the Close button."
   }
 }
