@@ -154,7 +154,7 @@
 
 ## T06d
 
-### Q21 操作 YouTube 外觀選單的實作細節（T06d）
+### Q21 操作 YouTube 外觀選單的實作細節（T06d） — 已回答：markThemeOptions 已加入 plan 3.5；逾時 5 秒可接受；已登入的選單結構待專案擁有者實測
 
 - **狀況**（見 `specs/notes/T06d-dark-mode-menu.md`）：
   1. 外觀子選單的選項沒有不依文字的 DOM 屬性；可靠的識別值是元件 data 中的動作代號（`TOGGLE_DARK_THEME_ON`／`OFF`），只有 main world 讀得到。因此頁面橋接新增 `markThemeOptions` 請求：不帶參數，只在子選單選項上加上 `data-yte-theme-option` 標記屬性，不點擊、不修改其他東西。**請規格方把它加入 plan 3.5 的請求清單。**

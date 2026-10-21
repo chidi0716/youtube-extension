@@ -120,7 +120,7 @@ host/                           橋接程式（Go），見第 4 節
 ### 3.5 頁面橋接腳本
 
 - 以 `world: 'MAIN'` 宣告的內容腳本，只在 `*.youtube.com` 執行。
-- 只接受以下事件請求，其他一律忽略：`getVideoData`（標題、影片 ID、長度、是否直播／尚未開始）、`getVolume`、`setVolume`、`seekTo`、`getCurrentTime`，以及鎖定畫質用的 `getAvailableQualities`、`getQuality`、`setQuality`（`setQuality` 的參數只接受 YouTube 畫質代號白名單）。
+- 只接受以下事件請求，其他一律忽略：`getVideoData`（標題、影片 ID、長度、是否直播／尚未開始）、`getVolume`、`setVolume`、`seekTo`、`getCurrentTime`，以及鎖定畫質用的 `getAvailableQualities`、`getQuality`、`setQuality`（`setQuality` 的參數只接受 YouTube 畫質代號白名單），與深色模式用的 `markThemeOptions`（不帶參數，只在 YouTube 外觀子選單的深色／淺色選項上加標記屬性，不點擊、不修改其他內容）。
 - 事件名稱加上固定前綴；回覆時帶請求 ID。
 - 頁面上其他程式也能發出同名事件，所以這些操作都設計成無害的（只能讀取影片資料、調整音量、跳轉）。
 
