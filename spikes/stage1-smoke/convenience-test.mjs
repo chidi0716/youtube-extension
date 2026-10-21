@@ -121,6 +121,160 @@ await section('T27', async (page) => {
   check('選「關閉」後交還給 YouTube 自動決定畫質', released && q7.quality === 'hd720' && q7.range === null, JSON.stringify(q7));
 }, { viewport: { width: 1280, height: 1300 } });
 
+// ---------------------------------------------------------------------------
+// T28 複製連結（004 第 4 節）
+// ---------------------------------------------------------------------------
+const linkRows = (page) =>
+  page.evaluate(() =>
+    [...document.querySelector('yte-toolbar').shadowRoot.querySelectorAll('.yte-copylink-row')].map((row) => ({
+      kind: row.dataset.kind,
+      name: row.querySelector('.yte-copylink-name').textContent,
+      preview: row.querySelector('.yte-copylink-preview').textContent,
+      full: row.querySelector('.yte-copylink-preview').title,
+      status: row.querySelector('.yte-copylink-status').textContent,
+    })),
+  );
+const clipboard = (page) => page.evaluate(() => navigator.clipboard.readText());
+const seek = (page, s) =>
+  page.evaluate(async (s) => {
+    const v = document.querySelector('video');
+    v.pause();
+    v.currentTime = s;
+    await new Promise((r) => v.addEventListener('seeked', r, { once: true }));
+  }, s);
+
+await section(
+  'T28',
+  async (page, context) => {
+    const order = await page.evaluate(() =>
+      [...document.querySelector('yte-toolbar').shadowRoot.querySelectorAll('.yte-group')].map((g) =>
+        [...g.querySelectorAll('.yte-btn')].map((b) => b.dataset.button),
+      ),
+    );
+    check(
+      '工具列左組在「截圖」右邊加入「連結」按鈕（FR-30、001 FR-6）',
+      order[0].join() === 'video,mp3,thumbnail,subtitles,screenshot,link',
+      order[0].join(),
+    );
+
+    await button(page, 'help').click();
+    await page.waitForTimeout(200);
+    const helpLink = await page.evaluate(() => {
+      const li = document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-help-item[data-button="link"]');
+      return li ? { name: li.querySelector('.yte-help-name').textContent, desc: li.querySelector('.yte-help-desc').textContent, icon: !!li.querySelector('svg path') } : null;
+    });
+    check('說明面板同步列出「連結」（FR-30、001 FR-17）', helpLink?.name === 'Link' && helpLink.icon && helpLink.desc.length > 10, JSON.stringify(helpLink));
+    await page.keyboard.press('Escape');
+
+    await button(page, 'link').click();
+    await page.waitForSelector('yte-toolbar .yte-copylink-row');
+    let rows = await linkRows(page);
+    check(
+      '連結面板有三個選項，順序為目前時間、Markdown、不含時間（FR-31）',
+      rows.map((r) => r.kind).join() === 'time,markdown,plain',
+      rows.map((r) => r.name).join(', '),
+    );
+    check(
+      '目前時間是 0 秒時，選項 1 與 3 相同，不加 ?t=0（FR-33）',
+      rows[0].full === 'https://youtu.be/jNQXAC9IVRw' && rows[2].full === rows[0].full && rows[1].full === '[Fixture video（00:00）](https://youtu.be/jNQXAC9IVRw)',
+      rows.map((r) => r.full).join(' | '),
+    );
+
+    // 播放到 23.6 秒（假影片長 30 秒；83 秒的例子由單元測試涵蓋）
+    await seek(page, 23.6);
+    await page.waitForTimeout(200);
+    rows = await linkRows(page);
+    check(
+      '預覽顯示實際會複製的文字，時間隨播放位置更新並無條件捨去（FR-31、FR-32）',
+      rows[0].full === 'https://youtu.be/jNQXAC9IVRw?t=23' && rows[1].full === '[Fixture video（00:23）](https://youtu.be/jNQXAC9IVRw?t=23)' && rows[2].full === 'https://youtu.be/jNQXAC9IVRw',
+      rows.map((r) => r.full).join(' | '),
+    );
+    await seek(page, 3);
+    await page.evaluate(() => document.querySelector('video').play());
+    await page.waitForTimeout(2300);
+    await page.evaluate(() => document.querySelector('video').pause());
+    const playing = (await linkRows(page))[0].full;
+    check('播放中預覽的時間跟著前進（FR-32）', /\?t=(5|6)$/.test(playing), playing);
+
+    // 複製
+    await seek(page, 23.6);
+    await page.locator('yte-toolbar .yte-copylink-row[data-kind="markdown"]').click();
+    await page.waitForTimeout(150);
+    const copiedMd = await clipboard(page);
+    rows = await linkRows(page);
+    check(
+      '點 Markdown 選項複製 [標題（00:23）](https://youtu.be/ID?t=23)，並顯示「已複製」（FR-31）',
+      copiedMd === '[Fixture video（00:23）](https://youtu.be/jNQXAC9IVRw?t=23)' && rows[1].status === 'Copied',
+      `${copiedMd} / ${rows[1].status}`,
+    );
+    await shot(page, 'T28-link-panel-copied.png');
+    await page.waitForTimeout(2200);
+    check('「已複製」約 2 秒後消失（FR-31）', (await linkRows(page))[1].status === '');
+    await page.locator('yte-toolbar .yte-copylink-row[data-kind="time"]').click();
+    await page.waitForTimeout(150);
+    check('點目前時間的連結複製 https://youtu.be/ID?t=23（FR-31）', (await clipboard(page)) === 'https://youtu.be/jNQXAC9IVRw?t=23');
+    await page.locator('yte-toolbar .yte-copylink-row[data-kind="plain"]').click();
+    await page.waitForTimeout(150);
+    check('點不含時間的連結複製 https://youtu.be/ID（FR-31）', (await clipboard(page)) === 'https://youtu.be/jNQXAC9IVRw');
+
+    // 換頁後（釘選面板）更新為新影片
+    await page.locator('yte-toolbar .yte-panel-pin, yte-toolbar [aria-label="Pin panel"]').first().click();
+    await spaNavigate(page, 'next');
+    await page.waitForTimeout(500);
+    rows = await linkRows(page);
+    check(
+      '釘選的面板換頁後顯示新影片的連結與標題',
+      rows[2]?.full === 'https://youtu.be/aaaaaaaaaaa' && rows[1]?.full.startsWith('[Fixture video aaaaaaaaaaa（'),
+      rows.map((r) => r.full).join(' | '),
+    );
+
+    // 播放清單中的影片：不帶播放清單參數
+    await page.goto('https://www.youtube.com/watch?v=bbbbbbbbbbb&list=PLabcdefghijklmnop&index=3&pp=xyz');
+    await page.waitForSelector('yte-toolbar', { state: 'attached' });
+    await page.waitForFunction(() => document.querySelector('video')?.readyState >= 1);
+    await seek(page, 12.2);
+    await button(page, 'link').click();
+    await page.waitForSelector('yte-toolbar .yte-copylink-row');
+    await page.locator('yte-toolbar .yte-copylink-row[data-kind="time"]').click();
+    await page.waitForTimeout(150);
+    const fromList = await clipboard(page);
+    check('從播放清單打開的影片，複製的連結不含播放清單參數（FR-35）', fromList === 'https://youtu.be/bbbbbbbbbbb?t=12', fromList);
+
+    // 複製失敗：瀏覽器拒絕剪貼簿存取
+    const cdp = await context.newCDPSession(page);
+    for (const allowWithoutSanitization of [false, true]) {
+      await cdp.send('Browser.setPermission', {
+        permission: { name: 'clipboard-write', allowWithoutSanitization },
+        setting: 'denied',
+        origin: 'https://www.youtube.com',
+      });
+    }
+    await page.locator('yte-toolbar .yte-copylink-row[data-kind="markdown"]').click();
+    await page.waitForTimeout(300);
+    const manual = await page.evaluate(() => {
+      const root = document.querySelector('yte-toolbar').shadowRoot;
+      const ta = root.querySelector('.yte-copylink-manual-text');
+      return {
+        error: root.querySelector('.yte-copylink-manual [role="alert"]')?.textContent ?? null,
+        value: ta?.value ?? null,
+        selected: ta ? ta.value.slice(ta.selectionStart, ta.selectionEnd) : null,
+        focused: root.activeElement === ta,
+      };
+    });
+    if (manual.error === null && manual.value === null) {
+      skip('複製失敗時顯示錯誤與可以手動選取的文字框（FR-34）', '本環境無法讓瀏覽器拒絕剪貼簿寫入');
+    } else {
+      check(
+        '複製失敗時顯示錯誤，並改為顯示可以手動選取的文字框（FR-34）',
+        !!manual.error && manual.value === '[Fixture video（00:12）](https://youtu.be/bbbbbbbbbbb?t=12)' && manual.selected === manual.value && manual.focused,
+        JSON.stringify(manual),
+      );
+      await shot(page, 'T28-link-panel-copy-failed.png');
+    }
+  },
+  { permissions: ['clipboard-read', 'clipboard-write'], viewport: { width: 1280, height: 1100 } },
+);
+
 if (!summary()) process.exitCode = 1;
 void EXT_ID;
 void skip;

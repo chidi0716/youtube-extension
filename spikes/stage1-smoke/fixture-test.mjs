@@ -110,8 +110,8 @@ const toolbarState = (page) =>
     await page.waitForTimeout(300);
     let s = await toolbarState(page);
     check(
-      '說明面板列出全部 13 顆按鈕的圖示、名稱與說明（FR-17）',
-      s.help.length === 13 && s.help.every((i, n) => i.icon && i.name === s.labels[n] && (i.desc ?? '').length > 5),
+      '說明面板列出全部 14 顆按鈕的圖示、名稱與說明（FR-17）',
+      s.help.length === 14 && s.help.every((i, n) => i.icon && i.name === s.labels[n] && (i.desc ?? '').length > 5),
       s.help.map((i) => i.name).join(', '),
     );
     await shotToolbar(page, 'T05-help-panel-en.png');
@@ -171,7 +171,7 @@ const toolbarState = (page) =>
     await page.locator('yte-toolbar .yte-btn[data-button="help"]').click();
     await page.waitForTimeout(300);
     const s = await toolbarState(page);
-    check('繁體中文的按鈕名稱與說明（NFR-4）', s.labels[0] === '影片' && s.labels[12] === '關閉' && s.help[0]?.name === '影片', s.labels.join('、'));
+    check('繁體中文的按鈕名稱與說明（NFR-4）', s.labels[0] === '影片' && s.labels[5] === '連結' && s.labels[13] === '關閉' && s.help[0]?.name === '影片', s.labels.join('、'));
     await shotToolbar(page, 'T05-help-panel-zh-TW.png');
 
     const popup = await context.newPage();

@@ -20,6 +20,7 @@ A YouTube browser extension that adds a native-looking toolbar under the video p
 - Dark mode, cinema mode (dim everything but the player), picture-in-picture
 - Floating player while scrolling, A–B loop / repeat N times
 - Pause on tab switch, autoplay toggle, audio-only mode, mouse-wheel volume, hide comments
+- Lock the playback quality (e.g. always 1080p); copy a `youtu.be` link at the current time, also as Markdown
 
 ## Privacy and security
 

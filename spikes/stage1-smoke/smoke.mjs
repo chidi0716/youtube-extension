@@ -353,7 +353,7 @@ try {
   });
   check(
     '說明面板列出全部按鈕的圖示、名稱與說明',
-    help.items.length === 13 &&
+    help.items.length === 14 &&
       help.items.every((i, n) => i.icon && i.name === help.labels[n] && i.desc && i.desc.length > 5),
     `${help.items.length} items`,
   );

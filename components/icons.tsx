@@ -29,6 +29,9 @@ import settings from '@material-symbols/svg-400/outlined/settings.svg?raw';
 import subtitles from '@material-symbols/svg-400/outlined/subtitles.svg?raw';
 import brandingWatermark from '@material-symbols/svg-400/outlined/branding_watermark.svg?raw';
 import hd from '@material-symbols/svg-400/outlined/hd.svg?raw';
+import check from '@material-symbols/svg-400/outlined/check.svg?raw';
+import contentCopy from '@material-symbols/svg-400/outlined/content_copy.svg?raw';
+import link from '@material-symbols/svg-400/outlined/link.svg?raw';
 
 const SOURCES = {
   autoplay: autoplay,
@@ -40,7 +43,9 @@ const SOURCES = {
   volume_up: volumeUp,
   arrow_drop_down: arrowDropDown,
   branding_watermark: brandingWatermark,
+  check,
   close,
+  content_copy: contentCopy,
   dark_mode: darkMode,
   drag_indicator: dragIndicator,
   error,
@@ -50,6 +55,7 @@ const SOURCES = {
   keep,
   keep_off: keepOff,
   lightbulb,
+  link,
   more_vert: moreVert,
   movie,
   music_note: musicNote,

@@ -151,3 +151,90 @@
 .yte-more-item[data-disabled] .yte-more-icon {
   opacity: 0.5;
 }
+
+/* ---------- 連結面板（004 第 4 節） ---------- */
+
+.yte-copylink {
+  width: 440px;
+  max-width: 100%;
+}
+
+.yte-copylink-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yte-copylink-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 56px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.yte-copylink-row:hover {
+  background: var(--yte-hover-background);
+}
+
+.yte-copylink-row:focus-visible {
+  outline: 2px solid var(--yte-call-to-action);
+  outline-offset: -2px;
+}
+
+.yte-copylink-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.yte-copylink-name {
+  font-weight: 500;
+}
+
+.yte-copylink-preview {
+  overflow: hidden;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.yte-copylink-status {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+}
+
+.yte-copylink-row[data-copied] .yte-copylink-status {
+  color: var(--yte-call-to-action);
+  font-weight: 500;
+}
+
+.yte-copylink-manual {
+  margin-top: 8px;
+}
+
+.yte-copylink-manual-text {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 4px;
+  padding: 8px 12px;
+  resize: none;
+  font-family: inherit;
+}

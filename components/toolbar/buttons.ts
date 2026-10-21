@@ -15,6 +15,7 @@ export type ButtonId =
   | 'thumbnail'
   | 'subtitles'
   | 'screenshot'
+  | 'link'
   | 'darkMode'
   | 'cinema'
   | 'pip'
@@ -43,6 +44,8 @@ export const LEFT_BUTTONS: readonly ButtonDef[] = [
   { id: 'thumbnail', kind: 'panel', icon: 'image', label: 'btnThumbnail', description: 'helpThumbnail' },
   { id: 'subtitles', kind: 'panel', icon: 'subtitles', label: 'btnSubtitles', description: 'helpSubtitles' },
   { id: 'screenshot', kind: 'action', icon: 'photo_camera', label: 'btnScreenshot', description: 'helpScreenshot' },
+  // 004 第 4 節：複製帶時間的連結。
+  { id: 'link', kind: 'panel', icon: 'link', label: 'btnLink', description: 'helpLink', panelTitle: 'panelTitleLink' },
 ];
 
 /** 右組（觀看輔助類），由左至右。 */

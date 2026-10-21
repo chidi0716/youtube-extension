@@ -8,6 +8,7 @@ import { render } from 'preact';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 import { HelpPanel } from '@/components/panels/HelpPanel';
+import { LinkPanel } from '@/components/panels/LinkPanel';
 import { LoopPanel } from '@/components/panels/LoopPanel';
 import { MorePanel, type MoreItem, type MoreSwitchItem } from '@/components/panels/MorePanel';
 import panelsCss from '@/components/panels/panels.css?inline';
@@ -104,6 +105,8 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     switch (id) {
       case 'help':
         return <HelpPanel />;
+      case 'link':
+        return videoId ? <LinkPanel videoId={videoId} /> : undefined;
       case 'loop':
         return <LoopPanel loop={viewing.loop} />;
       case 'more':

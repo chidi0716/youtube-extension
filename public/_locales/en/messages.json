@@ -115,6 +115,38 @@
     "message": "Save the current video frame as a PNG image.",
     "description": "Help panel: one-sentence description of the Screenshot button."
   },
+  "btnLink": {
+    "message": "Link",
+    "description": "Toolbar button name. Opens the copy link panel."
+  },
+  "helpLink": {
+    "message": "Copy a short link to this video, optionally starting at the current time.",
+    "description": "Help panel: one-sentence description of the Link button."
+  },
+  "panelTitleLink": {
+    "message": "Copy link",
+    "description": "Title of the copy link panel."
+  },
+  "linkAtTime": {
+    "message": "Link at current time",
+    "description": "Link panel: option that copies a youtu.be link starting at the current time."
+  },
+  "linkMarkdown": {
+    "message": "Markdown",
+    "description": "Link panel: option that copies a Markdown link with the title and time."
+  },
+  "linkPlain": {
+    "message": "Link without time",
+    "description": "Link panel: option that copies a youtu.be link without a time."
+  },
+  "linkCopied": {
+    "message": "Copied",
+    "description": "Link panel: shown for about 2 seconds after copying."
+  },
+  "linkCopyFailed": {
+    "message": "Couldn't copy to the clipboard. Select the text below and copy it yourself.",
+    "description": "Link panel: error when the browser refuses clipboard access."
+  },
   "helpDarkMode": {
     "message": "Switch YouTube between the dark and light theme.",
     "description": "Help panel: one-sentence description of the Dark mode button."

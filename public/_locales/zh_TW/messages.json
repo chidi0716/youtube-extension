@@ -115,6 +115,38 @@
     "message": "把目前的影片畫面存成 PNG 圖片。",
     "description": "Help panel: one-sentence description of the Screenshot button."
   },
+  "btnLink": {
+    "message": "連結",
+    "description": "Toolbar button name. Opens the copy link panel."
+  },
+  "helpLink": {
+    "message": "複製這部影片的短網址，可以從目前的時間開始。",
+    "description": "Help panel: one-sentence description of the Link button."
+  },
+  "panelTitleLink": {
+    "message": "複製連結",
+    "description": "Title of the copy link panel."
+  },
+  "linkAtTime": {
+    "message": "目前時間的連結",
+    "description": "Link panel: option that copies a youtu.be link starting at the current time."
+  },
+  "linkMarkdown": {
+    "message": "Markdown 格式",
+    "description": "Link panel: option that copies a Markdown link with the title and time."
+  },
+  "linkPlain": {
+    "message": "不含時間的連結",
+    "description": "Link panel: option that copies a youtu.be link without a time."
+  },
+  "linkCopied": {
+    "message": "已複製",
+    "description": "Link panel: shown for about 2 seconds after copying."
+  },
+  "linkCopyFailed": {
+    "message": "無法複製到剪貼簿，請選取下方文字後自行複製。",
+    "description": "Link panel: error when the browser refuses clipboard access."
+  },
   "helpDarkMode": {
     "message": "切換 YouTube 的深色與淺色主題。",
     "description": "Help panel: one-sentence description of the Dark mode button."
