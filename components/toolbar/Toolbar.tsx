@@ -13,6 +13,8 @@ import { ToolbarButton } from './ToolbarButton';
 export interface ToggleFeature {
   active: boolean;
   toggle: () => void;
+  /** 不能使用時的原因：按鈕停用，提示文字顯示原因（003 FR-32）。 */
+  disabledReason?: string;
 }
 
 export interface ToolbarProps {
@@ -28,11 +30,21 @@ export interface ToolbarProps {
   actions?: Partial<Record<ButtonId, () => void>>;
   /** 面板內容；未提供的面板顯示「即將推出」。 */
   renderPanel?: (id: ButtonId) => ComponentChildren | undefined;
+  /** 面板按鈕背後的功能正在進行中（例如循環播放，003 FR-52），按鈕維持開啟狀態。 */
+  activePanels?: ReadonlySet<ButtonId>;
 }
 
 const COMING_SOON_MS = 1500;
 
-export function Toolbar({ host, videoId, getBounds, toggles = {}, actions = {}, renderPanel }: ToolbarProps) {
+export function Toolbar({
+  host,
+  videoId,
+  getBounds,
+  toggles = {},
+  actions = {},
+  renderPanel,
+  activePanels,
+}: ToolbarProps) {
   const [state, dispatch] = useReducer(panelReducer<ButtonId>, initialPanelState<ButtonId>());
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef(new Map<ButtonId, HTMLButtonElement>());
@@ -73,7 +85,7 @@ export function Toolbar({ host, videoId, getBounds, toggles = {}, actions = {}, 
     if (def.kind === 'panel') {
       dispatch({ type: 'toggle', id: def.id });
     } else if (def.kind === 'toggle' && toggles[def.id]) {
-      toggles[def.id]!.toggle();
+      if (!toggles[def.id]!.disabledReason) toggles[def.id]!.toggle();
     } else if (def.kind === 'action' && actions[def.id]) {
       actions[def.id]!();
     } else {
@@ -83,6 +95,7 @@ export function Toolbar({ host, videoId, getBounds, toggles = {}, actions = {}, 
 
   const renderButton = (def: ButtonDef, index: number, group: readonly ButtonDef[], side: 'left' | 'right') => {
     const label = t(def.label);
+    const disabledReason = toggles[def.id]?.disabledReason;
     const align =
       side === 'left' && index === 0 ? 'start' : side === 'right' && index === group.length - 1 ? 'end' : 'center';
     return (
@@ -90,10 +103,11 @@ export function Toolbar({ host, videoId, getBounds, toggles = {}, actions = {}, 
         key={def.id}
         def={def}
         label={label}
-        tooltip={notice === def.id ? t('comingSoon') : label}
+        tooltip={notice === def.id ? t('comingSoon') : disabledReason ? `${label}: ${disabledReason}` : label}
         notice={notice === def.id}
         expanded={state.openId === def.id}
-        pressed={toggles[def.id]?.active}
+        pressed={def.kind === 'panel' ? activePanels?.has(def.id) : toggles[def.id]?.active}
+        disabledReason={disabledReason}
         controls={panelDomId(def.id)}
         tooltipAlign={align}
         buttonRef={(el: HTMLButtonElement | null) => {

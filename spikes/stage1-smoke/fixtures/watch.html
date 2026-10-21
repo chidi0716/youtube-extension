@@ -1,8 +1,15 @@
 <!doctype html>
 <!--
-  本機測試用的最小「觀看頁」：只模擬工具列需要的結構（播放器、#below、ytd-watch-metadata），
-  依 2026-10-21 實測 YouTube 的元素層級寫成，內容全部是假的。由 Playwright 的 route 提供，
-  瀏覽器不會連到 YouTube。顏色變數取自實測的淺色主題。
+  本機測試用的「觀看頁」：只模擬工具列與觀看輔助功能需要的結構，依 2026-10-21 實測 YouTube
+  的元素層級寫成，內容全部是假的。由 Playwright 的 route 提供，瀏覽器不會連到 YouTube。
+
+  模擬的部分：
+  - 標題列（#masthead-container，固定在頂端）；
+  - 播放器（#player > ... > #player-container > #movie_player），內含可播放的 <video>
+    （/__fixture/test.webm，30 秒）與自動播放開關（.ytp-autonav-toggle-button[aria-checked]）；
+  - #movie_player 上的播放器 API（getVideoData、seekTo、getVolume、setVolume 等）；
+  - 標題、留言區（#comments）、右側影片清單（站內換頁會發出 yt-navigate-finish）；
+  - <html dark> 深色主題與顏色變數，以及模擬 YouTube 選單的「切換主題」按鈕。
 -->
 <html>
   <head>
@@ -13,19 +20,54 @@
         --yt-sys-color-baseline--text-primary: #0f0f0f;
         --yt-sys-color-baseline--text-secondary: #606060;
         --yt-sys-color-baseline--menu-background: #fff;
+        --yt-sys-color-baseline--base-background: #fff;
         --yt-sys-color-baseline--additive-background: rgba(0, 0, 0, 0.05);
         --yt-sys-color-baseline--button-chip-background-hover: rgba(0, 0, 0, 0.1);
         --yt-sys-color-baseline--call-to-action: #065fd4;
+        --yt-sys-color-baseline--outline: rgba(0, 0, 0, 0.1);
+        --yt-sys-color-baseline--text-primary-inverse: #fff;
+        --yt-sys-color-baseline--text-disabled: #909090;
         font-family: Roboto, Arial, sans-serif;
+        background: var(--yt-sys-color-baseline--base-background);
+        color: var(--yt-sys-color-baseline--text-primary);
+      }
+      html[dark] {
+        --yt-sys-color-baseline--text-primary: #f1f1f1;
+        --yt-sys-color-baseline--text-secondary: #aaa;
+        --yt-sys-color-baseline--menu-background: #282828;
+        --yt-sys-color-baseline--base-background: #0f0f0f;
+        --yt-sys-color-baseline--additive-background: rgba(255, 255, 255, 0.1);
+        --yt-sys-color-baseline--button-chip-background-hover: rgba(255, 255, 255, 0.2);
+        --yt-sys-color-baseline--call-to-action: #3ea6ff;
+        --yt-sys-color-baseline--outline: rgba(255, 255, 255, 0.2);
+        --yt-sys-color-baseline--text-primary-inverse: #0f0f0f;
+        --yt-sys-color-baseline--text-disabled: #717171;
       }
       body {
         margin: 0;
-        background: #fff;
-        color: #0f0f0f;
       }
+      ytd-app,
       ytd-watch-flexy,
-      ytd-watch-metadata {
+      ytd-watch-metadata,
+      ytd-player,
+      ytd-comments {
         display: block;
+      }
+      #masthead-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 2020;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 0 16px;
+        background: var(--yt-sys-color-baseline--base-background);
+      }
+      #page-manager {
+        padding-top: 56px;
       }
       #columns {
         display: flex;
@@ -34,50 +76,183 @@
       }
       #primary {
         flex: 1;
+        min-width: 0;
       }
       #secondary {
-        width: 400px;
+        width: 360px;
+      }
+      #player-container-inner {
+        position: relative;
+        padding-top: 56.25%;
+      }
+      #player-container {
+        position: absolute;
+        inset: 0;
+      }
+      ytd-player,
+      ytd-player #container,
+      #movie_player {
+        width: 100%;
+        height: 100%;
       }
       #movie_player {
-        aspect-ratio: 16 / 9;
-        background: #111;
+        position: relative;
+        overflow: hidden;
         border-radius: 12px;
+        background: #000;
+      }
+      .html5-video-container,
+      .html5-main-video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .ytp-chrome-bottom {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        z-index: 10;
+        display: flex;
+        gap: 8px;
+      }
+      .ytp-button {
+        padding: 4px 8px;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font: inherit;
+        font-size: 12px;
+      }
+      .ytp-autonav-toggle-button {
+        display: inline-block;
+        width: 28px;
+        height: 12px;
+        margin-left: 4px;
+        border-radius: 6px;
+        background: #717171;
+        vertical-align: middle;
+      }
+      .ytp-autonav-toggle-button[aria-checked='true'] {
+        background: #fff;
       }
       h1 {
         margin: 12px 0 0;
         font-size: 20px;
       }
+      #comments {
+        margin-top: 24px;
+        padding: 16px;
+        border: 1px dashed var(--yt-sys-color-baseline--outline);
+      }
+      .filler {
+        height: 1600px;
+      }
+      #secondary a {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--yt-sys-color-baseline--call-to-action);
+      }
     </style>
   </head>
   <body>
     <ytd-app>
-      <ytd-watch-flexy>
-        <div id="columns">
-          <div id="primary">
-            <div id="primary-inner">
-              <div id="player"><div id="movie_player"></div></div>
-              <div id="below">
-                <div id="shopping-timely-shelf"></div>
-                <div>
-                  <ytd-watch-metadata><div id="title"><h1>Fixture video</h1></div></ytd-watch-metadata>
+      <div id="masthead-container">
+        <strong>Fixture</strong>
+        <button id="fixture-theme-toggle" type="button">Theme (YouTube menu)</button>
+      </div>
+      <div id="page-manager">
+        <ytd-watch-flexy>
+          <div id="columns">
+            <div id="primary">
+              <div id="primary-inner">
+                <div id="player">
+                  <div id="player-container-outer">
+                    <div id="player-container-inner">
+                      <div id="player-container">
+                        <ytd-player id="ytd-player">
+                          <div id="container">
+                            <div id="movie_player" class="html5-video-player">
+                              <div class="html5-video-container">
+                                <video class="html5-main-video" src="/__fixture/test.webm" preload="auto" playsinline></video>
+                              </div>
+                              <div class="ytp-chrome-bottom">
+                                <button class="ytp-button" id="fixture-play" type="button">Play/Pause</button>
+                                <button class="ytp-button" data-tooltip-target-id="ytp-autonav-toggle-button" type="button">
+                                  Autoplay<span class="ytp-autonav-toggle-button" aria-checked="true"></span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </ytd-player>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="below">
+                  <div id="shopping-timely-shelf"></div>
+                  <div>
+                    <ytd-watch-metadata><div id="title"><h1>Fixture video</h1></div></ytd-watch-metadata>
+                  </div>
+                  <ytd-comments id="comments"><p id="fixture-comments-text">Comments section (fixture)</p></ytd-comments>
+                  <div class="filler"></div>
                 </div>
               </div>
             </div>
+            <div id="secondary">
+              <a id="next" href="/watch?v=aaaaaaaaaaa">Next video</a>
+              <a id="next2" href="/watch?v=bbbbbbbbbbb">Another video</a>
+            </div>
           </div>
-          <div id="secondary">
-            <a id="next" href="/watch?v=aaaaaaaaaaa">Next video</a>
-          </div>
-        </div>
-      </ytd-watch-flexy>
+        </ytd-watch-flexy>
+      </div>
     </ytd-app>
     <script>
-      // 模擬 YouTube 的站內換頁：改網址並發出 yt-navigate-finish。
-      document.getElementById('next').addEventListener('click', (e) => {
-        e.preventDefault();
-        history.pushState({}, '', e.currentTarget.getAttribute('href'));
-        document.querySelector('h1').textContent = 'Fixture video 2';
-        document.dispatchEvent(new CustomEvent('yt-navigate-finish'));
+      const player = document.getElementById('movie_player');
+      const video = player.querySelector('video');
+      const autonav = player.querySelector('.ytp-autonav-toggle-button');
+
+      // 模擬 YouTube 播放器 API（只有頁面橋接腳本會用到的方法）。
+      const videoId = () => new URL(location.href).searchParams.get('v');
+      player.getVideoData = () => ({ video_id: videoId(), title: document.querySelector('h1').textContent, isLive: false });
+      player.getPlayerResponse = () => ({ videoDetails: { isLive: false, isUpcoming: false, lengthSeconds: '30' } });
+      player.getDuration = () => video.duration;
+      player.getCurrentTime = () => video.currentTime;
+      player.seekTo = (s) => {
+        video.currentTime = s;
+      };
+      player.getVolume = () => Math.round(video.volume * 100);
+      player.setVolume = (v) => {
+        video.volume = Math.max(0, Math.min(100, v)) / 100;
+      };
+      player.isMuted = () => video.muted;
+      player.unMute = () => {
+        video.muted = false;
+      };
+
+      document.getElementById('fixture-play').addEventListener('click', () => (video.paused ? video.play() : video.pause()));
+
+      // 自動播放開關：點按鈕切換 aria-checked。
+      autonav.closest('button').addEventListener('click', () => {
+        autonav.setAttribute('aria-checked', String(autonav.getAttribute('aria-checked') !== 'true'));
       });
+
+      // 模擬使用者從 YouTube 選單切換主題。
+      document.getElementById('fixture-theme-toggle').addEventListener('click', () => {
+        document.documentElement.toggleAttribute('dark');
+      });
+
+      // 模擬 YouTube 的站內換頁：改網址並發出 yt-navigate-finish。
+      for (const a of document.querySelectorAll('#secondary a')) {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          history.pushState({}, '', e.currentTarget.getAttribute('href'));
+          document.querySelector('h1').textContent = 'Fixture video ' + videoId();
+          video.currentTime = 0;
+          document.dispatchEvent(new CustomEvent('yt-navigate-finish'));
+        });
+      }
     </script>
   </body>
 </html>

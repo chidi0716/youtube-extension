@@ -154,5 +154,9 @@
   "optionsTitle": {
     "message": "Settings",
     "description": "Title of the extension's settings page."
+  },
+  "pipUnsupported": {
+    "message": "Not supported in this browser",
+    "description": "Tooltip reason when the browser has no native picture-in-picture."
   }
 }

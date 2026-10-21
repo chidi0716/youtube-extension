@@ -9,8 +9,10 @@ export interface ToolbarButtonProps {
   tooltip: string;
   /** 面板按鈕：對應的面板是否展開。 */
   expanded?: boolean;
-  /** 切換按鈕：目前是否為開啟狀態（FR-9）。 */
+  /** 切換按鈕：目前是否為開啟狀態（FR-9）。面板按鈕：背後的功能正在進行中（003 FR-52）。 */
   pressed?: boolean;
+  /** 不能使用時的原因；按鈕仍可聚焦（才能看到提示文字），但點了沒有作用。 */
+  disabledReason?: string;
   /** 對應面板元素的 id（面板按鈕）。 */
   controls?: string;
   /** 提示文字是暫時訊息（例如「即將推出」），要立即顯示。 */
@@ -22,8 +24,8 @@ export interface ToolbarButtonProps {
 }
 
 export function ToolbarButton(props: ToolbarButtonProps) {
-  const { def, label, tooltip, notice, expanded, pressed, controls, tooltipAlign, buttonRef, onClick } = props;
-  const isOn = def.kind === 'panel' ? !!expanded : def.kind === 'toggle' ? !!pressed : false;
+  const { def, label, tooltip, notice, expanded, pressed, disabledReason, controls, tooltipAlign, buttonRef, onClick } = props;
+  const isOn = def.kind === 'panel' ? !!expanded || !!pressed : def.kind === 'toggle' ? !!pressed : false;
   return (
     <div class="yte-btn-wrap" data-tooltip-align={tooltipAlign}>
       <button
@@ -33,6 +35,8 @@ export function ToolbarButton(props: ToolbarButtonProps) {
         data-button={def.id}
         data-on={isOn ? '' : undefined}
         aria-label={label}
+        aria-description={disabledReason}
+        aria-disabled={disabledReason ? 'true' : undefined}
         aria-haspopup={def.kind === 'panel' ? 'dialog' : undefined}
         aria-expanded={def.kind === 'panel' ? !!expanded : undefined}
         aria-controls={def.kind === 'panel' && expanded ? controls : undefined}

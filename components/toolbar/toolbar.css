@@ -298,3 +298,13 @@
 .yte-link:focus-visible {
   box-shadow: 0 0 0 2px var(--yte-call-to-action);
 }
+
+/* 不能使用的切換按鈕（003 FR-32）：仍可聚焦以顯示原因。 */
+.yte-btn[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.yte-btn[aria-disabled='true']:hover {
+  background: transparent;
+}

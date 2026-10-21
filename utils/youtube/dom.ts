@@ -50,6 +50,21 @@ export function findVideo(doc: Document = document): HTMLVideoElement | null {
 }
 
 // ---------------------------------------------------------------------------
+// 主題（003 深色模式）
+// ---------------------------------------------------------------------------
+
+/** YouTube 以 <html> 上的這個屬性切換深色主題，顏色變數會跟著換值。 */
+export const DARK_THEME_ATTRIBUTE = 'dark';
+
+export function isDarkTheme(doc: Document = document): boolean {
+  return doc.documentElement.hasAttribute(DARK_THEME_ATTRIBUTE);
+}
+
+export function setDarkTheme(dark: boolean, doc: Document = document): void {
+  doc.documentElement.toggleAttribute(DARK_THEME_ATTRIBUTE, dark);
+}
+
+// ---------------------------------------------------------------------------
 // 播放器 API（只在 main world 的頁面橋接腳本中使用）
 // ---------------------------------------------------------------------------
 

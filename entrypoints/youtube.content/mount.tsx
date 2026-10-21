@@ -12,8 +12,9 @@ import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import controlsCss from '@/components/controls/controls.css?inline';
 import toolbarCss from '@/components/toolbar/toolbar.css?inline';
+import { createViewingController } from '@/features/viewing';
 import { enabled } from '@/utils/settings';
-import { findPlayer, findToolbarAnchor } from '@/utils/youtube/dom';
+import { WATCH_HOSTS, findPlayer, findToolbarAnchor } from '@/utils/youtube/dom';
 import { getVideoId, isWatchPage, onNavigate } from '@/utils/youtube/page';
 
 const LOG_PREFIX = '[youtube-extension]';
@@ -28,6 +29,10 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   let waitObserver: MutationObserver | null = null;
   let waitTimer: ReturnType<typeof setTimeout> | undefined;
   let waitFrame = 0;
+
+  // 觀看輔助功能（003）：工具列啟用、且在支援的網域時才作用；停用時還原所有修改。
+  const viewing = createViewingController();
+  const updateViewing = () => viewing.setActive(isEnabled && WATCH_HOSTS.includes(location.hostname));
 
   const getBounds = () => {
     const rect = findPlayer()?.getBoundingClientRect();
@@ -67,10 +72,21 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   function renderInto(container: HTMLElement, host: HTMLElement) {
     if (!videoId) return;
     render(
-      <Toolbar host={host} videoId={videoId} getBounds={getBounds} actions={actions} renderPanel={renderPanel} />,
+      <Toolbar
+        host={host}
+        videoId={videoId}
+        getBounds={getBounds}
+        toggles={viewing.toggles()}
+        actions={actions}
+        renderPanel={renderPanel}
+      />,
       container,
     );
   }
+
+  const rerender = () => {
+    if (ui.mounted) renderInto(ui.uiContainer, ui.shadowHost);
+  };
 
   const isInPlace = () => {
     const anchor = findToolbarAnchor();
@@ -158,18 +174,27 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     applyFullscreen();
   }
 
-  ctx.onInvalidated(onNavigate(sync));
+  ctx.onInvalidated(
+    onNavigate(() => {
+      sync();
+      viewing.navigate();
+    }),
+  );
   ctx.onInvalidated(
     enabled.watch((value) => {
       isEnabled = value;
+      updateViewing();
       sync();
     }),
   );
+  ctx.onInvalidated(viewing.subscribe(rerender));
+  ctx.onInvalidated(() => viewing.setActive(false));
   ctx.addEventListener(document, 'fullscreenchange', applyFullscreen);
   ctx.onInvalidated(() => {
     stopWaiting();
     stopObserving();
   });
 
+  updateViewing();
   sync();
 }

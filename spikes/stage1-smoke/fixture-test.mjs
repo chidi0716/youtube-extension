@@ -13,6 +13,7 @@ const root = join(here, '..', '..');
 const extDir = join(root, '.output', 'chrome-mv3');
 const shots = process.env.SHOTS ?? join(root, 'specs', 'notes', 'screenshots');
 const fixture = readFileSync(join(here, 'fixtures', 'watch.html'), 'utf8');
+const video = readFileSync(join(here, 'fixtures', 'test.webm'));
 const EXT_ID = 'bkjlangdjfpllnkcpfpdlajchbginjdj';
 const WATCH = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 mkdirSync(shots, { recursive: true });
@@ -37,6 +38,9 @@ async function launch(lang) {
   await context.route('**/*', (route) => {
     const url = new URL(route.request().url());
     if (url.protocol === 'chrome-extension:') return route.continue();
+    if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/test.webm') {
+      return route.fulfill({ status: 200, contentType: 'video/webm', body: video });
+    }
     if (url.hostname === 'www.youtube.com') {
       return route.fulfill({ status: 200, contentType: 'text/html', body: fixture });
     }
@@ -90,10 +94,10 @@ const toolbarState = (page) =>
     check('滑鼠停留時顯示提示文字（FR-7）', tip.text === 'MP3' && tip.opacity === '1', JSON.stringify(tip));
     await shotToolbar(page, 'T03-tooltip.png');
 
-    // 尚未實作的切換按鈕：點了顯示「即將推出」
-    await page.locator('yte-toolbar .yte-btn[data-button="darkMode"]').click();
+    // 尚未實作的按鈕（截圖）：點了顯示「即將推出」
+    await page.locator('yte-toolbar .yte-btn[data-button="screenshot"]').click();
     const soon = await page.evaluate(
-      () => document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="darkMode"] + .yte-tooltip').textContent,
+      () => document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="screenshot"] + .yte-tooltip').textContent,
     );
     check('尚未實作的按鈕顯示「即將推出」', soon === 'Coming soon.', soon);
     await page.mouse.move(5, 5);
