@@ -146,5 +146,13 @@
   "helpClose": {
     "message": "Hide the toolbar. Turn it back on from the extension's popup.",
     "description": "Help panel: one-sentence description of the Close button."
+  },
+  "helpOpenSettings": {
+    "message": "Open settings",
+    "description": "Help panel: link that opens the extension's settings page."
+  },
+  "optionsTitle": {
+    "message": "Settings",
+    "description": "Title of the extension's settings page."
   }
 }

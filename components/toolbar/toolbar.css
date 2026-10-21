@@ -233,3 +233,68 @@
     transition: none;
   }
 }
+
+/* ---------- 說明面板（FR-17） ---------- */
+
+.yte-help {
+  width: min(440px, 100%);
+}
+
+.yte-help-list {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.yte-help-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.yte-help-icon {
+  display: flex;
+  padding-top: 2px;
+}
+
+.yte-help-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.yte-help-name {
+  font-weight: 500;
+}
+
+.yte-help-desc {
+  color: var(--yte-text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: normal;
+}
+
+.yte-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0 -8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--yte-call-to-action);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.yte-link:hover {
+  background: var(--yte-hover-background);
+}
+
+.yte-link:focus-visible {
+  box-shadow: 0 0 0 2px var(--yte-call-to-action);
+}

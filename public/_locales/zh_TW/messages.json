@@ -146,5 +146,13 @@
   "helpClose": {
     "message": "隱藏工具列，可以從擴充功能的彈出視窗重新開啟。",
     "description": "Help panel: one-sentence description of the Close button."
+  },
+  "helpOpenSettings": {
+    "message": "開啟設定頁",
+    "description": "Help panel: link that opens the extension's settings page."
+  },
+  "optionsTitle": {
+    "message": "設定",
+    "description": "Title of the extension's settings page."
   }
 }

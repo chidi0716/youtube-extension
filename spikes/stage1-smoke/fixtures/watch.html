@@ -1,0 +1,83 @@
+<!doctype html>
+<!--
+  本機測試用的最小「觀看頁」：只模擬工具列需要的結構（播放器、#below、ytd-watch-metadata），
+  依 2026-10-21 實測 YouTube 的元素層級寫成，內容全部是假的。由 Playwright 的 route 提供，
+  瀏覽器不會連到 YouTube。顏色變數取自實測的淺色主題。
+-->
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fixture watch page</title>
+    <style>
+      html {
+        --yt-sys-color-baseline--text-primary: #0f0f0f;
+        --yt-sys-color-baseline--text-secondary: #606060;
+        --yt-sys-color-baseline--menu-background: #fff;
+        --yt-sys-color-baseline--additive-background: rgba(0, 0, 0, 0.05);
+        --yt-sys-color-baseline--button-chip-background-hover: rgba(0, 0, 0, 0.1);
+        --yt-sys-color-baseline--call-to-action: #065fd4;
+        font-family: Roboto, Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #fff;
+        color: #0f0f0f;
+      }
+      ytd-watch-flexy,
+      ytd-watch-metadata {
+        display: block;
+      }
+      #columns {
+        display: flex;
+        gap: 24px;
+        padding: 24px;
+      }
+      #primary {
+        flex: 1;
+      }
+      #secondary {
+        width: 400px;
+      }
+      #movie_player {
+        aspect-ratio: 16 / 9;
+        background: #111;
+        border-radius: 12px;
+      }
+      h1 {
+        margin: 12px 0 0;
+        font-size: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <ytd-app>
+      <ytd-watch-flexy>
+        <div id="columns">
+          <div id="primary">
+            <div id="primary-inner">
+              <div id="player"><div id="movie_player"></div></div>
+              <div id="below">
+                <div id="shopping-timely-shelf"></div>
+                <div>
+                  <ytd-watch-metadata><div id="title"><h1>Fixture video</h1></div></ytd-watch-metadata>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="secondary">
+            <a id="next" href="/watch?v=aaaaaaaaaaa">Next video</a>
+          </div>
+        </div>
+      </ytd-watch-flexy>
+    </ytd-app>
+    <script>
+      // 模擬 YouTube 的站內換頁：改網址並發出 yt-navigate-finish。
+      document.getElementById('next').addEventListener('click', (e) => {
+        e.preventDefault();
+        history.pushState({}, '', e.currentTarget.getAttribute('href'));
+        document.querySelector('h1').textContent = 'Fixture video 2';
+        document.dispatchEvent(new CustomEvent('yt-navigate-finish'));
+      });
+    </script>
+  </body>
+</html>

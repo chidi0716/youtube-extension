@@ -7,3 +7,11 @@ export type MessageKey = Parameters<typeof browser.i18n.getMessage>[0];
 export function t(key: MessageKey, substitutions?: string | string[]): string {
   return browser.i18n.getMessage(key, substitutions) || key;
 }
+
+/** 把擴充功能頁面（彈出視窗、設定頁）中帶 data-i18n 的元素換成對應的文字。 */
+export function applyI18n(root: ParentNode): void {
+  if (root instanceof Document) root.documentElement.lang = browser.i18n.getUILanguage();
+  for (const el of root.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    el.textContent = t(el.dataset.i18n as MessageKey);
+  }
+}

@@ -1,13 +1,15 @@
 import './style.css';
+import { applyI18n, t } from '@/utils/i18n';
+import { enabled } from '@/utils/settings';
 
 // 介面文字一律來自 public/_locales，依瀏覽器語言自動選擇（預設英文）。
-document.documentElement.lang = browser.i18n.getUILanguage();
-document.title = browser.i18n.getMessage('extName');
-for (const el of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
-  el.textContent = browser.i18n.getMessage(el.dataset.i18n as Parameters<typeof browser.i18n.getMessage>[0]);
-}
+applyI18n(document);
+document.title = t('extName');
 
+// 「啟用」開關控制工具列是否顯示；工具列上的 ✕ 等同把它關掉（001 FR-16）。
 const checkbox = document.querySelector<HTMLInputElement>('#enabled')!;
-
 checkbox.checked = await enabled.getValue();
 checkbox.addEventListener('change', () => enabled.setValue(checkbox.checked));
+enabled.watch((value) => {
+  checkbox.checked = value;
+});

@@ -334,11 +334,104 @@ try {
   await page.evaluate(() => window.scrollTo(0, 0));
   await shot(page, 'T03-panel-video-dark.png');
   await page.keyboard.press('Escape');
+
+  // ---------- T05 說明面板 ----------
+  await clickButton('help');
+  await page.waitForTimeout(400);
+  const help = await page.evaluate(() => {
+    const root = document.querySelector('yte-toolbar').shadowRoot;
+    return {
+      items: [...root.querySelectorAll('.yte-help-item')].map((li) => ({
+        id: li.dataset.button,
+        name: li.querySelector('.yte-help-name')?.textContent,
+        desc: li.querySelector('.yte-help-desc')?.textContent,
+        icon: !!li.querySelector('svg path'),
+      })),
+      labels: [...root.querySelectorAll('.yte-btn')].map((b) => b.getAttribute('aria-label')),
+      link: root.querySelector('.yte-help .yte-link')?.textContent,
+    };
+  });
+  check(
+    '說明面板列出全部按鈕的圖示、名稱與說明',
+    help.items.length === 13 &&
+      help.items.every((i, n) => i.icon && i.name === help.labels[n] && i.desc && i.desc.length > 5),
+    `${help.items.length} items`,
+  );
+  await shot(page, 'T05-help-panel-dark.png');
+  const optionsPage = context.waitForEvent('page', { timeout: 10_000 });
+  await clickInPanel('.yte-link');
+  const opened = await optionsPage.catch(() => null);
+  if (opened) await opened.waitForLoadState();
+  check('說明面板的連結開啟設定頁', opened?.url() === `chrome-extension://${EXT_ID}/options.html`, opened?.url());
+  await opened?.close();
+  await page.bringToFront();
+  await page.keyboard.press('Escape');
+
+  // ---------- T05 ✕ 與彈出視窗 ----------
+  await clickButton('close');
+  const closedNow = await waitToolbar(false, 5000);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('ytd-watch-metadata', { timeout: 30_000 });
+  await page.waitForTimeout(4000);
+  const stillClosed = (await state()).count === 0;
+  check('按 ✕ 後工具列隱藏，重新整理後仍隱藏', closedNow && stillClosed);
+
+  const popup = await context.newPage();
+  await popup.setViewportSize({ width: 320, height: 160 });
+  await popup.goto(`chrome-extension://${EXT_ID}/popup.html`);
+  const checkbox = popup.locator('#enabled');
+  await popup.waitForFunction(() => !!document.querySelector('h1')?.textContent);
+  await popup.waitForTimeout(300);
+  const uncheckedInPopup = !(await checkbox.isChecked());
+  await popup.screenshot({ path: join(shots, 'T05-popup-disabled.png') });
+  await checkbox.check();
+  await page.bringToFront();
+  const back = await waitToolbar(true, 10_000);
+  check('彈出視窗的「啟用」與 ✕ 連動，打開後工具列重新出現', uncheckedInPopup && back, `popupUnchecked=${uncheckedInPopup} back=${back}`);
+  await popup.close();
 } catch (err) {
   check('smoke script', false, String(err).split('\n')[0]);
   await shot(page, 'smoke-error.png').catch(() => {});
 } finally {
   await context.close();
+}
+
+// ---------- 繁體中文介面（NFR-4） ----------
+{
+  const zhProfile = join(here, '.cache', 'profile-zh');
+  rmSync(zhProfile, { recursive: true, force: true });
+  const zh = await chromium.launchPersistentContext(zhProfile, {
+    executablePath: process.env.CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+    headless: true,
+    locale: 'zh-TW',
+    viewport: { width: 1400, height: 1000 },
+    proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined,
+    args: ['--lang=zh-TW', `--disable-extensions-except=${extDir}`, `--load-extension=${extDir}`],
+  });
+  const zp = zh.pages()[0] ?? (await zh.newPage());
+  try {
+    await zp.goto(WATCH, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await zp.waitForSelector('yte-toolbar', { state: 'attached', timeout: 30_000 });
+    await zp.waitForTimeout(1500);
+    await zp.locator('yte-toolbar .yte-btn[data-button="help"]').click();
+    await zp.waitForTimeout(400);
+    const labels = await zp.evaluate(() =>
+      [...document.querySelector('yte-toolbar').shadowRoot.querySelectorAll('.yte-btn')].map((b) => b.getAttribute('aria-label')),
+    );
+    check('繁體中文介面', labels[0] === '影片' && labels[12] === '關閉', labels.join('、'));
+    await shot(zp, 'T05-help-panel-zh-TW.png');
+    const popup = await zh.newPage();
+    await popup.setViewportSize({ width: 320, height: 160 });
+    await popup.goto(`chrome-extension://${EXT_ID}/popup.html`);
+    await popup.waitForFunction(() => !!document.querySelector('h1')?.textContent);
+    const text = await popup.locator('main').innerText();
+    check('彈出視窗的繁體中文文字', text.includes('啟用'), text.replace(/\s+/g, ' '));
+    await popup.screenshot({ path: join(shots, 'T05-popup-zh-TW.png') });
+  } catch (err) {
+    check('zh-TW smoke', false, String(err).split('\n')[0]);
+  } finally {
+    await zh.close();
+  }
 }
 
 const failed = results.filter((r) => !r.ok);

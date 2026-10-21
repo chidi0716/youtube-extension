@@ -7,6 +7,8 @@
 import { render } from 'preact';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
+import { HelpPanel } from '@/components/panels/HelpPanel';
+import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import controlsCss from '@/components/controls/controls.css?inline';
 import toolbarCss from '@/components/toolbar/toolbar.css?inline';
@@ -52,9 +54,22 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     },
   });
 
+  // ✕：隱藏工具列並記住，等同把彈出視窗的「啟用」關掉（001 FR-15、FR-16）。
+  // enabled.watch 收到變更後會呼叫 sync() 移除工具列。
+  const actions = {
+    close: () => {
+      void enabled.setValue(false);
+    },
+  };
+
+  const renderPanel = (id: ButtonId) => (id === 'help' ? <HelpPanel /> : undefined);
+
   function renderInto(container: HTMLElement, host: HTMLElement) {
     if (!videoId) return;
-    render(<Toolbar host={host} videoId={videoId} getBounds={getBounds} />, container);
+    render(
+      <Toolbar host={host} videoId={videoId} getBounds={getBounds} actions={actions} renderPanel={renderPanel} />,
+      container,
+    );
   }
 
   const isInPlace = () => {
