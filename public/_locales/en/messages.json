@@ -166,5 +166,71 @@
   "floatingClose": {
     "message": "Return the player to the page",
     "description": "Close button on the floating player; the player returns to its place until the next scroll away."
+  },
+  "loopModeLabel": {
+    "message": "Loop mode",
+    "description": "Accessible label of the loop mode radio group."
+  },
+  "loopModeRepeat": {
+    "message": "Repeat the whole video",
+    "description": "Loop panel: mode that repeats the whole video N times."
+  },
+  "loopTimesLabel": {
+    "message": "Number of times",
+    "description": "Loop panel: accessible label of the number input."
+  },
+  "loopTimesUnit": {
+    "message": "times",
+    "description": "Loop panel: unit after the number input."
+  },
+  "loopInfinite": {
+    "message": "Infinite",
+    "description": "Loop panel: repeat without limit."
+  },
+  "loopTimesError": {
+    "message": "Enter a number from 1 to 99.",
+    "description": "Loop panel: error for an invalid number of times."
+  },
+  "loopModeSegment": {
+    "message": "Loop a segment",
+    "description": "Loop panel: mode that loops between a start and an end time."
+  },
+  "loopStart": {
+    "message": "Start loop",
+    "description": "Loop panel: primary button."
+  },
+  "loopStop": {
+    "message": "Stop",
+    "description": "Loop panel: stops looping."
+  },
+  "loopPlayedCount": {
+    "message": "Played $COUNT$ times",
+    "description": "Loop panel: how many times the video or segment has been played.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "timeStart": {
+    "message": "Start",
+    "description": "Label of the start time input and slider handle."
+  },
+  "timeEnd": {
+    "message": "End",
+    "description": "Label of the end time input and slider handle."
+  },
+  "timeErrorFormat": {
+    "message": "Use the format h:mm:ss.",
+    "description": "Time input error: invalid format."
+  },
+  "timeErrorOutOfRange": {
+    "message": "Longer than the video.",
+    "description": "Time input error: later than the end of the video."
+  },
+  "timeErrorOrder": {
+    "message": "Start must be before end.",
+    "description": "Time input error: start is not before end."
   }
 }

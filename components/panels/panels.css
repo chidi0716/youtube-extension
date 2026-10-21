@@ -1,0 +1,107 @@
+/* 各面板的內容樣式（顏色使用 toolbar.css 的 --yte-* 別名）。 */
+
+.yte-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.yte-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.yte-radio,
+.yte-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.yte-radio {
+  display: flex;
+  margin: 8px 0;
+  font-weight: 500;
+}
+
+.yte-radio input,
+.yte-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--yte-call-to-action);
+  cursor: pointer;
+}
+
+.yte-number-input {
+  width: 72px;
+  font-variant-numeric: tabular-nums;
+}
+
+.yte-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+}
+
+.yte-range-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.yte-time-fields {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* ---------- 循環播放面板 ---------- */
+
+.yte-loop {
+  width: min(400px, 100%);
+}
+
+.yte-loop-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px 26px;
+}
+
+.yte-loop-segment {
+  display: block;
+}
+
+.yte-loop-option[data-disabled] {
+  opacity: 0.5;
+}
+
+.yte-loop-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.yte-loop-status {
+  color: var(--yte-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.yte-loop-actions {
+  display: flex;
+  gap: 8px;
+}

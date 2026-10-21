@@ -166,5 +166,71 @@
   "floatingClose": {
     "message": "把播放器放回原位",
     "description": "Close button on the floating player; the player returns to its place until the next scroll away."
+  },
+  "loopModeLabel": {
+    "message": "循環方式",
+    "description": "Accessible label of the loop mode radio group."
+  },
+  "loopModeRepeat": {
+    "message": "重複整部影片",
+    "description": "Loop panel: mode that repeats the whole video N times."
+  },
+  "loopTimesLabel": {
+    "message": "次數",
+    "description": "Loop panel: accessible label of the number input."
+  },
+  "loopTimesUnit": {
+    "message": "次",
+    "description": "Loop panel: unit after the number input."
+  },
+  "loopInfinite": {
+    "message": "無限",
+    "description": "Loop panel: repeat without limit."
+  },
+  "loopTimesError": {
+    "message": "請輸入 1 到 99。",
+    "description": "Loop panel: error for an invalid number of times."
+  },
+  "loopModeSegment": {
+    "message": "循環片段",
+    "description": "Loop panel: mode that loops between a start and an end time."
+  },
+  "loopStart": {
+    "message": "開始循環",
+    "description": "Loop panel: primary button."
+  },
+  "loopStop": {
+    "message": "停止",
+    "description": "Loop panel: stops looping."
+  },
+  "loopPlayedCount": {
+    "message": "已播放 $COUNT$ 次",
+    "description": "Loop panel: how many times the video or segment has been played.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "timeStart": {
+    "message": "開始",
+    "description": "Label of the start time input and slider handle."
+  },
+  "timeEnd": {
+    "message": "結束",
+    "description": "Label of the end time input and slider handle."
+  },
+  "timeErrorFormat": {
+    "message": "格式應為 時:分:秒。",
+    "description": "Time input error: invalid format."
+  },
+  "timeErrorOutOfRange": {
+    "message": "超出影片長度。",
+    "description": "Time input error: later than the end of the video."
+  },
+  "timeErrorOrder": {
+    "message": "開始必須早於結束。",
+    "description": "Time input error: start is not before end."
   }
 }

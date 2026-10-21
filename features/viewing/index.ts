@@ -4,6 +4,7 @@ import type { ToggleFeature } from '@/components/toolbar/Toolbar';
 import { createCinema } from './cinema';
 import { createDarkMode } from './dark-mode';
 import { createFloating } from './floating';
+import { createLoop, type LoopController } from './loop';
 import { createPip } from './pip';
 import type { Store, ToggleState, ViewingFeature } from './store';
 
@@ -16,6 +17,10 @@ export interface ViewingController {
   toggles(): Partial<Record<ButtonId, ToggleFeature>>;
   /** 任一功能狀態改變時通知。 */
   subscribe(listener: () => void): () => void;
+  /** 正在進行、按鈕要維持開啟狀態的面板功能（003 FR-52）。 */
+  activePanels(): ReadonlySet<ButtonId>;
+  /** 循環播放（給面板使用）。 */
+  loop: LoopController;
   /** 工具列（重新）掛載或重新繪製時呼叫，讓功能可以在宿主元素上加 class。 */
   decorateToolbarHost(host: HTMLElement): void;
 }
@@ -27,11 +32,16 @@ export function createViewingController(): ViewingController {
   const pip = createPip();
   const cinema = createCinema();
   const floating = createFloating();
-  const features: ViewingFeature[] = [dark, pip, cinema, floating];
-  const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state, floating.state];
+  const loop = createLoop();
+  const features: ViewingFeature[] = [dark, pip, cinema, floating, loop];
+  const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state, floating.state, loop.status];
   let active = false;
 
   return {
+    loop,
+    activePanels() {
+      return new Set<ButtonId>(loop.status.get().running ? ['loop'] : []);
+    },
     setActive(next) {
       if (next === active) return;
       active = next;

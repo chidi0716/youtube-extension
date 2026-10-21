@@ -36,7 +36,24 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport = { wi
     const url = new URL(route.request().url());
     if (url.protocol === 'chrome-extension:') return route.continue();
     if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/test.webm') {
-      return route.fulfill({ status: 200, contentType: 'video/webm', body: video });
+      // 支援 Range 請求，瀏覽器才能跳轉到還沒下載的位置。
+      const range = /bytes=(\d*)-(\d*)/.exec(route.request().headers()['range'] ?? '');
+      if (!range) {
+        return route.fulfill({
+          status: 200,
+          contentType: 'video/webm',
+          headers: { 'Accept-Ranges': 'bytes' },
+          body: video,
+        });
+      }
+      const start = range[1] ? Number(range[1]) : 0;
+      const end = range[2] ? Math.min(Number(range[2]), video.length - 1) : video.length - 1;
+      return route.fulfill({
+        status: 206,
+        contentType: 'video/webm',
+        headers: { 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${start}-${end}/${video.length}` },
+        body: video.subarray(start, end + 1),
+      });
     }
     if (url.hostname === 'www.youtube.com') {
       return route.fulfill({ status: 200, contentType: 'text/html', body: fixture });

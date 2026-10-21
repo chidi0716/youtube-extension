@@ -8,6 +8,8 @@ import { render } from 'preact';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 import { HelpPanel } from '@/components/panels/HelpPanel';
+import { LoopPanel } from '@/components/panels/LoopPanel';
+import panelsCss from '@/components/panels/panels.css?inline';
 import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import controlsCss from '@/components/controls/controls.css?inline';
@@ -44,7 +46,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     position: 'inline',
     anchor: () => findToolbarAnchor()?.before ?? null,
     append: 'before',
-    css: `${toolbarCss}\n${controlsCss}`,
+    css: `${toolbarCss}\n${controlsCss}\n${panelsCss}`,
     // 工具列內的按鍵不要冒泡到 YouTube，避免觸發 YouTube 的鍵盤快捷鍵（FR-19）。
     isolateEvents: true,
     onMount(container, _shadow, host) {
@@ -67,7 +69,16 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     },
   };
 
-  const renderPanel = (id: ButtonId) => (id === 'help' ? <HelpPanel /> : undefined);
+  const renderPanel = (id: ButtonId) => {
+    switch (id) {
+      case 'help':
+        return <HelpPanel />;
+      case 'loop':
+        return <LoopPanel loop={viewing.loop} />;
+      default:
+        return undefined;
+    }
+  };
 
   function renderInto(container: HTMLElement, host: HTMLElement) {
     if (!videoId) return;
@@ -80,6 +91,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         toggles={viewing.toggles()}
         actions={actions}
         renderPanel={renderPanel}
+        activePanels={viewing.activePanels()}
       />,
       container,
     );

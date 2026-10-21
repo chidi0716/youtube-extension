@@ -18,7 +18,8 @@ async function section(task, fn) {
     await openWatch(page);
     await fn(page, context);
   } catch (err) {
-    check(`${task} script`, false, String(err).split('\n')[0]);
+    check(`${task} script`, false, String(err).split('\n').slice(0, 3).join(' | '));
+    await page.screenshot({ path: `${(await import('./lib.mjs')).root}/spikes/stage1-smoke/.cache/error-${task}.png` }).catch(() => {});
   } finally {
     await context.close();
   }
@@ -224,6 +225,85 @@ await section('T08', async (page) => {
   await button(page, 'floating').click();
   await scrollTo(1200);
   check('關閉浮動播放器後不再浮動', !(await info()).floating && (await pressed(page, 'floating')).pressed === 'false');
+});
+
+// ---------------------------------------------------------------------------
+// T09 循環播放
+// ---------------------------------------------------------------------------
+await section('T09', async (page) => {
+  const panel = (sel) => page.locator(`yte-toolbar .yte-panel ${sel}`);
+  const status = () => panel('.yte-loop-status').innerText();
+  // 測試影片 30 秒，以 4 倍速播放縮短等待時間；在頁面上記錄跳轉次數。
+  await page.evaluate(() => {
+    const v = document.querySelector('video');
+    v.playbackRate = 4;
+    v.muted = true;
+    window.__seeks = 0;
+    v.addEventListener('seeked', () => window.__seeks++);
+  });
+
+  await button(page, 'loop').click();
+  await page.waitForTimeout(300);
+  await shot(page, 'T09-loop-panel.png');
+
+  // 重複 3 次
+  await panel('#yte-loop-times').fill('3');
+  await panel('.yte-button-primary').click();
+  await page.waitForTimeout(500);
+  const onWhileRunning = (await pressed(page, 'loop')).on;
+  await page.locator('#title h1').click({ position: { x: 5, y: 5 } }); // 點外面收起面板，循環繼續進行
+  await page.waitForTimeout(300);
+  const onWithPanelClosed = (await pressed(page, 'loop')).on;
+  check('循環進行中按鈕顯示開啟狀態（FR-52）', onWhileRunning && onWithPanelClosed);
+  await page.waitForFunction(() => document.querySelector('video').ended, null, { timeout: 40_000 });
+  await button(page, 'loop').click();
+  await page.waitForTimeout(200);
+  const repeat = { status: await status(), seeks: await page.evaluate(() => window.__seeks), on: (await pressed(page, 'loop')).on };
+  check('循環「3 次」播完第 3 次後停止（FR-50、FR-51）', repeat.status === 'Played 3 times' && repeat.seeks === 2, JSON.stringify(repeat));
+
+  // 循環片段 00:10–00:20
+  await panel('.yte-radio:nth-of-type(2) input').check();
+  await panel('#yte-loop-start').fill('00:00:10');
+  await panel('#yte-loop-end').fill('00:00:20');
+  await panel('.yte-button-primary').click();
+  const samples = [];
+  for (let i = 0; i < 40; i++) {
+    await page.waitForTimeout(250);
+    samples.push(await page.evaluate(() => document.querySelector('video').currentTime));
+  }
+  const segStatus = await status();
+  const inRange = samples.slice(4).every((t) => t >= 9.5 && t <= 20.8);
+  const playedMatch = /Played (\d+) times/.exec(segStatus);
+  check(
+    '循環片段 00:10–00:20 會一直在這段重複（FR-50）',
+    inRange && playedMatch && Number(playedMatch[1]) >= 2,
+    `status=${segStatus} min=${Math.min(...samples.slice(4)).toFixed(1)} max=${Math.max(...samples).toFixed(1)}`,
+  );
+  await shot(page, 'T09-loop-segment-running.png');
+
+  await panel('.yte-button-secondary').click();
+  await page.waitForTimeout(300);
+  const t1 = await page.evaluate(() => document.querySelector('video').currentTime);
+  await page.waitForTimeout(3000);
+  const t2 = await page.evaluate(() => document.querySelector('video').currentTime);
+  check(
+    '按「停止」結束循環（FR-51）',
+    (await panel('.yte-button-secondary').isDisabled()) && (t2 > 20.5 || t2 > t1),
+    `t1=${t1.toFixed(1)} t2=${t2.toFixed(1)}`,
+  );
+
+  // 不合法的片段時「開始循環」停用
+  await panel('#yte-loop-end').fill('00:00:05');
+  const disabled = await panel('.yte-button-primary').isDisabled();
+  check('片段的開始晚於結束時無法開始循環', disabled);
+  await panel('#yte-loop-end').fill('00:00:20');
+
+  // 換頁時自動停止
+  await panel('.yte-button-primary').click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await spaNavigate(page);
+  check('換到另一部影片時循環自動停止（FR-53）', !(await pressed(page, 'loop')).on);
 });
 
 if (!summary()) process.exitCode = 1;
