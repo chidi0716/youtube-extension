@@ -1,17 +1,18 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YouTube Extension</title>
+    <!-- WXT 會把這個標題寫進 manifest 的 action.default_title，由瀏覽器依語系替換。 -->
+    <title>__MSG_extName__</title>
     <meta name="manifest.type" content="browser_action" />
   </head>
   <body>
     <main id="app">
-      <h1>YouTube Extension</h1>
+      <h1 data-i18n="extName"></h1>
       <label class="toggle">
         <input id="enabled" type="checkbox" />
-        <span>啟用</span>
+        <span data-i18n="popupEnable"></span>
       </label>
     </main>
     <script type="module" src="./main.ts"></script>

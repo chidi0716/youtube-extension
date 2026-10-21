@@ -1,15 +1,41 @@
 import { defineConfig } from 'wxt';
 
+// Chrome：固定的公鑰，讓未封裝載入的擴充功能 ID 永遠相同（plan 3.3）。
+// 對應的擴充功能 ID 記錄在 specs/notes/extension-ids.md。私鑰不在 repo 內。
+const CHROME_PUBLIC_KEY =
+  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnS+lCUvqBBGgNYybmUV8UIN1ouvn806lrte+WCYPOHr0A2q0cjGqDnmWRgizBxPjC72dl0cPYuDIU72d567E/vEB1LK3x16PXv+RYSnsOglIN3n4/a4uuyhs5NI+XDaas9KRC1zA275TO2rQPRqBH+fOmKtAgivD0RlYceYxVmc8mKWzbTe0boZqk/uJA/qsRv7YIwb9GXyIddvR5Y6PobfHCp+XfaP3CXChKHjrprca+XIt+4K2FscNimY3KZ0vzEbZV6WQ+k/dnx7yF56feeWuaxEvP+vHhxw7yx3ogiZBN4omc42Wvt6baORZF+Un27V8vCvjF07UTsnOFe07cQIDAQAB';
+
+// Firefox：固定的附加元件 ID（plan 3.3）。
+const GECKO_ID = 'youtube-extension@chidi0716';
+
 // See https://wxt.dev/api/reference/wxt/interfaces/inlineconfig.html
 export default defineConfig({
-  manifest: {
-    name: 'YouTube Extension',
-    description: 'A browser extension for YouTube',
-    permissions: ['storage'],
-    browser_specific_settings: {
-      gecko: {
-        id: 'youtube-extension@example.com',
+  // Chrome 與 Firefox 都輸出 Manifest V3（plan 第 2 節、T00 結論）。
+  manifestVersion: 3,
+
+  // Preact + TSX：使用 Vite 內建的 JSX 轉換（automatic runtime），從 preact 匯入。
+  vite: () => ({
+    oxc: {
+      jsx: {
+        runtime: 'automatic',
+        importSource: 'preact',
       },
     },
-  },
+  }),
+
+  manifest: ({ browser }) => ({
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
+    default_locale: 'en',
+    // 權限完全依 plan 3.2，每一項的用途寫在 plan 中。
+    permissions: ['storage', 'downloads', 'notifications', 'nativeMessaging'],
+    host_permissions: ['*://*.youtube.com/*', 'https://i.ytimg.com/*'],
+    ...(browser === 'firefox'
+      ? {
+          browser_specific_settings: {
+            gecko: { id: GECKO_ID },
+          },
+        }
+      : { key: CHROME_PUBLIC_KEY }),
+  }),
 });

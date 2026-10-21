@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "YouTube Extension",
+    "description": "Extension name shown in the browser and the popup heading."
+  },
+  "extDescription": {
+    "message": "A browser extension for YouTube",
+    "description": "Extension description shown in the browser's extension list."
+  },
+  "popupEnable": {
+    "message": "Enable",
+    "description": "Label of the popup switch that shows or hides the toolbar."
+  }
+}

@@ -27,3 +27,11 @@ web-ext.config.ts
 
 # T00 實驗：下載的 Firefox、暫時的 HOME／設定檔與建置副本
 spikes/T00/.cache/
+
+# 橋接程式的建置輸出（npm run build:host）
+host/dist/
+
+# Chrome 擴充功能金鑰的私鑰不得提交（plan 3.3）
+*.pem
+*.key
+*.p8

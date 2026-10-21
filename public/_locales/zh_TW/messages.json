@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "YouTube Extension",
+    "description": "Extension name shown in the browser and the popup heading."
+  },
+  "extDescription": {
+    "message": "YouTube 瀏覽器擴充功能",
+    "description": "Extension description shown in the browser's extension list."
+  },
+  "popupEnable": {
+    "message": "啟用",
+    "description": "Label of the popup switch that shows or hides the toolbar."
+  }
+}
