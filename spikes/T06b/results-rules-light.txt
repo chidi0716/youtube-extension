@@ -1,0 +1,56 @@
+START=light
+as loaded {
+ "appBg": "rgb(255, 255, 255)",
+ "baseVar": "#fff",
+ "appVar": "#fff",
+ "rules": [
+  "[light], html { background: ; var: #fff } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "[color-version=\"v2_0\"] [light], html[color-version=\"v2_0\"] { background: ; var: #fff } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "ytd-app { background: var(--t3e41d7b17b187f69); var:  } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "html { background: rgb(255, 255, 255); var:  } [inline]"
+ ],
+ "varDefs": [
+  "--t3e41d7b17b187f69: :root => initial",
+  "--yt-sys-color-baseline--base-background: [light], html => #fff",
+  "--yt-sys-color-baseline--base-background: [dark], html[dark] => #0f0f0f",
+  "--yt-sys-color-baseline--base-background: [color-version=\"v2_0\"] [light], html[color-version=\"v2_0\"] => #fff",
+  "--yt-sys-color-baseline--base-background: [color-version=\"v2_0\"] [dark], html[color-version=\"v2_0\"][dark] => #0f0f0f",
+  "--t3e41d7b17b187f69: :root => #fff",
+  "--t3e41d7b17b187f69: [dark] => #0f0f0f",
+  "--t3e41d7b17b187f69: [light] => #fff"
+ ],
+ "varDefCount": 8,
+ "htmlAttrs": [
+  "lang",
+  "darker-dark-theme",
+  "darker-dark-theme-deprecate",
+  "system-icons",
+  "color-version",
+  "typography",
+  "typography-spacing"
+ ]
+}
+after toggling attributes {
+ "appBg": "rgb(15, 15, 15)",
+ "baseVar": "#0f0f0f",
+ "appVar": "#0f0f0f",
+ "rules": [
+  "[light], html { background: ; var: #fff } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "[dark], html[dark] { background: ; var: #0f0f0f } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "[color-version=\"v2_0\"] [light], html[color-version=\"v2_0\"] { background: ; var: #fff } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "[color-version=\"v2_0\"] [dark], html[color-version=\"v2_0\"][dark] { background: ; var: #0f0f0f } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "ytd-app { background: var(--t3e41d7b17b187f69); var:  } [ywGZzTRpJbRbDyguHgYU81h3hBB1LA]",
+  "html { background: rgb(255, 255, 255); var:  } [inline]",
+  "html[dark] { background: rgb(15, 15, 15); var:  } [inline]"
+ ],
+ "htmlAttrs": [
+  "lang",
+  "darker-dark-theme",
+  "darker-dark-theme-deprecate",
+  "system-icons",
+  "color-version",
+  "typography",
+  "typography-spacing",
+  "dark"
+ ]
+}

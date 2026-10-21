@@ -1,0 +1,16 @@
+{
+ "computed": "rgb(241, 241, 241)",
+ "className": "ytSpecButtonShapeNextHost ytSpecButtonShapeNextFilled ytSpecButtonShapeNextMono ytSpecButtonShapeNextSizeM ytSpecButtonShapeNextEnableBackdropFilterExperiment ytSpecButtonShapeNextMainstageIconSize ytSpecButtonShapeNextMainstagePadding",
+ "rules": [
+  ".ytSpecButtonShapeNextMono.ytSpecButtonShapeNextFilled { color: var(--t6216186c28b3834b) }"
+ ],
+ "defs": {
+  "--t6216186c28b3834b": [
+   ":root => initial",
+   ":root:root => #f1f1f1",
+   ":root => #fff",
+   "[dark] => #0f0f0f",
+   "[light] => #fff"
+  ]
+ }
+}

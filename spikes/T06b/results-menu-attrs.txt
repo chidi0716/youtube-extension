@@ -1,0 +1,72 @@
+initial {
+ "html": {
+  "style": "font-size: 62.5%; font-family: Roboto, Arial, sans-serif; --ytd-vtm-exit-ms: 50m…",
+  "lang": "en",
+  "darker-dark-theme": "",
+  "darker-dark-theme-deprecate": "",
+  "system-icons": "",
+  "color-version": "v2_0",
+  "typography": "",
+  "typography-spacing": ""
+ },
+ "body": {
+  "dir": "ltr",
+  "rounded-container": ""
+ },
+ "ytdApp": {
+  "fix-ambient-cutoff": "",
+  "mini-guide-visible": ""
+ },
+ "masthead": {
+  "id": "masthead",
+  "logo-type": "YOUTUBE_LOGO",
+  "slot": "masthead",
+  "class": "masthead-finish",
+  "frosted-glass-mode": "without-chipbar",
+  "role": "banner",
+  "mini-guide-visible": ""
+ },
+ "bg": {
+  "html": "rgb(255, 255, 255)",
+  "body": "rgba(0, 0, 0, 0)",
+  "ytdApp": "rgb(255, 255, 255)",
+  "masthead": "rgba(255, 255, 255, 0.9)"
+ },
+ "baseBackground": "",
+ "textPrimary": "",
+ "pref": "PREF=tz=UTC",
+ "darkAttrElements": 0,
+ "darkAttrTags": []
+}
+
+=== after "Dark theme" reloaded=true
+html diff {"dark":["(none)",""]}
+body diff {}
+ytd-app diff {}
+masthead diff {"page-dark-theme":["(none)",""],"dark":["(none)",""]}
+bg {"html":"rgb(15, 15, 15)","body":"rgba(0, 0, 0, 0)","ytdApp":"rgb(15, 15, 15)","masthead":"rgba(15, 15, 15, 0.8)"} base  text 
+pref PREF=tz=UTC&f6=400 dark elements 2 ["html","ytd-masthead"]
+mutations on html/body/ytd-app null
+dark attribute mutations in subtree undefined
+
+=== after "Light theme" reloaded=true
+html diff {"dark":["","(none)"]}
+body diff {}
+ytd-app diff {}
+masthead diff {"page-dark-theme":["","(none)"],"dark":["","(none)"]}
+bg {"html":"rgb(255, 255, 255)","body":"rgba(0, 0, 0, 0)","ytdApp":"rgb(255, 255, 255)","masthead":"rgba(255, 255, 255, 0.9)"} base  text 
+pref PREF=tz=UTC&f6=80000 dark elements 0 []
+mutations on html/body/ytd-app null
+dark attribute mutations in subtree undefined
+
+=== after "Dark theme" reloaded=true
+html diff {"dark":["(none)",""]}
+body diff {}
+ytd-app diff {}
+masthead diff {"page-dark-theme":["(none)",""],"dark":["(none)",""]}
+bg {"html":"rgb(15, 15, 15)","body":"rgba(0, 0, 0, 0)","ytdApp":"rgb(15, 15, 15)","masthead":"rgba(15, 15, 15, 0.8)"} base  text 
+pref PREF=tz=UTC&f6=400 dark elements 2 ["html","ytd-masthead"]
+mutations on html/body/ytd-app null
+dark attribute mutations in subtree undefined
+
+final {"style":"font-size: 62.5%; font-family: Roboto, Arial, sans-serif; --ytd-vtm-exit-ms: 50m…","lang":"en","darker-dark-theme":"","darker-dark-theme-deprecate":"","dark":"","system-icons":"","color-version":"v2_0","typography":"","typography-spacing":""}

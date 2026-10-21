@@ -1,0 +1,20 @@
+{
+ "rules": [
+  "canvas, caption, center, cite, code, dd, del, dfn, div, dl, dt, em, embed, fieldset, font, form, h1, h2, h3, h4, h5, h6, { margin: 0px; padding: 0px; border: 0px; background: transparent; }",
+  "#dismissible.ytd-feed-nudge-renderer { border-radius: 5px; border: 1px solid var(--tf3fc855af2285f5f); height: 100%; position: relative; width: 100%; max-width: var(--ytd-rich-grid-item-max-width,360px); display: flex; -webkit-box-orient:  }",
+  "ytd-feed-nudge-renderer[rounded-container] #dismissible.ytd-feed-nudge-renderer { border-radius: 12px; overflow: hidden; }",
+  "ytd-feed-nudge-renderer[nudge-style=\"modernized-nudge\"]:not([is-dark-mode]):not([no-shadow]) #dismissed.ytd-feed-nudge-r { border: none; box-shadow: 0 8px 23px var(--tf3fc855af2285f5f); }"
+ ],
+ "defs": {
+  "--tf3fc855af2285f5f": [
+   ":root => initial",
+   ":root:root => rgba(0,0,0,0.2)",
+   ":root => rgba(0,0,0,0.1)",
+   "[dark] => rgba(255,255,255,0.2)",
+   "[light] => rgba(0,0,0,0.1)"
+  ],
+  "--ytd-rich-grid-item-max-width": [
+   "html => 500px"
+  ]
+ }
+}

@@ -1,0 +1,4 @@
+--- lines only in dark
+ytd-feed-nudge-renderer class="style-scope ytd-rich-section-renderer" rounded-container button-update is-dark-mode nudge-style="modernized-nudge" trim-style="no-trim" background-style="FEED_NUDGE_BACKGROUND_STYLE_UNKNOWN" contents-location="FEED_NUDGE_CONTENTS_LOCATION_UNKNOWN" no-icon
+--- lines only in light
+ytd-feed-nudge-renderer class="style-scope ytd-rich-section-renderer" rounded-container button-update nudge-style="modernized-nudge" trim-style="no-trim" background-style="FEED_NUDGE_BACKGROUND_STYLE_UNKNOWN" contents-location="FEED_NUDGE_CONTENTS_LOCATION_UNKNOWN" no-icon

@@ -10,6 +10,13 @@
   - #movie_player 上的播放器 API（getVideoData、seekTo、getVolume、setVolume 等）；
   - 標題、留言區（#comments）、右側影片清單（站內換頁會發出 yt-navigate-finish）；
   - <html dark> 深色主題與顏色變數，以及模擬 YouTube 選單的「切換主題」按鈕。
+  - 主題的實測行為（specs/notes/T06b-dark-mode-instant.md）：
+    - YouTube 依載入時的主題輸出不同的樣式表：`:root` 的顏色變數預設值就是載入時的主題，另有
+      `[dark]`、`[light]` 兩組覆寫，以及以 `:root:root` 固定的少數變數（這裡是「訂閱」按鈕的文字色）；
+    - 頂端列（ytd-masthead[dark][page-dark-theme]）與 ytd-watch-flexy[is-dark-theme] 的屬性依載入時的主題設定；
+    - 站內換頁時，依記憶中（載入時）的主題把頂端列的 dark 改回去，並以記憶中的偏好改寫 PREF（另加 f7=100）。
+  - 網址帶 fixture_static_theme=1 時不輸出 [dark]／[light] 覆寫，模擬「只切換屬性無法改變顏色」
+    （用來測試退回重新載入，003 FR-16）。
 -->
 <html>
   <head>
@@ -25,35 +32,93 @@
         const dark =
           flags & 0x400 ? true : flags & 0x80000 ? false : matchMedia('(prefers-color-scheme: dark)').matches;
         if (dark) document.documentElement.setAttribute('dark', '');
+        // 模擬 YouTube 記憶中的主題與偏好（站內換頁時用來改回去）
+        window.__fixtureLoadDark = dark;
+        window.__fixtureThemeMemoryDark = dark;
+        window.__fixturePrefMemory = pref ? pref.slice(5) : '';
+
+        const lightVars = {
+          'text-primary': '#0f0f0f',
+          'text-secondary': '#606060',
+          'menu-background': '#fff',
+          'base-background': '#fff',
+          'additive-background': 'rgba(0, 0, 0, 0.05)',
+          'button-chip-background-hover': 'rgba(0, 0, 0, 0.1)',
+          'call-to-action': '#065fd4',
+          outline: 'rgba(0, 0, 0, 0.1)',
+          'text-primary-inverse': '#fff',
+          'text-disabled': '#909090',
+        };
+        const darkVars = {
+          'text-primary': '#f1f1f1',
+          'text-secondary': '#aaa',
+          'menu-background': '#282828',
+          'base-background': '#0f0f0f',
+          'additive-background': 'rgba(255, 255, 255, 0.1)',
+          'button-chip-background-hover': 'rgba(255, 255, 255, 0.2)',
+          'call-to-action': '#3ea6ff',
+          outline: 'rgba(255, 255, 255, 0.2)',
+          'text-primary-inverse': '#0f0f0f',
+          'text-disabled': '#717171',
+        };
+        const decl = (vars) =>
+          Object.entries(vars)
+            .map(([k, v]) => `--yt-sys-color-baseline--${k}: ${v};`)
+            .join(' ');
+        let css = `:root { ${decl(dark ? darkVars : lightVars)} }`;
+        css += ` :root:root { --fixture-pinned-inverse: ${dark ? '#0f0f0f' : '#f1f1f1'}; }`;
+        if (new URL(location.href).searchParams.get('fixture_static_theme') !== '1') {
+          css += ` [dark] { ${decl(darkVars)} --fixture-pinned-inverse: #0f0f0f; }`;
+          css += ` [light] { ${decl(lightVars)} --fixture-pinned-inverse: #fff; }`;
+        }
+        const style = document.createElement('style');
+        style.id = 'fixture-load-theme';
+        style.textContent = css;
+        document.head.appendChild(style);
       })();
     </script>
     <style>
       html {
-        --yt-sys-color-baseline--text-primary: #0f0f0f;
-        --yt-sys-color-baseline--text-secondary: #606060;
-        --yt-sys-color-baseline--menu-background: #fff;
-        --yt-sys-color-baseline--base-background: #fff;
-        --yt-sys-color-baseline--additive-background: rgba(0, 0, 0, 0.05);
-        --yt-sys-color-baseline--button-chip-background-hover: rgba(0, 0, 0, 0.1);
-        --yt-sys-color-baseline--call-to-action: #065fd4;
-        --yt-sys-color-baseline--outline: rgba(0, 0, 0, 0.1);
-        --yt-sys-color-baseline--text-primary-inverse: #fff;
-        --yt-sys-color-baseline--text-disabled: #909090;
         font-family: Roboto, Arial, sans-serif;
         background: var(--yt-sys-color-baseline--base-background);
         color: var(--yt-sys-color-baseline--text-primary);
       }
-      html[dark] {
-        --yt-sys-color-baseline--text-primary: #f1f1f1;
-        --yt-sys-color-baseline--text-secondary: #aaa;
-        --yt-sys-color-baseline--menu-background: #282828;
-        --yt-sys-color-baseline--base-background: #0f0f0f;
-        --yt-sys-color-baseline--additive-background: rgba(255, 255, 255, 0.1);
-        --yt-sys-color-baseline--button-chip-background-hover: rgba(255, 255, 255, 0.2);
-        --yt-sys-color-baseline--call-to-action: #3ea6ff;
-        --yt-sys-color-baseline--outline: rgba(255, 255, 255, 0.2);
-        --yt-sys-color-baseline--text-primary-inverse: #0f0f0f;
-        --yt-sys-color-baseline--text-disabled: #717171;
+      ytd-masthead {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        height: 100%;
+      }
+      /* 頂端列的部分顏色依 ytd-masthead[dark] 決定（實測：搜尋框） */
+      #fixture-search {
+        padding: 2px 12px;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        color: #0f0f0f;
+      }
+      ytd-masthead[dark] #fixture-search {
+        border-color: #303030;
+        color: #f1f1f1;
+      }
+      /* 觀看頁的部分顏色依 ytd-watch-flexy[is-dark-theme] 決定 */
+      #fixture-description {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.05);
+      }
+      ytd-watch-flexy[is-dark-theme] #fixture-description {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      /* 「訂閱」按鈕：背景隨 [dark]／[light]，文字色是被 :root:root 固定的變數 */
+      #fixture-subscribe {
+        margin-top: 8px;
+        padding: 8px 16px;
+        border: 0;
+        border-radius: 18px;
+        background: var(--yt-sys-color-baseline--text-primary);
+        color: var(--fixture-pinned-inverse);
+        font: inherit;
       }
       body {
         margin: 0;
@@ -171,8 +236,11 @@
   <body>
     <ytd-app>
       <div id="masthead-container">
-        <strong>Fixture</strong>
-        <button id="fixture-theme-toggle" type="button">Theme (YouTube menu)</button>
+        <ytd-masthead id="masthead">
+          <strong>Fixture</strong>
+          <span id="fixture-search">Search</span>
+          <button id="fixture-theme-toggle" type="button">Theme (YouTube menu)</button>
+        </ytd-masthead>
       </div>
       <div id="page-manager">
         <ytd-watch-flexy>
@@ -205,7 +273,11 @@
                 <div id="below">
                   <div id="shopping-timely-shelf"></div>
                   <div>
-                    <ytd-watch-metadata><div id="title"><h1>Fixture video</h1></div></ytd-watch-metadata>
+                    <ytd-watch-metadata>
+                      <div id="title"><h1>Fixture video</h1></div>
+                      <button id="fixture-subscribe" type="button">Subscribe</button>
+                      <div id="fixture-description">Description (fixture)</div>
+                    </ytd-watch-metadata>
                   </div>
                   <ytd-comments id="comments"><p id="fixture-comments-text">Comments section (fixture)</p></ytd-comments>
                   <div class="filler"></div>
@@ -250,7 +322,21 @@
         autonav.setAttribute('aria-checked', String(autonav.getAttribute('aria-checked') !== 'true'));
       });
 
-      // 模擬使用者從 YouTube 選單切換主題：與 YouTube 相同，改寫 PREF 的 f6 旗標並立即套用（不重新載入）。
+      // 模擬 YouTube 依載入時的主題設定在元素上的主題屬性。
+      const masthead = document.getElementById('masthead');
+      const flexy = document.querySelector('ytd-watch-flexy');
+      const setElementTheme = (dark) => {
+        masthead.toggleAttribute('dark', dark);
+        masthead.toggleAttribute('page-dark-theme', dark);
+        flexy.toggleAttribute('is-dark-theme', dark);
+      };
+      setElementTheme(window.__fixtureLoadDark);
+      const writePref = (value) => {
+        document.cookie = 'PREF=' + value + '; domain=.youtube.com; path=/; max-age=34560000; secure; samesite=lax';
+      };
+
+      // 模擬使用者從 YouTube 選單切換主題（假設可即時切換，例如登入帳號）：改寫 PREF 的 f6 旗標並立即套用。
+      // （未登入時真實的 YouTube 選單會重新載入頁面，見 T06b 筆記。）
       document.getElementById('fixture-theme-toggle').addEventListener('click', () => {
         const dark = !document.documentElement.hasAttribute('dark');
         const pref = (document.cookie.split('; ').find((c) => c.startsWith('PREF=')) || 'PREF=').slice(5);
@@ -260,9 +346,24 @@
         const next = ((flags & ~0x80400) | (dark ? 0x400 : 0x80000)).toString(16);
         if (i === -1) fields.push(['f6', next]);
         else fields[i] = ['f6', next];
-        document.cookie = 'PREF=' + fields.map((f) => f.join('=')).join('&') + '; domain=.youtube.com; path=/; max-age=34560000; secure; samesite=lax';
+        const value = fields.map((f) => f.join('=')).join('&');
+        writePref(value);
+        window.__fixturePrefMemory = value;
+        window.__fixtureThemeMemoryDark = dark;
         document.documentElement.toggleAttribute('dark', dark);
+        document.documentElement.toggleAttribute('light', !dark && window.__fixtureLoadDark);
+        setElementTheme(dark);
       });
+
+      // 模擬站內換頁時 YouTube 依記憶中的狀態改回主題：頂端列的 dark 屬性，以及以記憶中的偏好
+      // 改寫 PREF（實測會另外加上 f7=100，主題旗標是舊的）。
+      const simulateStaleTheme = () => {
+        masthead.toggleAttribute('dark', window.__fixtureThemeMemoryDark);
+        const fields = window.__fixturePrefMemory ? window.__fixturePrefMemory.split('&').map((p) => p.split('=')) : [];
+        if (!fields.some(([k]) => k === 'f7')) fields.push(['f7', '100']);
+        window.__fixturePrefMemory = fields.map((f) => f.join('=')).join('&');
+        writePref(window.__fixturePrefMemory);
+      };
 
       // 模擬 YouTube 的 t 參數：載入後跳到指定的秒數。
       const startAt = /^(\d+)s?$/.exec(new URL(location.href).searchParams.get('t') || '');
@@ -278,6 +379,7 @@
           history.pushState({}, '', e.currentTarget.getAttribute('href'));
           document.querySelector('h1').textContent = 'Fixture video ' + videoId();
           video.currentTime = 0;
+          simulateStaleTheme();
           document.dispatchEvent(new CustomEvent('yt-navigate-finish'));
         });
       }

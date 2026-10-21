@@ -1,0 +1,32 @@
+f6=80000 {
+ "ms": 64,
+ "totalRules": 23337,
+ "sheets": 18,
+ "pinned": 6,
+ "withDark": 4,
+ "withLight": 6,
+ "sample": [
+  "--tf3fc855af2285f5f: pinned=rgba(0,0,0,0.2) dark=rgba(255,255,255,0.2) light=rgba(0,0,0,0.1)",
+  "--t02c0a2c868c14ce8: pinned=#e9e9e9 dark=#e5e5e5 light=#3f3f3f",
+  "--t87eabf113a15ac96: pinned=#e9e9e9 dark=undefined light=#e6e6e6",
+  "--t0f59291ce5504543: pinned=#0f0f0f dark=undefined light=#030303",
+  "--t45b2a38314924357: pinned=#e9e9e9 dark=#0f0f0f light=#e6e6e6",
+  "--t6216186c28b3834b: pinned=#f1f1f1 dark=#0f0f0f light=#fff"
+ ],
+ "otherRootRootSelectors": []
+}
+f6=400 {
+ "ms": 65,
+ "totalRules": 23337,
+ "sheets": 18,
+ "pinned": 4,
+ "withDark": 4,
+ "withLight": 4,
+ "sample": [
+  "--tf3fc855af2285f5f: pinned=rgba(255,255,255,0.2) dark=rgba(255,255,255,0.2) light=rgba(0,0,0,0.1)",
+  "--t0a1249f7c9e82b5e: pinned=rgba(0,0,0,0.2) dark=rgba(0,0,0,0.1) light=rgba(255,255,255,0.2)",
+  "--t832f22ce6618e99e: pinned=#e9e9e9 dark=#e6e6e6 light=#0f0f0f",
+  "--t6216186c28b3834b: pinned=#0f0f0f dark=#0f0f0f light=#fff"
+ ],
+ "otherRootRootSelectors": []
+}

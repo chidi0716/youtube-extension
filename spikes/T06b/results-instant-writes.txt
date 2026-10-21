@@ -1,0 +1,18 @@
+MODE=html+masthead
+reference dark {"html":true,"masthead":["dark","page-dark-theme"],"pref":"PREF=f6=400&tz=UTC","bg":"rgb(15, 15, 15)","mastheadBg":"rgba(15, 15, 15, 0.8)","url":"/"}
+reference light {"html":false,"masthead":[],"pref":"PREF=f6=80000&tz=UTC","bg":"rgb(255, 255, 255)","mastheadBg":"rgba(255, 255, 255, 0.9)","url":"/"}
+
+=== light -> dark
+start {"html":false,"masthead":[],"pref":"PREF=f6=80000&tz=UTC","bg":"rgb(255, 255, 255)","mastheadBg":"rgba(255, 255, 255, 0.9)","url":"/"}
+after 300ms {"html":true,"masthead":["dark","page-dark-theme"],"pref":"PREF=f6=400&tz=UTC","bg":"rgb(15, 15, 15)","mastheadBg":"rgba(15, 15, 15, 0.8)","url":"/"} reloaded false
+compare with reference (300ms) {"compared":89,"mismatched":1,"examples":["div#dismissible.ytd-feed-nudge-renderer: ref=rgba(0, 0, 0, 0) | rgb(0, 0, 0) | rgba(255, 255, 255, 0.2) | rgb(0, 0, 0) got=rgba(0, 0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0)"]}
+after 10s {"html":true,"masthead":["dark","page-dark-theme"],"pref":"PREF=f6=400&tz=UTC","bg":"rgb(15, 15, 15)","mastheadBg":"rgba(15, 15, 15, 0.8)","url":"/"} reverts []
+compare with reference (10s) {"compared":89,"mismatched":1,"examples":["div#dismissible.ytd-feed-nudge-renderer: ref=rgba(0, 0, 0, 0) | rgb(0, 0, 0) | rgba(255, 255, 255, 0.2) | rgb(0, 0, 0) got=rgba(0, 0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0)"]}
+settings menu {"bg":"rgb(40, 40, 40)","color":"rgb(0, 0, 0)","appearance":"Appearance: Light"}
+PREF writes so far [{"t":1502,"value":"PREF=f6=80000","from":"at _.W.set (m=kevlar_base_module,kevlar_main_module,kevlar_base_sync_mod_chunk:6470:453) < at _.aD (m=kevlar_base_module,kevlar_main_module,kevlar_base_sync_mod_chunk:1523:31)"},{"t":1553,"value":"PREF=f6=80000&tz=UTC","from":"at _.W.set (m=kevlar_base_module,kevlar_main_module,kevlar_base_sync_mod_chunk:6470:453) < at _.aD (m=kevlar_base_module,kevlar_main_module,kevlar_base_sync_mod_chunk:1523:31)"},{"t":1900,"value":"PREF=f6=80000&tz=UTC","from":"at _.W.set (m=kevlar_base_module,kevlar_main_module,kevlar_base_sync_mod_chunk:6470:453) < at _.aD (m=kevlar_base_module,kevlar_main_module,kevlar_base_sync_mod_chunk:1523:31)"},{"t":7657,"value":"PREF=f6=400&tz=UTC","from":"at eval (eval at evaluate (:290:30), <anonymous>:10:23) < at UtilityScript.evaluate (<anonymous>:292:16)"}]
+after SPA navigation to /shorts/ {"html":true,"masthead":["dark","page-dark-theme"],"pref":"PREF=f6=400&tz=UTC","bg":"rgb(15, 15, 15)","mastheadBg":"rgb(15, 15, 15)","url":"/shorts/EDteB_K6doM"} reloaded false reverts []
+after history back {"html":true,"masthead":["dark","page-dark-theme"],"pref":"PREF=f6=400&tz=UTC","bg":"rgb(15, 15, 15)","mastheadBg":"rgb(15, 15, 15)","url":"/shorts/"} reloaded false reverts []
+after reload {"html":true,"masthead":["dark","page-dark-theme"],"pref":"PREF=f6=400&tz=UTC&f7=100","bg":"rgb(15, 15, 15)","mastheadBg":"rgb(15, 15, 15)","url":"/shorts/pQ_UKZFR6fc"}
+compare with reference (after reload) {"compared":70,"mismatched":2,"examples":["ytd-app: ref=rgb(15, 15, 15) | rgb(0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0) got=rgba(0, 0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0)","div#background.ytd-masthead: ref=rgba(15, 15, 15, 0.8) | rgb(0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0) got=rgb(15, 15, 15) | rgb(0, 0, 0) | rgb(0, 0, 0) | rgb(0, 0, 0)"]}
+
+noise baseline (dark vs dark reload) {"compared":89,"mismatched":0,"examples":[]}

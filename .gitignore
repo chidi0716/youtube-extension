@@ -41,3 +41,6 @@ spikes/stage1-smoke/.cache/
 
 # T06a 實測的暫存截圖
 spikes/T06a/.cache/
+
+# T06b 實測的暫存截圖與打包的測試程式
+spikes/T06b/.cache/

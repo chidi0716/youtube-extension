@@ -1,0 +1,9 @@
+ -1764ms  before click
+     0ms  clicking Dark theme
+    37ms  PREF write PREF=f6=400&tz=UTC
+    39ms  beforeunload
+   161ms  pagehide
+  1212ms  PREF write PREF=f6=400&tz=UTC
+  1251ms  PREF write PREF=f6=400&tz=UTC
+  1539ms  pagehide
+  1704ms  PREF write PREF=f6=400&tz=UTC

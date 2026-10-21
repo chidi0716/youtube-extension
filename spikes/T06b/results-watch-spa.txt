@@ -1,0 +1,34 @@
+
+=== light -> dark
+reference (loaded as target theme) {"url":"/watch?v=jNQXAC9IVRw","alive":true,"watchVisible":true,"verification":false,"html":["dark"],"themed":["html[dark]","ytd-masthead[dark,page-dark-theme]","ytd-feed-nudge-renderer[is-dark-mode]","ytd-watch-flexy[is-dark-theme]","ytd-playlist-panel-renderer[is-dark-theme]","yt-chip-cloud-renderer[is-dark-theme]"],"pref":"f6=400&tz=UTC"}
+switched instantly on the homepage {"url":"/watch?v=jNQXAC9IVRw","alive":true,"watchVisible":true,"verification":false,"html":["dark"],"themed":["html[dark]","ytd-masthead[dark,page-dark-theme]","ytd-feed-nudge-renderer[is-dark-mode]","ytd-watch-flexy[is-dark-theme]","ytd-playlist-panel-renderer[is-dark-theme]","yt-chip-cloud-renderer[is-dark-theme]"],"pref":"f6=400&tz=UTC"}
+PASS  light -> dark: 站內換頁到觀看頁，沒有重新載入、沒有驗證頁  (/watch?v=jNQXAC9IVRw)
+PASS  light -> dark: 觀看頁的主題屬性與以dark載入時相同  (html[dark],yt-chip-cloud-renderer[is-dark-theme],ytd-feed-nudge-renderer[is-dark-mode],ytd-masthead[dark,page-dark-theme],ytd-playlist-panel-renderer[is-dark-theme],ytd-watch-flexy[is-dark-theme] vs html[dark],yt-chip-cloud-renderer[is-dark-theme],ytd-feed-nudge-renderer[is-dark-mode],ytd-masthead[dark,page-dark-theme],ytd-playlist-panel-renderer[is-dark-theme],ytd-watch-flexy[is-dark-theme])
+compare {
+ "compared": 182,
+ "mismatched": 0,
+ "examples": [],
+ "approximate": []
+}
+PASS  light -> dark: 觀看頁顏色與以dark載入時相同或近似（播放器外的元素）  (mismatched=0 approximate=0 of 182)
+
+=== dark -> light
+reference (loaded as target theme) {"url":"/watch?v=jNQXAC9IVRw","alive":true,"watchVisible":true,"verification":false,"html":[],"themed":[],"pref":"f6=80000&tz=UTC"}
+switched instantly on the homepage {"url":"/watch?v=jNQXAC9IVRw","alive":true,"watchVisible":true,"verification":false,"html":["light"],"themed":[],"pref":"f6=80000&tz=UTC"}
+PASS  dark -> light: 站內換頁到觀看頁，沒有重新載入、沒有驗證頁  (/watch?v=jNQXAC9IVRw)
+PASS  dark -> light: 觀看頁的主題屬性與以light載入時相同  ( vs )
+compare {
+ "compared": 191,
+ "mismatched": 0,
+ "examples": [],
+ "approximate": [
+  "a.ytSpecButtonShapeNextCallToAction.ytSpecButtonShapeNextEnableBackdropFilterExperiment.ytSpecButtonShapeNextHost: ref=rgba(0, 0, 0, 0) | rgb(6, 95, 212) | rgba(0, 0, 0, 0.2) got=rgba(0, 0, 0, 0) | rgb(6, 95, 212) | rgba(0, 0, 0, 0.1)",
+  "button.ytSpecButtonShapeNextEnableBackdropFilterExperiment.ytSpecButtonShapeNextFilled.ytSpecButtonShapeNextHost: ref=rgb(15, 15, 15) | rgb(241, 241, 241) | rgb(241, 241, 241) got=rgb(15, 15, 15) | rgb(255, 255, 255) | rgb(255, 255, 255)",
+  "yt-touch-feedback-shape.ytSpecTouchFeedbackShapeHost.ytSpecTouchFeedbackShapeTouchResponseInverse: ref=rgba(0, 0, 0, 0) | rgb(241, 241, 241) | rgb(241, 241, 241) got=rgba(0, 0, 0, 0) | rgb(255, 255, 255) | rgb(255, 255, 255)",
+  "yt-light-shape.contribYtLightShapeHost.contribYtLightShapeStaticRimLight.contribYtLightShapeStaticRimLightSolid: ref=rgba(0, 0, 0, 0) | rgb(241, 241, 241) | rgb(241, 241, 241) got=rgba(0, 0, 0, 0) | rgb(255, 255, 255) | rgb(255, 255, 255)",
+  "div.contribYtLightShapeStaticWashLight.contribYtLightShapeStaticWashLightSolid: ref=rgba(255, 255, 255, 0.15) | rgb(241, 241, 241) | rgb(241, 241, 241) got=rgba(255, 255, 255, 0.15) | rgb(255, 255, 255) | rgb(255, 255, 255)"
+ ]
+}
+PASS  dark -> light: 觀看頁顏色與以light載入時相同或近似（播放器外的元素）  (mismatched=0 approximate=5 of 191)
+
+all passed

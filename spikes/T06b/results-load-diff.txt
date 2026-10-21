@@ -1,0 +1,37 @@
+html inline style diff (dark, light) {}
+body inline style diff {}
+ytd-app inline style diff {}
+theme-like attributes diff {
+ "html [dark=]": [
+  1,
+  "(none)"
+ ],
+ "ytd-masthead#masthead [page-dark-theme=]": [
+  1,
+  "(none)"
+ ],
+ "ytd-masthead#masthead [dark=]": [
+  1,
+  "(none)"
+ ],
+ "ytd-feed-nudge-renderer [is-dark-mode=]": [
+  1,
+  "(none)"
+ ],
+ "ytd-watch-flexy [is-dark-theme=]": [
+  1,
+  "(none)"
+ ],
+ "ytd-playlist-panel-renderer#playlist [is-dark-theme=]": [
+  1,
+  "(none)"
+ ]
+}
+<style> only in dark []
+<style> only in light []
+stylesheet links only in dark ["https://www.youtube.com/s/_/ytmainappweb/_/ss/k=ytmainappweb.kevlar_base.xf1LMwKkhkk.L.W.O/am=AAAAAAFgPANM/d=0/br=1/rs=AGKMywG4Qn68ho4Otm7JbwU_tyvw3bvaMw"]
+stylesheet links only in light ["https://www.youtube.com/s/_/ytmainappweb/_/ss/k=ytmainappweb.kevlar_base.xf1LMwKkhkk.L.W.O/am=AAAAEABgCGBP/d=0/br=1/rs=AGKMywGZzTRpJbRbDyguHgYU81h3hBB1LA"]
+counts dark 18 0 light 18 0
+css vars on ytd-app dark {"--yt-spec-base-background":"","--yt-spec-text-primary":"","--yt-spec-general-background-a":"","--yt-sys-color-baseline--base-background":"#0f0f0f","--yt-frosted-glass-desktop":""}
+css vars on ytd-app light {"--yt-spec-base-background":"","--yt-spec-text-primary":"","--yt-spec-general-background-a":"","--yt-sys-color-baseline--base-background":"#fff","--yt-frosted-glass-desktop":""}
+html inline style property count dark 13 light 13

@@ -1,0 +1,56 @@
+START=dark
+as loaded {
+ "appBg": "rgb(15, 15, 15)",
+ "baseVar": "#0f0f0f",
+ "appVar": "#0f0f0f",
+ "rules": [
+  "[light], html { background: ; var: #fff } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "[dark], html[dark] { background: ; var: #0f0f0f } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "[color-version=\"v2_0\"] [light], html[color-version=\"v2_0\"] { background: ; var: #fff } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "[color-version=\"v2_0\"] [dark], html[color-version=\"v2_0\"][dark] { background: ; var: #0f0f0f } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "ytd-app { background: var(--t3e41d7b17b187f69); var:  } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "html { background: rgb(255, 255, 255); var:  } [inline]",
+  "html[dark] { background: rgb(15, 15, 15); var:  } [inline]"
+ ],
+ "varDefs": [
+  "--t3e41d7b17b187f69: :root => initial",
+  "--yt-sys-color-baseline--base-background: [light], html => #fff",
+  "--yt-sys-color-baseline--base-background: [dark], html[dark] => #0f0f0f",
+  "--yt-sys-color-baseline--base-background: [color-version=\"v2_0\"] [light], html[color-version=\"v2_0\"] => #fff",
+  "--yt-sys-color-baseline--base-background: [color-version=\"v2_0\"] [dark], html[color-version=\"v2_0\"][dark] => #0f0f0f",
+  "--t3e41d7b17b187f69: :root => #0f0f0f",
+  "--t3e41d7b17b187f69: [dark] => #0f0f0f",
+  "--t3e41d7b17b187f69: [light] => #fff"
+ ],
+ "varDefCount": 8,
+ "htmlAttrs": [
+  "lang",
+  "darker-dark-theme",
+  "darker-dark-theme-deprecate",
+  "dark",
+  "system-icons",
+  "color-version",
+  "typography",
+  "typography-spacing"
+ ]
+}
+after toggling attributes {
+ "appBg": "rgb(15, 15, 15)",
+ "baseVar": "#fff",
+ "appVar": "#0f0f0f",
+ "rules": [
+  "[light], html { background: ; var: #fff } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "[color-version=\"v2_0\"] [light], html[color-version=\"v2_0\"] { background: ; var: #fff } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "ytd-app { background: var(--t3e41d7b17b187f69); var:  } [ywGulv51vW6k7vJ5EvwG5k-JdADLkA]",
+  "html { background: rgb(255, 255, 255); var:  } [inline]"
+ ],
+ "htmlAttrs": [
+  "lang",
+  "darker-dark-theme",
+  "darker-dark-theme-deprecate",
+  "system-icons",
+  "color-version",
+  "typography",
+  "typography-spacing"
+ ]
+}

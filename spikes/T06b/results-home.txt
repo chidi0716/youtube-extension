@@ -1,0 +1,48 @@
+reference dark {"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC","appBg":"rgb(15, 15, 15)","button":null,"alive":false}
+reference light {"url":"/","html":[],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgb(255, 255, 255)","button":null,"alive":false}
+
+=== light -> dark
+start {"url":"/","html":[],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgb(255, 255, 255)","button":false,"alive":true}
+PASS  light -> dark: 不重新載入  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC","appBg":"rgb(15, 15, 15)","button":true,"alive":true})
+PASS  light -> dark: 下一個畫面就是新主題的背景（沒有閃一下舊主題或白畫面）  ({"before":"rgb(255, 255, 255)","sync":"rgb(15, 15, 15)","frame1":"rgb(15, 15, 15)","frame2":"rgb(15, 15, 15)"})
+PASS  light -> dark: 按鈕狀態與主題偏好  (pref=f6=400&tz=UTC)
+PASS  light -> dark: 整頁顏色與 YouTube 以dark載入時相同  ({"compared":85,"mismatched":0,"examples":[],"approximate":[]})
+PASS  light -> dark: 10 秒後沒有被改回去  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC","appBg":"rgb(15, 15, 15)","button":true,"alive":true} mismatched=0)
+  console: [youtube-extension] dark mode: theme preference was changed back by the page; restored
+PASS  light -> dark: 站內換頁到 /shorts/7tuLNof_daA 後仍是dark  ({"url":"/shorts/7tuLNof_daA","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC&f7=100","appBg":"rgba(0, 0, 0, 0)","button":true,"alive":true})
+PASS  light -> dark: 站內換頁到 /feed/you 後仍是dark  ({"url":"/feed/you","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC&f7=100","appBg":"rgb(15, 15, 15)","button":true,"alive":true})
+PASS  light -> dark: 站內換頁到 / 後仍是dark  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC&f7=100","appBg":"rgb(15, 15, 15)","button":true,"alive":true})
+PASS  light -> dark: 換頁回首頁後整頁顏色仍正確  ({"compared":85,"mismatched":0,"examples":[],"approximate":[]})
+PASS  light -> dark: 重新整理後維持dark  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC&f7=100","appBg":"rgb(15, 15, 15)","button":null,"alive":false} {"compared":85,"mismatched":0,"examples":[],"approximate":[]})
+
+=== dark -> light
+start {"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC","appBg":"rgb(15, 15, 15)","button":true,"alive":true}
+PASS  dark -> light: 不重新載入  ({"url":"/","html":["light"],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgb(255, 255, 255)","button":false,"alive":true})
+PASS  dark -> light: 下一個畫面就是新主題的背景（沒有閃一下舊主題或白畫面）  ({"before":"rgb(15, 15, 15)","sync":"rgb(255, 255, 255)","frame1":"rgb(255, 255, 255)","frame2":"rgb(255, 255, 255)"})
+PASS  dark -> light: 按鈕狀態與主題偏好  (pref=f6=80000&tz=UTC)
+PASS  dark -> light: 整頁顏色與 YouTube 以light載入時相同  ({"compared":85,"mismatched":0,"examples":[],"approximate":["a.ytSpecButtonShapeNextCallToAction.ytSpecButtonShapeNextEnableBackdropFilterExperiment.ytSpecButtonShapeNextHost: ref=rgba(0, 0, 0, 0) | rgb(6, 95, 212) | rgba(0, 0, 0, 0.2) | rgb(0, 0, 0) got=rgba(0, 0, 0, 0) | rgb(6, 95, 212) | rgba(0, 0, 0, 0.1) | rgb(0, 0, 0)"]})
+PASS  dark -> light: 10 秒後沒有被改回去  ({"url":"/","html":["light"],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgb(255, 255, 255)","button":false,"alive":true} mismatched=0)
+PASS  dark -> light: 站內換頁到 /shorts/CpCJ7MLJCMY 後仍是light  ({"url":"/shorts/CpCJ7MLJCMY","html":["light"],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgba(0, 0, 0, 0)","button":false,"alive":true})
+PASS  dark -> light: 站內換頁到 /feed/you 後仍是light  ({"url":"/feed/you","html":["light"],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgb(255, 255, 255)","button":false,"alive":true})
+PASS  dark -> light: 站內換頁到 / 後仍是light  ({"url":"/","html":["light"],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgb(255, 255, 255)","button":false,"alive":true})
+PASS  dark -> light: 換頁回首頁後整頁顏色仍正確  ({"compared":85,"mismatched":0,"examples":[],"approximate":["a.ytSpecButtonShapeNextCallToAction.ytSpecButtonShapeNextEnableBackdropFilterExperiment.ytSpecButtonShapeNextHost: ref=rgba(0, 0, 0, 0) | rgb(6, 95, 212) | rgba(0, 0, 0, 0.2) | rgb(0, 0, 0) got=rgba(0, 0, 0, 0) | rgb(6, 95, 212) | rgba(0, 0, 0, 0.1) | rgb(0, 0, 0)"]})
+PASS  dark -> light: 重新整理後維持light  ({"url":"/","html":[],"masthead":[],"watchFlexy":false,"pref":"f6=80000&tz=UTC","appBg":"rgb(255, 255, 255)","button":null,"alive":false} {"compared":85,"mismatched":0,"examples":[],"approximate":[]})
+
+=== unset -> dark
+start {"url":"/","html":[],"masthead":[],"watchFlexy":false,"pref":"tz=UTC","appBg":"rgb(255, 255, 255)","button":false,"alive":true}
+PASS  unset -> dark: 不重新載入  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"tz=UTC&f6=400","appBg":"rgb(15, 15, 15)","button":true,"alive":true})
+PASS  unset -> dark: 下一個畫面就是新主題的背景（沒有閃一下舊主題或白畫面）  ({"before":"rgb(255, 255, 255)","sync":"rgb(15, 15, 15)","frame1":"rgb(15, 15, 15)","frame2":"rgb(15, 15, 15)"})
+PASS  unset -> dark: 按鈕狀態與主題偏好  (pref=tz=UTC&f6=400)
+PASS  unset -> dark: 整頁顏色與 YouTube 以dark載入時相同  ({"compared":87,"mismatched":0,"examples":[],"approximate":[]})
+PASS  unset -> dark: 10 秒後沒有被改回去  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"tz=UTC&f6=400","appBg":"rgb(15, 15, 15)","button":true,"alive":true} mismatched=0)
+  console: [youtube-extension] dark mode: theme preference was changed back by the page; restored
+PASS  unset -> dark: 站內換頁到 /shorts/Ils0tmYDTdk 後仍是dark  ({"url":"/shorts/Ils0tmYDTdk","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"tz=UTC&f7=100&f6=400","appBg":"rgba(0, 0, 0, 0)","button":true,"alive":true})
+PASS  unset -> dark: 站內換頁到 /feed/you 後仍是dark  ({"url":"/feed/you","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"tz=UTC&f7=100&f6=400","appBg":"rgb(15, 15, 15)","button":true,"alive":true})
+PASS  unset -> dark: 站內換頁到 / 後仍是dark  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"tz=UTC&f7=100&f6=400","appBg":"rgb(15, 15, 15)","button":true,"alive":true})
+PASS  unset -> dark: 換頁回首頁後整頁顏色仍正確  ({"compared":87,"mismatched":0,"examples":[],"approximate":[]})
+PASS  unset -> dark: 重新整理後維持dark  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"tz=UTC&f7=100&f6=400","appBg":"rgb(15, 15, 15)","button":null,"alive":false} {"compared":83,"mismatched":0,"examples":[],"approximate":[]})
+
+=== dark -> light -> dark
+PASS  再按一次回到深色，不重新載入、整頁顏色正確  ({"url":"/","html":["dark"],"masthead":["dark","page-dark-theme"],"watchFlexy":true,"pref":"f6=400&tz=UTC","appBg":"rgb(15, 15, 15)","button":true,"alive":true} {"compared":89,"mismatched":0,"examples":[],"approximate":[]})
+
+all passed
