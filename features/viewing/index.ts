@@ -3,6 +3,7 @@ import type { ButtonId } from '@/components/toolbar/buttons';
 import type { ToggleFeature } from '@/components/toolbar/Toolbar';
 import { createCinema } from './cinema';
 import { createDarkMode } from './dark-mode';
+import { createFloating } from './floating';
 import { createPip } from './pip';
 import type { Store, ToggleState, ViewingFeature } from './store';
 
@@ -25,8 +26,9 @@ export function createViewingController(): ViewingController {
   const dark = createDarkMode();
   const pip = createPip();
   const cinema = createCinema();
-  const features: ViewingFeature[] = [dark, pip, cinema];
-  const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state];
+  const floating = createFloating();
+  const features: ViewingFeature[] = [dark, pip, cinema, floating];
+  const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state, floating.state];
   let active = false;
 
   return {
@@ -58,6 +60,7 @@ export function createViewingController(): ViewingController {
         darkMode: toToggle(dark.state, dark.toggle),
         pip: toToggle(pip.state, pip.toggle),
         cinema: toToggle(cinema.state, cinema.toggle),
+        floating: toToggle(floating.state, floating.toggle),
       };
     },
     decorateToolbarHost(host) {

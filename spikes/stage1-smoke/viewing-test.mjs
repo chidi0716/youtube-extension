@@ -142,5 +142,89 @@ await section('T07', async (page) => {
   check('劇院模式不記住狀態（FR-22）', (await pressed(page, 'cinema')).pressed === 'false' && (await page.locator('.yte-cinema-overlay').count()) === 0);
 });
 
+// ---------------------------------------------------------------------------
+// T08 浮動播放器
+// ---------------------------------------------------------------------------
+await section('T08', async (page) => {
+  const { shots } = await import('./lib.mjs');
+  const info = () =>
+    page.evaluate(() => {
+      const c = document.querySelector('#player-container');
+      const r = c.getBoundingClientRect();
+      return {
+        floating: c.classList.contains('yte-floating'),
+        left: Math.round(r.left),
+        top: Math.round(r.top),
+        right: Math.round(r.right),
+        bottom: Math.round(r.bottom),
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+        vw: document.documentElement.clientWidth,
+        vh: window.innerHeight,
+        paused: document.querySelector('video').paused,
+        controls: !!document.querySelector('yte-floating-controls'),
+      };
+    });
+  const scrollTo = async (y) => {
+    await page.evaluate((y) => window.scrollTo(0, y), y);
+    await page.waitForTimeout(500);
+  };
+
+  await page.evaluate(() => document.querySelector('video').play());
+  await button(page, 'floating').click();
+  await page.waitForTimeout(200);
+  let s = await info();
+  check('開啟浮動播放器，播放器在畫面內時不浮動（FR-40）', (await pressed(page, 'floating')).pressed === 'true' && !s.floating);
+
+  await scrollTo(1200);
+  s = await info();
+  check(
+    '捲出畫面時縮小並固定在右下角繼續播放（FR-40）',
+    s.floating && s.controls && !s.paused && Math.abs(s.right - (s.vw - 16)) <= 1 && Math.abs(s.bottom - (s.vh - 16)) <= 1,
+    JSON.stringify(s),
+  );
+  check('寬度約為視窗的 25%（最小 320px）且維持影片比例（FR-43）', s.width === Math.max(320, Math.round(s.vw * 0.25)) && Math.abs(s.height - Math.round(s.width * 9 / 16)) <= 1, `${s.width}x${s.height}`);
+  await page.screenshot({ path: `${shots}/T08-floating-bottom-right.png` });
+
+  // 拖到左上方，放開時貼齊左上角
+  await page.mouse.move(s.left + 60, s.top + 18);
+  await page.mouse.down();
+  await page.mouse.move(400, 300, { steps: 8 });
+  await page.mouse.move(200, 200, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  s = await info();
+  check('拖到其他角落，放開時貼齊最近的角落（FR-41）', s.floating && s.left === 16 && s.top === 56 + 16, JSON.stringify(s));
+  await page.screenshot({ path: `${shots}/T08-floating-top-left.png` });
+
+  await page.reload();
+  await openWatch(page);
+  await scrollTo(1200);
+  s = await info();
+  check('重新整理後浮動播放器仍開啟，位置仍在左上角（FR-41、FR-1）', (await pressed(page, 'floating')).pressed === 'true' && s.floating && s.left === 16 && s.top === 72, JSON.stringify(s));
+
+  // ✕：暫時回到原位置，直到下次捲動離開
+  await page.locator('yte-floating-controls .close').click();
+  await page.waitForTimeout(300);
+  s = await info();
+  const afterClose = !s.floating && !s.controls;
+  await scrollTo(1400);
+  const stillBack = !(await info()).floating;
+  await scrollTo(0);
+  await scrollTo(1200);
+  const floatsAgain = (await info()).floating;
+  check('✕ 後回到原位置，捲回原位再捲出去時重新浮動（FR-42）', afterClose && stillBack && floatsAgain, `close=${afterClose} still=${stillBack} again=${floatsAgain}`);
+
+  await scrollTo(0);
+  await spaNavigate(page);
+  await scrollTo(1200);
+  check('換頁後浮動播放器持續生效（FR-3）', (await info()).floating);
+
+  await scrollTo(0);
+  await button(page, 'floating').click();
+  await scrollTo(1200);
+  check('關閉浮動播放器後不再浮動', !(await info()).floating && (await pressed(page, 'floating')).pressed === 'false');
+});
+
 if (!summary()) process.exitCode = 1;
 void WATCH;

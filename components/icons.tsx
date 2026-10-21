@@ -3,6 +3,7 @@
 import arrowDropDown from '@material-symbols/svg-400/outlined/arrow_drop_down.svg?raw';
 import close from '@material-symbols/svg-400/outlined/close.svg?raw';
 import darkMode from '@material-symbols/svg-400/outlined/dark_mode.svg?raw';
+import dragIndicator from '@material-symbols/svg-400/outlined/drag_indicator.svg?raw';
 import error from '@material-symbols/svg-400/outlined/error.svg?raw';
 import help from '@material-symbols/svg-400/outlined/help.svg?raw';
 import image from '@material-symbols/svg-400/outlined/image.svg?raw';
@@ -26,6 +27,7 @@ const SOURCES = {
   branding_watermark: brandingWatermark,
   close,
   dark_mode: darkMode,
+  drag_indicator: dragIndicator,
   error,
   help,
   image,

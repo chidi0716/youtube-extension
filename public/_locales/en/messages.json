@@ -158,5 +158,13 @@
   "pipUnsupported": {
     "message": "Not supported in this browser",
     "description": "Tooltip reason when the browser has no native picture-in-picture."
+  },
+  "floatingDrag": {
+    "message": "Drag to move the player",
+    "description": "Tooltip of the drag handle on the floating player."
+  },
+  "floatingClose": {
+    "message": "Return the player to the page",
+    "description": "Close button on the floating player; the player returns to its place until the next scroll away."
   }
 }

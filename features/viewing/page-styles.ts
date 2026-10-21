@@ -18,6 +18,17 @@ export const PAGE_CSS = `
 .yte-cinema-positioned {
   position: relative !important;
 }
+
+/* 浮動播放器（003 FR-40）：位置與尺寸由 features/viewing/floating.ts 另外寫入。 */
+.yte-floating {
+  position: fixed !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 2150 !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
+}
 `;
 
 /** 在頁面加入一次共用樣式（重複呼叫沒有作用）。 */

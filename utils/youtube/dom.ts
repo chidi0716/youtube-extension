@@ -26,7 +26,12 @@ export const SELECTORS = {
    * 劇院模式（003 FR-20）提高它的 z-index；浮動播放器（FR-40）把它改成固定定位。
    */
   playerContainer: 'ytd-watch-flexy #player-container',
+  /** 固定在頁面頂端的標題列；浮動播放器不蓋住它（003 FR-40）。 */
+  masthead: '#masthead-container',
 } as const;
+
+/** 標題列的預設高度（找不到標題列時使用）。 */
+const DEFAULT_MASTHEAD_HEIGHT = 56;
 
 export interface ToolbarAnchor {
   /** 工具列要插入的父元素。 */
@@ -52,6 +57,14 @@ export function findPlayer(doc: Document = document): HTMLElement | null {
 
 export function findPlayerContainer(doc: Document = document): HTMLElement | null {
   return doc.querySelector<HTMLElement>(SELECTORS.playerContainer);
+}
+
+/** 頁面頂端被固定標題列蓋住的高度。 */
+export function mastheadHeight(doc: Document = document): number {
+  const masthead = doc.querySelector(SELECTORS.masthead);
+  if (!masthead) return DEFAULT_MASTHEAD_HEIGHT;
+  const rect = masthead.getBoundingClientRect();
+  return rect.height > 0 ? Math.max(0, Math.round(rect.bottom)) : 0;
 }
 
 export function findVideo(doc: Document = document): HTMLVideoElement | null {

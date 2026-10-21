@@ -158,5 +158,13 @@
   "pipUnsupported": {
     "message": "此瀏覽器不支援",
     "description": "Tooltip reason when the browser has no native picture-in-picture."
+  },
+  "floatingDrag": {
+    "message": "拖曳以移動播放器",
+    "description": "Tooltip of the drag handle on the floating player."
+  },
+  "floatingClose": {
+    "message": "把播放器放回原位",
+    "description": "Close button on the floating player; the player returns to its place until the next scroll away."
   }
 }

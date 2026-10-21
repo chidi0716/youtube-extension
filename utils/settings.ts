@@ -13,3 +13,14 @@ export const enabled = storage.defineItem<boolean>('sync:enabled', {
 export const darkMode = storage.defineItem<boolean | null>('sync:darkMode', {
   fallback: null,
 });
+
+/** 浮動播放器是否開啟（003 FR-40、FR-1）。 */
+export const floatingPlayer = storage.defineItem<boolean>('sync:floatingPlayer', {
+  fallback: false,
+});
+
+/** 浮動播放器貼齊的角落（003 FR-41）。 */
+export const floatingCorner = storage.defineItem<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>(
+  'sync:floatingCorner',
+  { fallback: 'bottom-right' },
+);
