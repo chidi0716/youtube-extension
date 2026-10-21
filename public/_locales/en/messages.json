@@ -187,6 +187,90 @@
     "message": "Settings",
     "description": "Title of the extension's settings page."
   },
+  "optionsTidyTitle": {
+    "message": "Page tidy",
+    "description": "Settings page: heading of the page tidy section."
+  },
+  "optionsTidyDesc": {
+    "message": "Changes to YouTube pages that stay on until you turn them off. They take effect right away in open YouTube tabs, even when the toolbar is closed.",
+    "description": "Settings page: one-line explanation under the page tidy heading."
+  },
+  "optionsDownloadsTitle": {
+    "message": "Downloads",
+    "description": "Settings page: heading of the downloads section."
+  },
+  "tidyGroupWatch": {
+    "message": "Watch page",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyGroupDistractions": {
+    "message": "Distractions",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyGroupShorts": {
+    "message": "Shorts",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyGroupInterface": {
+    "message": "Interface",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyOriginalAudio": {
+    "message": "Always use the original audio",
+    "description": "Page tidy option name."
+  },
+  "tidyOriginalAudioDesc": {
+    "message": "When YouTube plays an automatically dubbed (AI) audio track, switch to the video's original audio.",
+    "description": "Page tidy option description."
+  },
+  "tidyHideEndCards": {
+    "message": "Hide end cards and the end screen",
+    "description": "Page tidy option name."
+  },
+  "tidyHideEndCardsDesc": {
+    "message": "Hides the cards shown in the last seconds of a video and the grid of videos after it ends. Autoplay keeps working.",
+    "description": "Page tidy option description."
+  },
+  "tidyAutoContinue": {
+    "message": "Dismiss “Continue watching?”",
+    "description": "Page tidy option name."
+  },
+  "tidyAutoContinueDesc": {
+    "message": "When YouTube pauses the video and asks “Video paused. Continue watching?”, close the dialog and keep playing.",
+    "description": "Page tidy option description."
+  },
+  "tidyNoThumbnailPreview": {
+    "message": "Turn off thumbnail previews",
+    "description": "Page tidy option name."
+  },
+  "tidyNoThumbnailPreviewDesc": {
+    "message": "Thumbnails stay still when you hover over them instead of playing a preview.",
+    "description": "Page tidy option description."
+  },
+  "tidyShortsToWatch": {
+    "message": "Open Shorts in the normal player",
+    "description": "Page tidy option name."
+  },
+  "tidyShortsToWatchDesc": {
+    "message": "Opens Shorts links as a normal watch page with the full player and the toolbar.",
+    "description": "Page tidy option description."
+  },
+  "tidyHideShorts": {
+    "message": "Hide Shorts",
+    "description": "Page tidy option name."
+  },
+  "tidyHideShortsDesc": {
+    "message": "Hides Shorts on the home page, subscriptions, search results, recommendations and in the side menu.",
+    "description": "Page tidy option description."
+  },
+  "tidyFullTitles": {
+    "message": "Show full video titles",
+    "description": "Page tidy option name."
+  },
+  "tidyFullTitlesDesc": {
+    "message": "Shows whole titles in video lists instead of cutting them off with “…”.",
+    "description": "Page tidy option description."
+  },
   "pipUnsupported": {
     "message": "Not supported in this browser",
     "description": "Tooltip reason when the browser has no native picture-in-picture."

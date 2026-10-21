@@ -187,6 +187,90 @@
     "message": "設定",
     "description": "Title of the extension's settings page."
   },
+  "optionsTidyTitle": {
+    "message": "頁面整理",
+    "description": "Settings page: heading of the page tidy section."
+  },
+  "optionsTidyDesc": {
+    "message": "設定一次就一直生效的 YouTube 頁面調整。開關後已開啟的 YouTube 分頁立即生效，工具列關閉時也照常作用。",
+    "description": "Settings page: one-line explanation under the page tidy heading."
+  },
+  "optionsDownloadsTitle": {
+    "message": "下載",
+    "description": "Settings page: heading of the downloads section."
+  },
+  "tidyGroupWatch": {
+    "message": "觀看頁",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyGroupDistractions": {
+    "message": "干擾",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyGroupShorts": {
+    "message": "Shorts",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyGroupInterface": {
+    "message": "介面",
+    "description": "Settings page: page tidy category."
+  },
+  "tidyOriginalAudio": {
+    "message": "永遠使用原始語音",
+    "description": "Page tidy option name."
+  },
+  "tidyOriginalAudioDesc": {
+    "message": "YouTube 播放自動配音（AI 配音）時，自動切換到影片的原始語音。",
+    "description": "Page tidy option description."
+  },
+  "tidyHideEndCards": {
+    "message": "隱藏片尾推薦卡片與結尾畫面",
+    "description": "Page tidy option name."
+  },
+  "tidyHideEndCardsDesc": {
+    "message": "隱藏影片最後幾秒的推薦卡片，以及播完後的推薦影片格狀畫面；自動播放下一部照常運作。",
+    "description": "Page tidy option description."
+  },
+  "tidyAutoContinue": {
+    "message": "自動關閉「要繼續觀看嗎？」",
+    "description": "Page tidy option name."
+  },
+  "tidyAutoContinueDesc": {
+    "message": "YouTube 暫停影片並詢問「影片已暫停，要繼續觀看嗎？」時，自動關閉對話框並繼續播放。",
+    "description": "Page tidy option description."
+  },
+  "tidyNoThumbnailPreview": {
+    "message": "停用縮圖自動預覽",
+    "description": "Page tidy option name."
+  },
+  "tidyNoThumbnailPreviewDesc": {
+    "message": "滑鼠停在縮圖上時不播放預覽，縮圖維持靜態圖片。",
+    "description": "Page tidy option description."
+  },
+  "tidyShortsToWatch": {
+    "message": "Shorts 改用一般播放器",
+    "description": "Page tidy option name."
+  },
+  "tidyShortsToWatchDesc": {
+    "message": "開啟 Shorts 連結時改以一般觀看頁播放，可以使用完整的播放器與工具列。",
+    "description": "Page tidy option description."
+  },
+  "tidyHideShorts": {
+    "message": "隱藏 Shorts",
+    "description": "Page tidy option name."
+  },
+  "tidyHideShortsDesc": {
+    "message": "隱藏首頁、訂閱、搜尋結果、推薦清單與左側選單中的 Shorts。",
+    "description": "Page tidy option description."
+  },
+  "tidyFullTitles": {
+    "message": "顯示完整影片標題",
+    "description": "Page tidy option name."
+  },
+  "tidyFullTitlesDesc": {
+    "message": "影片清單中的標題完整顯示，不截斷成「…」。",
+    "description": "Page tidy option description."
+  },
   "pipUnsupported": {
     "message": "此瀏覽器不支援",
     "description": "Tooltip reason when the browser has no native picture-in-picture."

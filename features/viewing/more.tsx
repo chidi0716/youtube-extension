@@ -272,16 +272,12 @@ export function createWheelVolume() {
 }
 
 // ---------------------------------------------------------------------------
-// 隱藏留言（FR-64）
+// 隱藏留言（FR-64）：以 CSS 開關機制實作（plan 3.7.2，features/tidy）。document_start 的內容腳本依
+// 這個設定與工具列是否啟用（003 FR-5）在 <html> 加上 class；這裡只負責面板中的開關與寫入設定。
 // ---------------------------------------------------------------------------
-
-const HIDE_COMMENTS_CLASS = 'yte-hide-comments';
 
 export function createHideComments() {
   return createSettingFeature(hideComments, {
-    apply(on) {
-      if (on) ensurePageStyles();
-      document.documentElement.classList.toggle(HIDE_COMMENTS_CLASS, on);
-    },
+    apply() {},
   });
 }

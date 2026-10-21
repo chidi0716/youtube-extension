@@ -4,13 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>__MSG_optionsTitle__</title>
-    <!-- 設定頁以獨立分頁開啟；下載相關設定在 T23 加入（002 FR-60）。 -->
+    <!-- 設定頁以獨立分頁開啟。偏好設定集中在這裡，依類別分組（constitution 第 7a 點）。 -->
     <meta name="manifest.open_in_tab" content="true" />
   </head>
   <body>
     <main id="app">
       <h1 data-i18n="optionsTitle"></h1>
-      <p data-i18n="comingSoon"></p>
+
+      <!-- 頁面整理（005）：類別與選項由 main.ts 依 features/tidy/options.ts 繪製。 -->
+      <section id="tidy" class="section" aria-labelledby="tidy-title">
+        <h2 id="tidy-title" data-i18n="optionsTidyTitle"></h2>
+        <p class="section-desc" data-i18n="optionsTidyDesc"></p>
+        <div id="tidy-groups"></div>
+      </section>
+
+      <!-- 下載相關設定在 T23 加入（002 FR-60）。 -->
+      <section id="downloads" class="section" aria-labelledby="downloads-title">
+        <h2 id="downloads-title" data-i18n="optionsDownloadsTitle"></h2>
+        <p class="section-desc" data-i18n="comingSoon"></p>
+      </section>
     </main>
     <script type="module" src="./main.ts"></script>
   </body>

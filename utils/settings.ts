@@ -38,3 +38,26 @@ export type QualityLock = (typeof QUALITY_LOCK_VALUES)[number];
 
 /** 鎖定畫質（004 FR-1、FR-5）。 */
 export const qualityLock = storage.defineItem<QualityLock>('sync:qualityLock', { fallback: 'off' });
+
+// 頁面整理（005）：在設定頁開關，預設全部關閉（FR-2），跟著瀏覽器帳號同步（FR-4）。
+
+/** 永遠使用原始語音（005 FR-10 至 FR-13）。 */
+export const tidyOriginalAudio = storage.defineItem<boolean>('sync:tidyOriginalAudio', { fallback: false });
+
+/** 隱藏片尾推薦卡片與結尾畫面（005 FR-20 至 FR-22）。 */
+export const tidyHideEndCards = storage.defineItem<boolean>('sync:tidyHideEndCards', { fallback: false });
+
+/** 自動關閉「影片已暫停，要繼續觀看嗎？」（005 FR-30、FR-31）。 */
+export const tidyAutoContinue = storage.defineItem<boolean>('sync:tidyAutoContinue', { fallback: false });
+
+/** 停用縮圖自動預覽（005 FR-40、FR-41）。 */
+export const tidyNoThumbnailPreview = storage.defineItem<boolean>('sync:tidyNoThumbnailPreview', { fallback: false });
+
+/** Shorts 改用一般播放器（005 FR-50 至 FR-52）。 */
+export const tidyShortsToWatch = storage.defineItem<boolean>('sync:tidyShortsToWatch', { fallback: false });
+
+/** 隱藏 Shorts（005 FR-60 至 FR-63）。 */
+export const tidyHideShorts = storage.defineItem<boolean>('sync:tidyHideShorts', { fallback: false });
+
+/** 顯示完整影片標題（005 FR-70、FR-71）。 */
+export const tidyFullTitles = storage.defineItem<boolean>('sync:tidyFullTitles', { fallback: false });

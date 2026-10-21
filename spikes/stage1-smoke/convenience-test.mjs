@@ -275,6 +275,119 @@ await section(
   { permissions: ['clipboard-read', 'clipboard-write'], viewport: { width: 1280, height: 1100 } },
 );
 
+// ---------------------------------------------------------------------------
+// T29 設定頁分類與 CSS 開關機制（005 共通需求、plan 3.7.2）
+// ---------------------------------------------------------------------------
+const OPTIONS_URL = `chrome-extension://${EXT_ID}/options.html`;
+const readOptions = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('#tidy-groups fieldset')].map((f) => ({
+      category: f.dataset.category,
+      legend: f.querySelector('legend').textContent,
+      options: [...f.querySelectorAll('.option')].map((o) => ({
+        id: o.dataset.option,
+        name: o.querySelector('.option-name').textContent,
+        desc: o.querySelector('.option-desc').textContent,
+        checked: o.querySelector('input').checked,
+        role: o.querySelector('input').getAttribute('role'),
+      })),
+    })),
+  );
+const openOptions = async (context) => {
+  const options = await context.newPage();
+  await options.goto(OPTIONS_URL);
+  await options.waitForFunction(() => [...document.querySelectorAll('#tidy-groups input')].length === 7 && [...document.querySelectorAll('#tidy-groups input')].every((i) => !i.disabled));
+  return options;
+};
+const setOption = async (options, id, on) => {
+  const input = options.locator(`.option[data-option="${id}"] input`);
+  if ((await input.isChecked()) !== on) await input.click();
+};
+const htmlHas = (page, cls) => page.evaluate((cls) => document.documentElement.classList.contains(cls), cls);
+
+await section(
+  'T29',
+  async (page, context) => {
+    const options = await openOptions(context);
+    options.setViewportSize({ width: 900, height: 1100 });
+    const groups = await readOptions(options);
+    check(
+      '設定頁「頁面整理」區依四個類別分組：觀看頁、干擾、Shorts、介面（005 FR-1）',
+      groups.map((g) => `${g.category}:${g.options.map((o) => o.id).join('+')}`).join(' ') ===
+        'watch:originalAudio+hideEndCards distractions:autoContinue+noThumbnailPreview shorts:shortsToWatch+hideShorts interface:fullTitles',
+      groups.map((g) => `${g.legend}(${g.options.map((o) => o.name).join(', ')})`).join(' / '),
+    );
+    check(
+      '每個選項是一個開關，附一行說明（005 FR-1）',
+      groups.every((g) => g.options.every((o) => o.role === 'switch' && o.desc.length > 20 && o.name !== o.desc)),
+    );
+    check('所有選項預設關閉（005 FR-2）', groups.every((g) => g.options.every((o) => !o.checked)));
+    check(
+      '保留下載設定區',
+      await options.evaluate(() => !!document.querySelector('#downloads h2')?.textContent),
+    );
+    await options.screenshot({ path: `${(await import('./lib.mjs')).shots}/T29-options-en.png`, fullPage: true });
+
+    // 設定存在 sync 區（005 FR-4）
+    await setOption(options, 'fullTitles', true);
+    await options.waitForTimeout(200);
+    const stored = await options.evaluate(() => chrome.storage.sync.get('tidyFullTitles'));
+    check('設定存在 sync 區，跟著瀏覽器帳號同步（005 FR-4）', stored.tidyFullTitles === true, JSON.stringify(stored));
+    await setOption(options, 'fullTitles', false);
+    // 另一個設定頁分頁同步顯示
+    const options2 = await openOptions(context);
+    await setOption(options, 'hideShorts', true);
+    await options2.waitForTimeout(300);
+    check('另一個開著的設定頁同步顯示變更', await options2.locator('.option[data-option="hideShorts"] input').isChecked());
+    await setOption(options, 'hideShorts', false);
+    await options2.close();
+
+    // 003 的隱藏留言改用 CSS 開關機制：在 <html> 加上 class，並在 document_start 的內容腳本處理
+    await page.bringToFront();
+    await openMore(page);
+    await page.locator('yte-toolbar .yte-more-item[data-item="hideComments"] [role="switch"]').click();
+    await page.waitForTimeout(300);
+    const viaClass = await page.evaluate(() => ({
+      cls: document.documentElement.classList.contains('yte-hide-comments'),
+      hidden: getComputedStyle(document.querySelector('#comments')).display === 'none',
+      style: !!document.getElementById('yte-tidy-styles'),
+      oldStyleRule: [...(document.getElementById('yte-page-styles')?.sheet?.cssRules ?? [])].some((r) => r.cssText.includes('yte-hide-comments')),
+    }));
+    check('「隱藏留言」改用 <html> class 開關機制（plan 3.7.2）', viaClass.cls && viaClass.hidden && viaClass.style && !viaClass.oldStyleRule, JSON.stringify(viaClass));
+
+    // 重新整理：document_start 的內容腳本在工具列出現之前就套用
+    await page.addInitScript(() => {
+      document.addEventListener('DOMContentLoaded', () => {
+        window.__classAtDomReady = document.documentElement.className;
+        window.__toolbarAtDomReady = !!document.querySelector('yte-toolbar');
+      });
+    });
+    await page.reload();
+    await page.waitForSelector('yte-toolbar', { state: 'attached' });
+    const early = await page.evaluate(() => ({ cls: window.__classAtDomReady, toolbar: window.__toolbarAtDomReady }));
+    check(
+      '重新整理後，頁面解析完成時（工具列出現之前）<html> 已有 class',
+      /\byte-hide-comments\b/.test(early.cls ?? '') && early.toolbar === false,
+      JSON.stringify(early),
+    );
+
+    // 繁體中文
+    const zh = await launch({ name: 'conv-T29-zh', lang: 'zh-TW' });
+    const zhPage = await zh.newPage();
+    await zhPage.setViewportSize({ width: 900, height: 1100 });
+    await zhPage.goto(OPTIONS_URL);
+    await zhPage.waitForFunction(() => document.querySelectorAll('#tidy-groups .option').length === 7);
+    const zhGroups = await readOptions(zhPage);
+    check(
+      '設定頁的繁體中文類別與選項名稱（NFR-4）',
+      zhGroups.map((g) => g.legend).join('、') === '觀看頁、干擾、Shorts、介面' && zhGroups[0].options[0].name === '永遠使用原始語音',
+      zhGroups.map((g) => `${g.legend}：${g.options.map((o) => o.name).join('、')}`).join('；'),
+    );
+    await zhPage.screenshot({ path: `${(await import('./lib.mjs')).shots}/T29-options-zh-TW.png`, fullPage: true });
+    await zh.close();
+  },
+);
+
 if (!summary()) process.exitCode = 1;
 void EXT_ID;
 void skip;

@@ -35,10 +35,7 @@ html.${CINEMA_CLASS} :is(${CINEMA_DIMMED_REGIONS.join(', ')}) {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* 隱藏留言（003 FR-64） */
-html.yte-hide-comments ${SELECTORS.comments} {
-  display: none !important;
-}
+/* 隱藏留言（003 FR-64）改由 CSS 開關機制處理：features/tidy/styles.ts */
 
 /* 純音訊模式（003 FR-62）：隱藏畫面，縮圖由 features/viewing/audio-only.ts 另外寫入。 */
 html.yte-audio-only ${SELECTORS.videoContainer} {
