@@ -139,7 +139,7 @@ host/                           橋接程式（Go），見第 4 節
 | 功能 | 做法 |
 |---|---|
 | 深色模式 | **即時切換，不重新載入**：同時做兩件事——(1) 修改 YouTube 主題偏好（T06a 的 PREF `f6` 旗標，讓重新整理後維持）；(2) 立即在 `<html>` 上設定或移除 YouTube 自己用來決定主題的屬性（`dark`，以及目前版本中與深色主題相關的其他屬性），讓頁面當下就以 YouTube 原生的深色／淺色樣式繪製。需要設定哪些屬性，由實作方在 YouTube 首頁觀察 YouTube 自己的外觀選單切換前後 `<html>` 屬性的差異確認，並確認切換後 YouTube 不會在幾秒內或站內換頁後改回去。不得參考第三方擴充功能或使用者腳本的程式碼。按鈕狀態只讀取 `<html>` 的 `dark` 屬性。只有即時切換失效時才退回重新載入（FR-16） |
-| 劇院模式 | 在頁面加入固定定位的遮罩元素；暫時提高播放器容器與工具列的 `z-index`；Esc 或點遮罩關閉 |
+| 劇院模式 | **不使用蓋住整頁的遮罩**（YouTube 的播放器位於多層形成獨立堆疊脈絡的容器內，提高 `z-index` 無法讓播放器跳出遮罩，實測會連播放器一起蓋住）。改為在 `<html>` 加上 class，以 CSS 把播放器容器與工具列以外的各個頁面區域調暗（例如降低不透明度或亮度），頁面背景改為黑色；需要調暗的區域選擇器集中在 `utils/youtube/dom.ts`。點擊被調暗的區域時關閉（在這些區域上以捕獲階段攔截點擊，避免誤觸連結）；Esc 關閉 |
 | 子母畫面 | 對 `<video>` 呼叫 `requestPictureInPicture()`；監聽 `enterpictureinpicture`／`leavepictureinpicture`；`document.pictureInPictureEnabled` 為 false 時停用按鈕 |
 | 浮動播放器 | `IntersectionObserver` 觀察播放器原位置；離開畫面時對播放器容器加上固定定位的 class，並觸發 `resize` 事件讓 YouTube 重新計算尺寸；拖曳使用 Pointer Events，放開時貼齊最近角落 |
 | 循環播放 | 監聽 `<video>` 的 `timeupdate` 與 `ended`；片段模式超過結束時間就 `seekTo` 開始時間 |
