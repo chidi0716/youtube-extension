@@ -1,5 +1,6 @@
 // 觀看輔助功能加在 YouTube 頁面上的樣式（constitution 第 6 點：只用 yte- 前綴的 class，
 // 不改 YouTube 原本的屬性）。選擇器來自 utils/youtube/dom.ts。
+import { SELECTORS } from '@/utils/youtube/dom';
 
 const STYLE_ID = 'yte-page-styles';
 
@@ -28,6 +29,19 @@ export const PAGE_CSS = `
   overflow: hidden !important;
   border-radius: 12px !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 隱藏留言（003 FR-64） */
+html.yte-hide-comments ${SELECTORS.comments} {
+  display: none !important;
+}
+
+/* 純音訊模式（003 FR-62）：隱藏畫面，縮圖由 features/viewing/audio-only.ts 另外寫入。 */
+html.yte-audio-only ${SELECTORS.videoContainer} {
+  background: #000 center / contain no-repeat !important;
+}
+html.yte-audio-only ${SELECTORS.videoContainer} video {
+  opacity: 0 !important;
 }
 `;
 

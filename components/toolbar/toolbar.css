@@ -243,7 +243,8 @@
 /* ---------- 說明面板（FR-17） ---------- */
 
 .yte-help {
-  width: min(440px, 100%);
+  width: 440px;
+  max-width: 100%;
 }
 
 .yte-help-list {

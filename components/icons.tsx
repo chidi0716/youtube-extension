@@ -1,6 +1,13 @@
 // Google Material Symbols（Outlined，weight 400，Apache 2.0）以 SVG 字串打包進擴充功能
 // （constitution 第 6 點）。這裡只取出 path，再用 JSX 畫出 <svg>，不使用 innerHTML。
 import arrowDropDown from '@material-symbols/svg-400/outlined/arrow_drop_down.svg?raw';
+import autoplay from '@material-symbols/svg-400/outlined/autoplay.svg?raw';
+import commentsDisabled from '@material-symbols/svg-400/outlined/comments_disabled.svg?raw';
+import headphones from '@material-symbols/svg-400/outlined/headphones.svg?raw';
+import mouse from '@material-symbols/svg-400/outlined/mouse.svg?raw';
+import pausePresentation from '@material-symbols/svg-400/outlined/pause_presentation.svg?raw';
+import volumeOff from '@material-symbols/svg-400/outlined/volume_off.svg?raw';
+import volumeUp from '@material-symbols/svg-400/outlined/volume_up.svg?raw';
 import close from '@material-symbols/svg-400/outlined/close.svg?raw';
 import darkMode from '@material-symbols/svg-400/outlined/dark_mode.svg?raw';
 import dragIndicator from '@material-symbols/svg-400/outlined/drag_indicator.svg?raw';
@@ -23,6 +30,13 @@ import subtitles from '@material-symbols/svg-400/outlined/subtitles.svg?raw';
 import brandingWatermark from '@material-symbols/svg-400/outlined/branding_watermark.svg?raw';
 
 const SOURCES = {
+  autoplay: autoplay,
+  comments_disabled: commentsDisabled,
+  headphones: headphones,
+  mouse: mouse,
+  pause_presentation: pausePresentation,
+  volume_off: volumeOff,
+  volume_up: volumeUp,
   arrow_drop_down: arrowDropDown,
   branding_watermark: brandingWatermark,
   close,

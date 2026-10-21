@@ -28,6 +28,12 @@ export const SELECTORS = {
   playerContainer: 'ytd-watch-flexy #player-container',
   /** 固定在頁面頂端的標題列；浮動播放器不蓋住它（003 FR-40）。 */
   masthead: '#masthead-container',
+  /** 播放器內包住 <video> 的容器；純音訊模式在這裡顯示縮圖（003 FR-62）。 */
+  videoContainer: '#movie_player .html5-video-container',
+  /** 播放器上 YouTube 自己的「自動播放」開關；aria-checked 表示開或關（003 FR-61）。 */
+  autoplayToggle: '#movie_player .ytp-autonav-toggle-button',
+  /** 觀看頁的留言區（003 FR-64）。 */
+  comments: 'ytd-watch-flexy #comments',
 } as const;
 
 /** 標題列的預設高度（找不到標題列時使用）。 */
@@ -57,6 +63,29 @@ export function findPlayer(doc: Document = document): HTMLElement | null {
 
 export function findPlayerContainer(doc: Document = document): HTMLElement | null {
   return doc.querySelector<HTMLElement>(SELECTORS.playerContainer);
+}
+
+/** 影片縮圖的網址（i.ytimg.com，所有影片都有 hqdefault）。純音訊模式使用（003 FR-62）。 */
+export function thumbnailUrl(videoId: string): string {
+  return `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`;
+}
+
+export interface AutoplayToggle {
+  /** 帶 aria-checked 的元素。 */
+  indicator: Element;
+  /** 要點擊的按鈕。 */
+  button: HTMLElement;
+}
+
+/** YouTube 播放器上的自動播放開關；找不到時回傳 null。 */
+export function findAutoplayToggle(doc: Document = document): AutoplayToggle | null {
+  const indicator = doc.querySelector(SELECTORS.autoplayToggle);
+  const button = indicator?.closest<HTMLElement>('button') ?? null;
+  return indicator && button ? { indicator, button } : null;
+}
+
+export function isAutoplayOn(toggle: AutoplayToggle): boolean {
+  return toggle.indicator.getAttribute('aria-checked') === 'true';
 }
 
 /** 頁面頂端被固定標題列蓋住的高度。 */

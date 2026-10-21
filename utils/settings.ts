@@ -24,3 +24,15 @@ export const floatingCorner = storage.defineItem<'top-left' | 'top-right' | 'bot
   'sync:floatingCorner',
   { fallback: 'bottom-right' },
 );
+
+/** 切換分頁時自動暫停（003 FR-60）。 */
+export const smartPause = storage.defineItem<boolean>('sync:smartPause', { fallback: false });
+
+/** 純音訊模式（003 FR-62）。 */
+export const audioOnly = storage.defineItem<boolean>('sync:audioOnly', { fallback: false });
+
+/** 滑鼠滾輪調整音量（003 FR-63）。 */
+export const wheelVolume = storage.defineItem<boolean>('sync:wheelVolume', { fallback: false });
+
+/** 隱藏留言（003 FR-64）。 */
+export const hideComments = storage.defineItem<boolean>('sync:hideComments', { fallback: false });

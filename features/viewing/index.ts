@@ -5,6 +5,8 @@ import { createCinema } from './cinema';
 import { createDarkMode } from './dark-mode';
 import { createFloating } from './floating';
 import { createLoop, type LoopController } from './loop';
+import { createAudioOnly, createAutoplay, createHideComments, createSmartPause, createWheelVolume, type AutoplayFeature } from './more';
+import type { SettingFeature } from './setting-feature';
 import { createPip } from './pip';
 import type { Store, ToggleState, ViewingFeature } from './store';
 
@@ -21,6 +23,14 @@ export interface ViewingController {
   activePanels(): ReadonlySet<ButtonId>;
   /** 循環播放（給面板使用）。 */
   loop: LoopController;
+  /** 「更多」選單的功能（給面板使用），順序即面板中的順序。 */
+  more: {
+    smartPause: SettingFeature;
+    autoplay: AutoplayFeature;
+    audioOnly: SettingFeature;
+    wheelVolume: SettingFeature;
+    hideComments: SettingFeature;
+  };
   /** 工具列（重新）掛載或重新繪製時呼叫，讓功能可以在宿主元素上加 class。 */
   decorateToolbarHost(host: HTMLElement): void;
 }
@@ -33,12 +43,20 @@ export function createViewingController(): ViewingController {
   const cinema = createCinema();
   const floating = createFloating();
   const loop = createLoop();
-  const features: ViewingFeature[] = [dark, pip, cinema, floating, loop];
+  const more = {
+    smartPause: createSmartPause(),
+    autoplay: createAutoplay(),
+    audioOnly: createAudioOnly(),
+    wheelVolume: createWheelVolume(),
+    hideComments: createHideComments(),
+  };
+  const features: ViewingFeature[] = [dark, pip, cinema, floating, loop, ...Object.values(more)];
   const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state, floating.state, loop.status];
   let active = false;
 
   return {
     loop,
+    more,
     activePanels() {
       return new Set<ButtonId>(loop.status.get().running ? ['loop'] : []);
     },

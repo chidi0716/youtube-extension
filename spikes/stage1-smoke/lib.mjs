@@ -15,13 +15,15 @@ mkdirSync(shots, { recursive: true });
 
 const fixture = readFileSync(join(here, 'fixtures', 'watch.html'), 'utf8');
 const video = readFileSync(join(here, 'fixtures', 'test.webm'));
+const thumb = readFileSync(join(here, 'fixtures', 'thumb.jpg'));
 
 export async function launch({ lang = 'en-US', name = 'fixture', viewport = { width: 1280, height: 900 } } = {}) {
   const profile = join(here, '.cache', `profile-${name}-${lang}`);
   rmSync(profile, { recursive: true, force: true });
   const context = await chromium.launchPersistentContext(profile, {
     executablePath: process.env.CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-    headless: true,
+    // HEADED=1 時以有視窗的模式執行（搭配 xvfb-run），切換分頁才會改變 document.visibilityState。
+    headless: !process.env.HEADED,
     locale: lang,
     viewport,
     args: [
@@ -58,6 +60,10 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport = { wi
     if (url.hostname === 'www.youtube.com') {
       return route.fulfill({ status: 200, contentType: 'text/html', body: fixture });
     }
+    // 純音訊模式的縮圖：以測試影片的一格畫面代替。
+    if (url.hostname === 'i.ytimg.com' && /^\/vi\/[A-Za-z0-9_-]{11}\/hqdefault\.jpg$/.test(url.pathname)) {
+      return route.fulfill({ status: 200, contentType: 'image/jpeg', body: thumb });
+    }
     return route.abort();
   });
   return context;
@@ -69,12 +75,16 @@ export function reporter() {
     results.push({ name, ok: !!ok, detail });
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`);
   };
+  /** 本環境無法驗證的項目：列出但不算通過或失敗。 */
+  const skip = (name, detail = '') => {
+    console.log(`SKIP  ${name}${detail ? `  (${detail})` : ''}`);
+  };
   const summary = () => {
     const failed = results.filter((r) => !r.ok);
     console.log(`\n${results.length - failed.length}/${results.length} passed`);
     return failed.length === 0;
   };
-  return { check, summary, results };
+  return { check, skip, summary, results };
 }
 
 /** 等工具列出現並把它與 toolbar 內的按鈕準備好。 */

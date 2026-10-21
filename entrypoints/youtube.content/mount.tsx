@@ -9,6 +9,7 @@ import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
 import { HelpPanel } from '@/components/panels/HelpPanel';
 import { LoopPanel } from '@/components/panels/LoopPanel';
+import { MorePanel, type MoreItem } from '@/components/panels/MorePanel';
 import panelsCss from '@/components/panels/panels.css?inline';
 import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
@@ -22,6 +23,8 @@ import { getVideoId, isWatchPage, onNavigate } from '@/utils/youtube/page';
 const LOG_PREFIX = '[youtube-extension]';
 /** 首次載入時等待錨點出現的上限；超過就安靜放棄（constitution 第 7 點）。 */
 const ANCHOR_WAIT_MS = 20_000;
+
+const pick = (f: { state: MoreItem['state']; toggle: () => void }) => ({ state: f.state, toggle: f.toggle });
 
 export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   let isEnabled = await enabled.getValue();
@@ -69,12 +72,24 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     },
   };
 
+  const { more } = viewing;
+  const moreItems: MoreItem[] = [
+    { id: 'smartPause', icon: 'pause_presentation', label: 'moreSmartPause', description: 'moreSmartPauseDesc', ...pick(more.smartPause) },
+    { id: 'autoplay', icon: 'autoplay', label: 'moreAutoplay', description: 'moreAutoplayDesc', ...pick(more.autoplay) },
+    { id: 'audioOnly', icon: 'headphones', label: 'moreAudioOnly', description: 'moreAudioOnlyDesc', ...pick(more.audioOnly) },
+    { id: 'wheelVolume', icon: 'mouse', label: 'moreWheelVolume', description: 'moreWheelVolumeDesc', ...pick(more.wheelVolume) },
+    { id: 'hideComments', icon: 'comments_disabled', label: 'moreHideComments', description: 'moreHideCommentsDesc', ...pick(more.hideComments) },
+  ];
+  const refreshMore = () => more.autoplay.refresh();
+
   const renderPanel = (id: ButtonId) => {
     switch (id) {
       case 'help':
         return <HelpPanel />;
       case 'loop':
         return <LoopPanel loop={viewing.loop} />;
+      case 'more':
+        return <MorePanel items={moreItems} onOpen={refreshMore} />;
       default:
         return undefined;
     }

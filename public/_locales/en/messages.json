@@ -232,5 +232,53 @@
   "timeErrorOrder": {
     "message": "Start must be before end.",
     "description": "Time input error: start is not before end."
+  },
+  "moreSmartPause": {
+    "message": "Pause when switching tabs",
+    "description": "More panel: smart pause switch."
+  },
+  "moreSmartPauseDesc": {
+    "message": "Pauses the video when you switch tabs or minimize the window, and resumes it when you come back.",
+    "description": "More panel: smart pause description."
+  },
+  "moreAutoplay": {
+    "message": "Autoplay next video",
+    "description": "More panel: autoplay switch."
+  },
+  "moreAutoplayDesc": {
+    "message": "The same setting as YouTube's own autoplay switch.",
+    "description": "More panel: autoplay description."
+  },
+  "moreAutoplayMissing": {
+    "message": "YouTube's autoplay switch was not found on this page.",
+    "description": "More panel: shown when YouTube's autoplay switch cannot be found."
+  },
+  "moreAudioOnly": {
+    "message": "Audio only",
+    "description": "More panel: audio-only switch."
+  },
+  "moreAudioOnlyDesc": {
+    "message": "Shows the thumbnail instead of the picture. It only hides the video and does not save bandwidth.",
+    "description": "More panel: audio-only description."
+  },
+  "moreWheelVolume": {
+    "message": "Mouse wheel volume",
+    "description": "More panel: wheel volume switch."
+  },
+  "moreWheelVolumeDesc": {
+    "message": "Scroll over the player to change the volume in 5% steps.",
+    "description": "More panel: wheel volume description."
+  },
+  "moreHideComments": {
+    "message": "Hide comments",
+    "description": "More panel: hide comments switch."
+  },
+  "moreHideCommentsDesc": {
+    "message": "Hides the comment section below the video.",
+    "description": "More panel: hide comments description."
+  },
+  "volumeHint": {
+    "message": "Volume",
+    "description": "Accessible label of the volume indicator shown over the player."
   }
 }

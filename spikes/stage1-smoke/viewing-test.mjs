@@ -4,7 +4,7 @@
 //   ONLY=T06 node spikes/stage1-smoke/viewing-test.mjs   # 只跑某個任務
 import { WATCH, button, launch, openWatch, pressed, reporter, shot, spaNavigate } from './lib.mjs';
 
-const { check, summary } = reporter();
+const { check, skip, summary } = reporter();
 const only = process.env.ONLY;
 const want = (task) => !only || only.split(',').includes(task);
 
@@ -304,6 +304,190 @@ await section('T09', async (page) => {
   await page.keyboard.press('Escape');
   await spaNavigate(page);
   check('換到另一部影片時循環自動停止（FR-53）', !(await pressed(page, 'loop')).on);
+});
+
+// ---------------------------------------------------------------------------
+// T10 更多選單
+// ---------------------------------------------------------------------------
+await section('T10', async (page, context) => {
+  const { shots } = await import('./lib.mjs');
+  const row = (id) => page.locator(`yte-toolbar .yte-more-item[data-item="${id}"]`);
+  const sw = (id) => row(id).locator('[role="switch"]');
+  const isOn = async (id) => (await sw(id).getAttribute('aria-checked')) === 'true';
+  const openMore = async () => {
+    if ((await page.locator('yte-toolbar .yte-more').count()) === 0) await button(page, 'more').click();
+    await page.waitForTimeout(200);
+  };
+  const v = (expr) => page.evaluate(new Function(`const v = document.querySelector('video'); return ${expr};`));
+
+  await openMore();
+  const names = await page.locator('yte-toolbar .yte-more-name').allInnerTexts();
+  check('更多面板列出 5 個開關（FR-60 至 FR-64）', names.length === 5, names.join(', '));
+  await shot(page, 'T10-more-panel.png');
+
+  // 切換分頁時自動暫停
+  await sw('smartPause').click();
+  await page.evaluate(() => document.querySelector('video').play());
+  await page.waitForTimeout(500);
+  const other = await context.newPage();
+  await other.goto('about:blank');
+  await other.bringToFront();
+  await page.waitForTimeout(500);
+  const hiddenState = await page.evaluate(() => document.visibilityState);
+  const pausedWhileHidden = await v('v.paused');
+  await page.bringToFront();
+  await page.waitForTimeout(500);
+  const resumed = !(await v('v.paused'));
+  if (hiddenState !== 'hidden') {
+    // Playwright 控制的 Chromium（headless 與 Xvfb 下的有視窗模式皆同）切換分頁時
+    // document.visibilityState 仍是 visible，無法模擬；狀態機以單元測試驗證。
+    skip('切換分頁時影片暫停、回來時繼續（FR-60）', '本環境切換分頁時 visibilityState 不會變成 hidden');
+    skip('原本就暫停的影片回來時不會自動播放（FR-60）', '同上');
+  } else {
+    check('切換分頁時影片暫停、回來時繼續（FR-60）', pausedWhileHidden && resumed, `paused=${pausedWhileHidden} resumed=${resumed}`);
+    await page.evaluate(() => document.querySelector('video').pause());
+    await other.bringToFront();
+    await page.waitForTimeout(300);
+    await page.bringToFront();
+    await page.waitForTimeout(500);
+    check('原本就暫停的影片回來時不會自動播放（FR-60）', await v('v.paused'));
+  }
+  await other.close();
+
+  // 自動播放
+  await openMore();
+  const ytAutoplay = () => page.evaluate(() => document.querySelector('.ytp-autonav-toggle-button').getAttribute('aria-checked'));
+  const initial = (await isOn('autoplay')) === ((await ytAutoplay()) === 'true');
+  await sw('autoplay').click();
+  await page.waitForTimeout(200);
+  const afterOurs = { ours: await isOn('autoplay'), yt: await ytAutoplay() };
+  // 點 YouTube 自己的開關（點在面板外，面板會收起，所以之後重新打開）
+  await page.locator('.ytp-button[data-tooltip-target-id="ytp-autonav-toggle-button"]').click();
+  await page.waitForTimeout(200);
+  await openMore();
+  const afterYt = { ours: await isOn('autoplay'), yt: await ytAutoplay() };
+  check(
+    '自動播放開關控制 YouTube 本身的開關，狀態雙向同步（FR-61）',
+    initial && afterOurs.ours === false && afterOurs.yt === 'false' && afterYt.ours === true && afterYt.yt === 'true',
+    `${JSON.stringify(afterOurs)} ${JSON.stringify(afterYt)}`,
+  );
+
+  // 純音訊模式
+  await sw('audioOnly').click();
+  await page.evaluate(() => document.querySelector('video').play());
+  await page.waitForTimeout(800);
+  const audio = await page.evaluate(() => {
+    const video = document.querySelector('video');
+    const container = document.querySelector('.html5-video-container');
+    return {
+      opacity: getComputedStyle(video).opacity,
+      bg: getComputedStyle(container).backgroundImage,
+      playing: !video.paused,
+      muted: video.muted,
+    };
+  });
+  check(
+    '純音訊模式顯示縮圖、聲音照常播放（FR-62）',
+    audio.opacity === '0' && audio.bg.includes('i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg') && audio.playing && !audio.muted,
+    JSON.stringify(audio),
+  );
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  await shot(page, 'T10-audio-only.png');
+  await openMore();
+  await sw('audioOnly').click();
+
+  // 滑鼠滾輪調整音量
+  await sw('wheelVolume').click();
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document.querySelector('video').volume = 0.5;
+  });
+  const box = await page.locator('#movie_player').boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const scrollBefore = await page.evaluate(() => window.scrollY);
+  await page.mouse.wheel(0, -100);
+  await page.waitForTimeout(300);
+  const up = { volume: await v('Math.round(v.volume * 100)'), scroll: await page.evaluate(() => window.scrollY) };
+  const hintText = await page.evaluate(() => document.querySelector('yte-volume-hint')?.shadowRoot.querySelector('.hint')?.textContent ?? null);
+  await page.screenshot({ path: `${shots}/T10-wheel-volume.png`, clip: { x: box.x, y: box.y, width: box.width, height: box.height } });
+  await page.mouse.wheel(0, 100);
+  await page.mouse.wheel(0, 100);
+  await page.waitForTimeout(300);
+  const down = await v('Math.round(v.volume * 100)');
+  check(
+    '滾輪在播放器上調整音量（每格 5%）並顯示目前音量（FR-63）',
+    up.volume === 55 && up.scroll === scrollBefore && hintText === '55%' && down === 45,
+    `up=${up.volume} hint=${hintText} down=${down} scroll=${up.scroll}`,
+  );
+  await page.mouse.move(box.x + 20, box.y + box.height + 200);
+  await page.mouse.wheel(0, 300);
+  await page.waitForTimeout(300);
+  const scrolled = await page.evaluate(() => window.scrollY);
+  check('游標不在播放器上時滾輪照常捲動頁面（FR-63）', scrolled > 0 && (await v('Math.round(v.volume * 100)')) === 45, `scrollY=${scrolled}`);
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  // 隱藏留言
+  await openMore();
+  await sw('hideComments').click();
+  const hiddenNow = await page.evaluate(() => getComputedStyle(document.querySelector('#comments')).display === 'none');
+  await page.reload();
+  await openWatch(page);
+  await page.waitForTimeout(500);
+  const hiddenAfterReload = await page.evaluate(() => getComputedStyle(document.querySelector('#comments')).display === 'none');
+  check('隱藏留言開啟後重新整理，留言區仍隱藏（FR-64、FR-1）', hiddenNow && hiddenAfterReload);
+
+  // 記住狀態與換頁後持續生效
+  await openMore();
+  const remembered = { smartPause: await isOn('smartPause'), wheelVolume: await isOn('wheelVolume'), hideComments: await isOn('hideComments') };
+  await page.keyboard.press('Escape');
+  await spaNavigate(page);
+  const afterNav = await page.evaluate(() => getComputedStyle(document.querySelector('#comments')).display === 'none');
+  check('開關狀態被記住，換頁後持續生效（FR-1、FR-3）', remembered.smartPause && remembered.wheelVolume && remembered.hideComments && afterNav, JSON.stringify(remembered));
+
+  await openMore();
+  await sw('hideComments').click();
+  check('關閉隱藏留言後留言區恢復', await page.evaluate(() => getComputedStyle(document.querySelector('#comments')).display !== 'none'));
+});
+
+// ---------------------------------------------------------------------------
+// 「啟用」關閉時停用所有觀看輔助功能（QUESTIONS Q11 的目前做法）
+// ---------------------------------------------------------------------------
+await section('DISABLE', async (page, context) => {
+  const { EXT_ID } = await import('./lib.mjs');
+  await button(page, 'more').click();
+  await page.locator('yte-toolbar .yte-more-item[data-item="hideComments"] [role="switch"]').click();
+  await page.keyboard.press('Escape');
+  await button(page, 'cinema').click();
+  await page.waitForTimeout(200);
+  const before = await page.evaluate(() => ({
+    overlay: !!document.querySelector('.yte-cinema-overlay'),
+    commentsHidden: getComputedStyle(document.querySelector('#comments')).display === 'none',
+  }));
+
+  const popup = await context.newPage();
+  await popup.goto(`chrome-extension://${EXT_ID}/popup.html`);
+  await popup.waitForFunction(() => !!document.querySelector('h1')?.textContent);
+  await popup.waitForTimeout(300);
+  await popup.locator('#enabled').uncheck();
+  await page.waitForTimeout(500);
+  const after = await page.evaluate(() => ({
+    toolbar: !!document.querySelector('yte-toolbar'),
+    overlay: !!document.querySelector('.yte-cinema-overlay'),
+    commentsHidden: getComputedStyle(document.querySelector('#comments')).display === 'none',
+  }));
+  check(
+    '關閉「啟用」時移除工具列並還原頁面修改（Q11）',
+    before.overlay && before.commentsHidden && !after.toolbar && !after.overlay && !after.commentsHidden,
+    `${JSON.stringify(before)} → ${JSON.stringify(after)}`,
+  );
+  await popup.locator('#enabled').check();
+  await page.waitForTimeout(800);
+  const again = await page.evaluate(() => getComputedStyle(document.querySelector('#comments')).display === 'none');
+  check('重新啟用後再次套用記住的設定（Q11）', again && (await page.locator('yte-toolbar').count()) === 1);
+  await popup.close();
 });
 
 if (!summary()) process.exitCode = 1;

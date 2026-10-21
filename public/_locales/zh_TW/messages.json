@@ -232,5 +232,53 @@
   "timeErrorOrder": {
     "message": "開始必須早於結束。",
     "description": "Time input error: start is not before end."
+  },
+  "moreSmartPause": {
+    "message": "切換分頁時自動暫停",
+    "description": "More panel: smart pause switch."
+  },
+  "moreSmartPauseDesc": {
+    "message": "切換到其他分頁或視窗最小化時暫停影片，回來時繼續播放。",
+    "description": "More panel: smart pause description."
+  },
+  "moreAutoplay": {
+    "message": "自動播放下一部",
+    "description": "More panel: autoplay switch."
+  },
+  "moreAutoplayDesc": {
+    "message": "與 YouTube 播放器上的自動播放開關同步。",
+    "description": "More panel: autoplay description."
+  },
+  "moreAutoplayMissing": {
+    "message": "這個頁面找不到 YouTube 的自動播放開關。",
+    "description": "More panel: shown when YouTube's autoplay switch cannot be found."
+  },
+  "moreAudioOnly": {
+    "message": "純音訊模式",
+    "description": "More panel: audio-only switch."
+  },
+  "moreAudioOnlyDesc": {
+    "message": "以縮圖取代影片畫面。只隱藏畫面，不保證節省頻寬。",
+    "description": "More panel: audio-only description."
+  },
+  "moreWheelVolume": {
+    "message": "滑鼠滾輪調整音量",
+    "description": "More panel: wheel volume switch."
+  },
+  "moreWheelVolumeDesc": {
+    "message": "游標在播放器上時用滾輪調整音量，每格 5%。",
+    "description": "More panel: wheel volume description."
+  },
+  "moreHideComments": {
+    "message": "隱藏留言",
+    "description": "More panel: hide comments switch."
+  },
+  "moreHideCommentsDesc": {
+    "message": "隱藏影片下方的留言區。",
+    "description": "More panel: hide comments description."
+  },
+  "volumeHint": {
+    "message": "音量",
+    "description": "Accessible label of the volume indicator shown over the player."
   }
 }

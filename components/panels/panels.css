@@ -70,7 +70,8 @@
 /* ---------- 循環播放面板 ---------- */
 
 .yte-loop {
-  width: min(400px, 100%);
+  width: 400px;
+  max-width: 100%;
 }
 
 .yte-loop-option {
@@ -104,4 +105,49 @@
 .yte-loop-actions {
   display: flex;
   gap: 8px;
+}
+
+/* ---------- 更多面板 ---------- */
+
+.yte-more {
+  width: 420px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yte-more-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.yte-more-icon {
+  display: flex;
+  align-self: flex-start;
+  padding-top: 2px;
+}
+
+.yte-more-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.yte-more-name {
+  font-weight: 500;
+}
+
+.yte-more-desc {
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.yte-more-item[data-disabled] .yte-more-name,
+.yte-more-item[data-disabled] .yte-more-icon {
+  opacity: 0.5;
 }
