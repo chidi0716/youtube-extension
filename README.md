@@ -102,6 +102,7 @@ This project follows spec-driven development and a clean-room process:
 | [`specs/003-viewing-tools`](./specs/003-viewing-tools/spec.md) | Viewing tools |
 | [`specs/plan.md`](./specs/plan.md) / [`specs/tasks.md`](./specs/tasks.md) | Technical plan and tasks |
 | [`specs/ROADMAP.md`](./specs/ROADMAP.md) | Future directions |
+| [`specs/BACKLOG.md`](./specs/BACKLOG.md) | Feature ideas not yet specified |
 
 Specs are written in Traditional Chinese.
 

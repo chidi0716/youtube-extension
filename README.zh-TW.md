@@ -102,6 +102,7 @@ Firefox 版由 [WXT](https://wxt.dev)／Vite 打包並壓縮。從上傳的原�
 | [`specs/003-viewing-tools`](./specs/003-viewing-tools/spec.md) | 觀看輔助功能 |
 | [`specs/plan.md`](./specs/plan.md)／[`specs/tasks.md`](./specs/tasks.md) | 技術計畫與任務拆解 |
 | [`specs/ROADMAP.md`](./specs/ROADMAP.md) | 後續擴充方向 |
+| [`specs/BACKLOG.md`](./specs/BACKLOG.md) | 可新增功能清單 |
 
 ## 免責聲明
 
