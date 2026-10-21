@@ -1,37 +1,83 @@
 # youtube-extension
 
-一個 YouTube 瀏覽器擴充功能，使用 [WXT](https://wxt.dev) + TypeScript 開發，同時支援 Chrome（Manifest V3）與 Firefox。
+**English** | [繁體中文](./README.zh-TW.md)
 
-## 開發
+A YouTube browser extension that adds a native-looking toolbar under the video player, with download tools and viewing tools. Built with [WXT](https://wxt.dev) + TypeScript for Chrome and Firefox (Firefox-based browsers such as Zen are treated as Firefox).
+
+> **Status:** under active development. The feature set below is the plan described in [`specs/`](./specs); not everything is implemented yet.
+
+## Features (planned)
+
+**Download tools** (powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ffmpeg](https://ffmpeg.org) on your computer)
+
+- Video: pick a quality (8K / 4K / 2K / 1080p / HD …) with file sizes shown
+- MP3: choose bitrate and trim a time range
+- Thumbnails and subtitles (SRT / VTT / TXT)
+- Screenshot of the current frame
+
+**Viewing tools**
+
+- Dark mode, cinema mode (dim everything but the player), picture-in-picture
+- Floating player while scrolling, A–B loop / repeat N times
+- Pause on tab switch, autoplay toggle, audio-only mode, mouse-wheel volume, hide comments
+
+## Privacy and security
+
+- No analytics or tracking. The extension only talks to YouTube and to the local helper program.
+- No remote code: everything is bundled; no CDN scripts, no `eval`.
+- Minimal permissions; content scripts run on `youtube.com` only.
+- Video processing happens locally. Nothing is uploaded to third-party services.
+
+See [`specs/constitution.md`](./specs/constitution.md) for the full set of principles.
+
+## How downloads work
+
+Browser extensions cannot run yt-dlp directly, so a small helper program (written in Go) is installed on your computer and connected through the browser's Native Messaging API:
+
+```
+Toolbar on YouTube  →  extension background  →  local helper  →  yt-dlp  →  ffmpeg
+```
+
+Installation scripts for macOS and Windows will be provided. Thumbnails, screenshots and all viewing tools work without the helper.
+
+## Development
 
 ```bash
 npm install
-npm run dev           # Chrome，會自動開啟瀏覽器並熱重載
+npm run dev           # Chrome, with auto-reload
 npm run dev:firefox   # Firefox
 ```
 
-## 建置與打包
+## Build
 
 ```bash
-npm run build           # 輸出到 .output/chrome-mv3
-npm run build:firefox   # 輸出到 .output/firefox-mv2
-npm run zip             # 打包成可上架的 zip
+npm run build           # Chrome  → .output/chrome-mv3
+npm run build:firefox   # Firefox → .output/firefox-*
+npm run zip
 npm run zip:firefox
 ```
 
-## 手動載入
+## Load the extension manually
 
-- **Chrome**：開啟 `chrome://extensions`，打開「開發人員模式」，點「載入未封裝項目」，選擇 `.output/chrome-mv3`。
-- **Firefox**：開啟 `about:debugging#/runtime/this-firefox`，點「載入臨時附加元件」，選擇 `.output/firefox-mv2/manifest.json`。
+- **Chrome:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose `.output/chrome-mv3`.
+- **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `manifest.json` inside the Firefox build folder under `.output/`.
 
-## 專案結構
+## Project documents
 
-```
-entrypoints/
-  background.ts   背景腳本
-  content.ts      注入 YouTube 頁面的內容腳本
-  popup/          點擊工具列圖示時的彈出視窗
-utils/
-  storage.ts      共用設定（自動匯入）
-public/icon/      擴充功能圖示
-```
+This project follows spec-driven development and a clean-room process:
+
+| Document | Content |
+|---|---|
+| [`specs/constitution.md`](./specs/constitution.md) | Project principles |
+| [`specs/CLEANROOM.md`](./specs/CLEANROOM.md) | Clean-room process and records |
+| [`specs/001-toolbar`](./specs/001-toolbar/spec.md) | Toolbar shell |
+| [`specs/002-downloads`](./specs/002-downloads/spec.md) | Download tools |
+| [`specs/003-viewing-tools`](./specs/003-viewing-tools/spec.md) | Viewing tools |
+| [`specs/plan.md`](./specs/plan.md) / [`specs/tasks.md`](./specs/tasks.md) | Technical plan and tasks |
+| [`specs/ROADMAP.md`](./specs/ROADMAP.md) | Future directions |
+
+Specs are written in Traditional Chinese.
+
+## Disclaimer
+
+Downloading YouTube content may violate YouTube's Terms of Service. Use this extension only for content you have the right to download, for personal use. Because Chrome Web Store does not allow YouTube downloaders, the extension is meant to be loaded manually.

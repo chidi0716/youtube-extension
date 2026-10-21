@@ -49,7 +49,8 @@
 ## 8. 語言
 
 - 介面提供繁體中文與英文，依瀏覽器語言自動選擇，預設英文。
-- 文件以繁體中文撰寫。
+- 規格文件（`specs/`）以繁體中文撰寫。
+- README 以英文為主：`README.md` 為英文版，`README.zh-TW.md` 為繁體中文版；兩份檔案開頭都有語言切換連結（`**English** | [繁體中文](./README.zh-TW.md)`），內容保持同步。
 
 ## 9. 品質
 
@@ -60,4 +61,13 @@
 
 ## 10. 版本控制
 
-- commit 訊息以繁體中文撰寫，不加入 AI 署名或 Co-Authored-By。
+- commit 訊息以英文為主、中文為輔：第一行是英文摘要，空一行後以繁體中文補充說明。
+- commit 訊息不加入 AI 署名、Co-Authored-By 或工作階段連結。
+
+範例：
+
+```
+T03 Add toolbar shell and panel manager
+
+新增工具列外框與面板管理：Shadow DOM 掛載、單一面板、Esc 與點外面收起、釘選。
+```
