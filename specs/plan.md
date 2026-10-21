@@ -97,6 +97,16 @@ host/                           橋接程式（Go），見第 4 節
 
 - **Chrome**：在 `wxt.config.ts` 的 manifest 加入固定的 `key`（公鑰），讓未封裝載入的 ID 永遠相同。金鑰在實作時產生一次，只提交公鑰，私鑰不進 repo。
 - **Firefox**：`browser_specific_settings.gecko.id` 改為 `youtube-extension@chidi0716`。
+- Chrome 不打包 `.crx`（Chrome 不允許安裝商店以外的 `.crx`），因此不需要保留私鑰；只以「載入未封裝項目」安裝。
+
+### 3.3.1 Firefox 發佈方式
+
+- Firefox 正式版與 Zen 只能永久安裝經 Mozilla 簽署的附加元件，因此以 AMO「不公開（unlisted）」頻道送簽署，取得 `.xpi` 自行發佈；不在 AMO 網站上架。
+- manifest 的 `browser_specific_settings.gecko` 加入：
+  - `strict_min_version: "128.0"`（main world 內容腳本需要 Firefox 128）；
+  - `data_collection_permissions: { "required": ["none"] }`（依 constitution 第 2 點，不收集任何資料）。
+- 新增 `npm run sign:firefox`：以 `web-ext sign --channel unlisted` 送簽署。AMO API 金鑰從環境變數 `WEB_EXT_API_KEY`、`WEB_EXT_API_SECRET` 讀取，不得寫入 repo 或任何設定檔。實際送簽署由專案擁有者在自己的電腦上執行。
+- README 說明如何安裝簽署後的 `.xpi`，以及開發時用「臨時附加元件」載入。
 
 ### 3.4 換頁與工具列掛載
 

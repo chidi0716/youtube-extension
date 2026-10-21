@@ -20,6 +20,10 @@
 
 ## 階段 1：工具列外框（001）
 
+- **T01a Firefox 發佈設定**（QUESTIONS Q1、Q2 的回答）
+  - 依 plan 3.3.1 加入 `strict_min_version`、`data_collection_permissions`，以及 `npm run sign:firefox`。
+  - **完成條件**：`web-ext lint` 對 `.output/firefox-mv3` 沒有錯誤與警告；Chrome 版 manifest 不出現 `browser_specific_settings`。
+
 - **T02 YouTube 頁面工具**
   - `utils/youtube/dom.ts`、`page.ts`：判斷觀看頁、取得影片 ID、換頁事件、錨點元素。
   - `youtube-page.content.ts` 與 `player.ts`：頁面橋接腳本與封裝（plan 3.5）。
