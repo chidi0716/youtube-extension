@@ -120,7 +120,7 @@ host/                           橋接程式（Go），見第 4 節
 ### 3.5 頁面橋接腳本
 
 - 以 `world: 'MAIN'` 宣告的內容腳本，只在 `*.youtube.com` 執行。
-- 只接受以下事件請求，其他一律忽略：`getVideoData`（標題、影片 ID、長度、是否直播／尚未開始）、`getVolume`、`setVolume`、`seekTo`、`getCurrentTime`。
+- 只接受以下事件請求，其他一律忽略：`getVideoData`（標題、影片 ID、長度、是否直播／尚未開始）、`getVolume`、`setVolume`、`seekTo`、`getCurrentTime`，以及鎖定畫質用的 `getAvailableQualities`、`getQuality`、`setQuality`（`setQuality` 的參數只接受 YouTube 畫質代號白名單）。
 - 事件名稱加上固定前綴；回覆時帶請求 ID。
 - 頁面上其他程式也能發出同名事件，所以這些操作都設計成無害的（只能讀取影片資料、調整音量、跳轉）。
 
@@ -148,6 +148,15 @@ host/                           橋接程式（Go），見第 4 節
 | 純音訊模式 | 隱藏 `<video>` 畫面，在播放器內加入顯示縮圖的覆蓋層 |
 | 滾輪調音量 | 在播放器上監聽 `wheel`（`passive: false`），透過頁面橋接腳本 `setVolume`；在播放器中央顯示音量提示 |
 | 隱藏留言 | 對留言區容器加上隱藏用的 class |
+
+### 3.7.1 鎖定畫質與複製連結（004）
+
+- **鎖定畫質**：透過頁面橋接腳本讀取影片可用畫質，選出不高於設定值的最高畫質後設定給播放器。
+  - 在影片載入與播放器畫質改變時重新檢查。
+  - 偵測到使用者手動改畫質時（畫質改變但不是我們觸發的），記下這部影片的影片 ID，該影片不再強制。
+  - 畫質代號與解析度的對應、選擇邏輯寫成純函式並有單元測試。
+  - 實作前先以真實 YouTube 確認播放器的畫質相關方法仍可用；不可用時在 QUESTIONS.md 回報。
+- **複製連結**：連結與 Markdown 文字的產生寫成純函式（有單元測試），在按鈕點擊的使用者操作中以 `navigator.clipboard.writeText` 複製；失敗時改為顯示可選取的文字框（004 FR-34）。
 
 ### 3.8 下載相關（擴充功能端）
 
@@ -198,7 +207,7 @@ install/
 |---|---|---|
 | `status` | — | 回傳橋接程式版本、yt-dlp 與 ffmpeg 路徑和版本、是否由套件管理工具安裝、預設下載資料夾 |
 | `getInfo` | `videoId` | `yt-dlp -J --no-playlist`，回傳精簡後的格式、字幕清單、標題、長度、直播狀態 |
-| `download` | `videoId`、`kind`、`formatId`、`container`、`bitrate`、`section`、`subLang`、`subFormat`、`dir`、`namePreset` | 依 `kind`（`video`／`mp3`／`subtitle`）組參數，回傳 `jobId` |
+| `download` | `videoId`、`kind`、`formatId`、`container`、`bitrate`、`section`、`subLang`、`subFormat`、`dir`、`namePreset`、`embed` | 依 `kind`（`video`／`mp3`／`subtitle`）組參數，回傳 `jobId` |
 | `cancel` | `jobId` | 結束整個子程序樹並刪除暫存檔 |
 | `jobs` | — | 回傳進行中與最近完成的工作 |
 | `reveal` | `jobId` | 在 Finder 或檔案總管中選取完成的檔案 |
@@ -211,7 +220,8 @@ install/
 - `formatId`：`^[A-Za-z0-9_-]{1,10}(\+[A-Za-z0-9_-]{1,10})?$`。
 - `container`：白名單 `mp4`、`webm`。
 - `bitrate`：白名單 64、128、192、256、320。
-- `section`：兩個非負整數秒數，開始小於結束。
+- `section`：兩個非負整數秒數，開始小於結束；`video` 與 `mp3` 都可使用。
+- `embed`：布林值。
 - `subLang`：`^[A-Za-z0-9-]{1,20}$`。
 - `subFormat`：白名單 `srt`、`vtt`、`txt`。
 - `namePreset`：白名單 ID，對應橋接程式內建的 yt-dlp 檔名範本，不接受任意範本。
@@ -225,11 +235,12 @@ install/
   - Windows：`%LOCALAPPDATA%\Microsoft\WinGet\Links`、`%LOCALAPPDATA%\Microsoft\WinGet\Packages\*`
 
   找到的 ffmpeg 以 `--ffmpeg-location` 傳給 yt-dlp。
-- **影片**：`-f <formatId> --merge-output-format <container>`
+- **影片**：`-f <formatId> --merge-output-format <container>`；有裁切時加 `--download-sections *<start>-<end> --force-keyframes-at-cuts`
 - **MP3**：`-f bestaudio -x --audio-format mp3 --audio-quality <bitrate>K`；有裁切時加 `--download-sections *<start>-<end> --force-keyframes-at-cuts`
 - **字幕**：`--skip-download --write-subs`（自動字幕用 `--write-auto-subs`）`--sub-langs <lang> --sub-format vtt`
   - SRT：加上 `--convert-subs srt`
   - TXT：由橋接程式把 VTT 轉成純文字（去掉時間碼與重複行），有單元測試。
+- **嵌入資訊**（004 第 2 節，設定開啟時）：`--embed-thumbnail --embed-metadata --embed-chapters`；WEBM 等不支援嵌入封面的格式不加 `--embed-thumbnail`。是否嵌入由 `download` 指令的布林參數 `embed` 決定。
 - **共通參數**：`--newline --no-colors --progress-template "download:YTE-PROGRESS %(progress)j" --print after_move:YTE-FILE:%(filepath)s -P <dir> -o <範本> --windows-filenames --no-playlist`
 - **進度**：解析 `YTE-PROGRESS` JSON 行得到百分比、速度、剩餘時間；遇到合併或轉檔階段時，回報狀態「處理中」。
 - **錯誤分類**：依 stderr 關鍵字對應錯誤代碼，例如登入、網路、空間不足、格式不存在。
