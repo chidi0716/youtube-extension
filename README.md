@@ -100,6 +100,8 @@ This project follows spec-driven development and a clean-room process:
 | [`specs/001-toolbar`](./specs/001-toolbar/spec.md) | Toolbar shell |
 | [`specs/002-downloads`](./specs/002-downloads/spec.md) | Download tools |
 | [`specs/003-viewing-tools`](./specs/003-viewing-tools/spec.md) | Viewing tools |
+| [`specs/004-convenience`](./specs/004-convenience/spec.md) | Quality lock, embedding, clip downloads, timestamp links |
+| [`specs/005-page-tidy`](./specs/005-page-tidy/spec.md) | Page tidy options in the settings page |
 | [`specs/plan.md`](./specs/plan.md) / [`specs/tasks.md`](./specs/tasks.md) | Technical plan and tasks |
 | [`specs/ROADMAP.md`](./specs/ROADMAP.md) | Future directions |
 | [`specs/BACKLOG.md`](./specs/BACKLOG.md) | Feature ideas not yet specified |

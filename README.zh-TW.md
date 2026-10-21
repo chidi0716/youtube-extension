@@ -100,6 +100,8 @@ Firefox 版由 [WXT](https://wxt.dev)／Vite 打包並壓縮。從上傳的原�
 | [`specs/001-toolbar`](./specs/001-toolbar/spec.md) | 工具列外框 |
 | [`specs/002-downloads`](./specs/002-downloads/spec.md) | 下載功能 |
 | [`specs/003-viewing-tools`](./specs/003-viewing-tools/spec.md) | 觀看輔助功能 |
+| [`specs/004-convenience`](./specs/004-convenience/spec.md) | 便利功能：鎖定畫質、嵌入資訊、時間範圍下載、複製連結 |
+| [`specs/005-page-tidy`](./specs/005-page-tidy/spec.md) | 頁面整理（設定頁） |
 | [`specs/plan.md`](./specs/plan.md)／[`specs/tasks.md`](./specs/tasks.md) | 技術計畫與任務拆解 |
 | [`specs/ROADMAP.md`](./specs/ROADMAP.md) | 後續擴充方向 |
 | [`specs/BACKLOG.md`](./specs/BACKLOG.md) | 可新增功能清單 |
