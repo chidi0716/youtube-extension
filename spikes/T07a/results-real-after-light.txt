@@ -1,0 +1,50 @@
+ancestors of #movie_player:
+  div#movie_player position=relative z=0  <- position:relative z-index:0
+  div#container position=static z=auto
+  ytd-player#ytd-player position=static z=auto
+  div#player-container position=absolute z=auto
+  div#player-container-inner position=relative z=auto
+  div#player-container-outer position=static z=auto
+  div#player position=relative z=auto
+  div#primary-inner position=static z=auto
+  div#primary position=static z=auto
+  div#columns position=static z=auto
+  ytd-watch-flexy position=static z=auto
+  ytd-page-manager#page-manager position=static z=auto
+  div#content position=static z=auto
+  ytd-app position=absolute z=auto
+  body position=static z=auto
+regions:
+  #masthead-container: 0,0 1400x56 visible=true
+  tp-yt-app-drawer#guide: 0,-120 1400x1240 visible=true
+  ytd-mini-guide-renderer: 0,0 0x0 visible=false
+  ytd-watch-flexy #secondary: 999,56 401x2939 visible=true
+  ytd-watch-flexy #below: 16,801 967x782 visible=true
+  ytd-watch-flexy ytd-watch-metadata: 16,861 967x194 visible=true
+  ytd-watch-flexy #comments: 16,1079 967x504 visible=true
+  ytd-watch-flexy #player-container: 16,68 967x725 visible=true
+  ytd-watch-flexy #full-bleed-container: 0,56 1400x0 visible=false
+  ytd-watch-flexy #player-full-bleed-container: 0,56 1400x0 visible=false
+  ytd-watch-flexy #cinematics-container: 16,68 967x0 visible=false
+  ytd-watch-flexy #cinematics: 0,0 0x0 visible=false
+container children:
+  ytd-watch-flexy > iron-media-query#two-column-query, iron-media-query#small-window-query, iron-media-query#large-window-query, div#microformat, div#full-bleed-container, div#single-column-container, div#columns[has player], div#fixed-side-menu, div#survey, div#engagement-panel-scrim
+  ytd-watch-flexy #columns > div#primary[has player], div#secondary
+  ytd-watch-flexy #full-bleed-container > div#player-full-bleed-container, div#panels-full-bleed-container
+  ytd-watch-flexy #primary-inner > div#player[has player], div#below
+  ytd-watch-flexy #below > div#shopping-timely-shelf, yte-toolbar, div, div
+sidebar thumbnail mean luminance {"before":151.4,"cinema":10.1,"rect":{"x":1003,"y":72,"width":233,"height":127}}
+cinema on, elementFromPoint: {
+ "playerCenter": "player",
+ "playerControls": "player",
+ "toolbarCinema": "toolbar",
+ "toolbarHelp": "toolbar",
+ "masthead": "input.ytSearchboxComponentInput",
+ "secondary": "img.ytCoreImageHost"
+}
+state {"pressed":"true","overlay":false,"htmlClass":"yte-cinema"}
+visible elements not dimmed (outside the player and toolbar): 0
+sidebar thumbnail mean luminance before the full screenshot 10.1
+screenshot /home/user/youtube-extension/.claude/worktrees/agent-a093306d044012db1/specs/notes/screenshots/T07a-real-cinema-light.png
+sidebar thumbnail mean luminance after the full screenshot 10.1
+click on a dimmed sidebar thumbnail {"cinema":false,"pressed":"false","sameUrl":true,"url":"https://www.youtube.com/watch?v=jNQXAC9IVRw"}

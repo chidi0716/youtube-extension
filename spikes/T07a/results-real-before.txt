@@ -1,0 +1,39 @@
+ancestors of #movie_player:
+  div#movie_player position=relative z=0  <- position:relative z-index:0
+  div#container position=static z=auto
+  ytd-player#ytd-player position=static z=auto
+  div#player-container position=absolute z=auto
+  div#player-container-inner position=relative z=auto
+  div#player-container-outer position=static z=auto
+  div#player position=relative z=auto
+  div#primary-inner position=static z=auto
+  div#primary position=static z=auto
+  div#columns position=static z=auto
+  ytd-watch-flexy position=static z=auto
+  ytd-page-manager#page-manager position=static z=auto
+  div#content position=static z=auto
+  ytd-app position=absolute z=auto
+  body position=static z=auto
+regions:
+  #masthead-container: 0,0 1400x56 visible=true
+  tp-yt-app-drawer#guide: 0,-120 1400x1240 visible=true
+  ytd-mini-guide-renderer: 0,0 0x0 visible=false
+  ytd-watch-flexy #secondary: 999,56 401x2939 visible=true
+  ytd-watch-flexy #below: 16,801 967x782 visible=true
+  ytd-watch-flexy ytd-watch-metadata: 16,861 967x194 visible=true
+  ytd-watch-flexy #comments: 16,1079 967x504 visible=true
+  ytd-watch-flexy #player-container: 16,68 967x725 visible=true
+  ytd-watch-flexy #full-bleed-container: 0,56 1400x0 visible=false
+  ytd-watch-flexy #player-full-bleed-container: 0,56 1400x0 visible=false
+  ytd-watch-flexy #cinematics-container: 16,68 967x0 visible=false
+  ytd-watch-flexy #cinematics: 0,0 0x0 visible=false
+cinema on, elementFromPoint: {
+ "playerCenter": "player",
+ "playerControls": "player",
+ "toolbarCinema": "div.yte-cinema-overlay",
+ "toolbarHelp": "div.yte-cinema-overlay",
+ "masthead": "div.yte-cinema-overlay",
+ "secondary": "div.yte-cinema-overlay"
+}
+state {"pressed":"true","overlay":true,"htmlClass":""}
+screenshot /home/user/youtube-extension/.claude/worktrees/agent-a093306d044012db1/spikes/T07a/.cache/real-cinema.png

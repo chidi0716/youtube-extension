@@ -1,0 +1,7 @@
+thumbnail rect {"x":1003,"y":72,"width":233,"height":127}
+none                                                    mean luminance 100.6
+opacity on #secondary                                   mean luminance 6.6
+opacity on #secondary-inner                             mean luminance 6.6
+opacity on #secondary without view-transition-name      mean luminance 6.6
+filter brightness on #secondary                         mean luminance 7.1
+opacity + filter on #secondary                          mean luminance 3

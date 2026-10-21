@@ -36,6 +36,39 @@ export const SELECTORS = {
   comments: 'ytd-watch-flexy #comments',
 } as const;
 
+/**
+ * 劇院模式（003 FR-20、plan 3.7）調暗的頁面區域：播放器容器與工具列以外的各個區塊。
+ * 依 2026-10-21 從站內換頁進入的真實觀看頁確認（spikes/T07a/results-real-*.txt）。
+ * 工具列（yte-toolbar）插在 #below 的最前面，所以 #below 只調暗工具列以外的子元素。
+ * 播放器容器與它的祖先都不在這個清單中（播放器位於多層堆疊脈絡內，不能靠提高 z-index）。
+ */
+export const CINEMA_DIMMED_REGIONS: readonly string[] = [
+  // 頂端列
+  '#masthead-container',
+  // 左側導覽（觀看頁預設收合成抽屜）
+  'tp-yt-app-drawer#guide',
+  'ytd-mini-guide-renderer',
+  // 播放器欄位（#primary）以外的欄位：右側欄（推薦影片、播放清單、聊天室、資訊面板）等
+  'ytd-watch-flexy #columns > :not(#primary)',
+  // 播放器下方：標題、頻道、說明、留言（視窗較窄時推薦影片也在這裡）
+  'ytd-watch-flexy #below > :not(yte-toolbar)',
+  // 播放器欄位中播放器與 #below 以外的區塊
+  'ytd-watch-flexy #primary-inner > :not(#player):not(#below)',
+  // YouTube 劇院模式（加寬播放器）時的全寬區：播放器以外的資訊面板
+  'ytd-watch-flexy #full-bleed-container > :not(#player-full-bleed-container)',
+  // 部分版面在右側的固定選單（說明、留言等按鈕）與問卷
+  'ytd-watch-flexy #fixed-side-menu',
+  'ytd-watch-flexy #survey',
+  // YouTube「環境模式」在播放器周圍的光暈（與播放器容器是兄弟元素）
+  'ytd-watch-flexy #cinematics-container',
+];
+
+/** 元素是否位於劇院模式調暗的區域中（不含播放器與工具列）。 */
+export function isInCinemaDimmedRegion(el: Element): boolean {
+  if (el.closest(`${SELECTORS.player}, yte-toolbar`)) return false;
+  return el.closest(CINEMA_DIMMED_REGIONS.join(', ')) !== null;
+}
+
 /** 標題列的預設高度（找不到標題列時使用）。 */
 const DEFAULT_MASTHEAD_HEIGHT = 56;
 

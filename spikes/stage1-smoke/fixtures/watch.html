@@ -8,7 +8,8 @@
   - 播放器（#player > ... > #player-container > #movie_player），內含可播放的 <video>
     （/__fixture/test.webm，30 秒）與自動播放開關（.ytp-autonav-toggle-button[aria-checked]）；
   - #movie_player 上的播放器 API（getVideoData、seekTo、getVolume、setVolume 等）；
-  - 標題、留言區（#comments）、右側影片清單（站內換頁會發出 yt-navigate-finish）；
+  - 標題、說明、留言區（#comments）、右側影片清單（站內換頁會發出 yt-navigate-finish）；
+  - 播放器位於多層形成堆疊脈絡的祖先容器（#primary-inner、#player、#player-container-inner）內（T07a）；
   - <html dark> 深色主題與顏色變數，以及模擬 YouTube 選單的「切換主題」按鈕。
   - 主題的實測行為（specs/notes/T06b-dark-mode-instant.md）：
     - YouTube 依載入時的主題輸出不同的樣式表：`:root` 的顏色變數預設值就是載入時的主題，另有
@@ -158,8 +159,21 @@
       #secondary {
         width: 360px;
       }
+      /*
+       * 專案擁有者回報的情境（T07a）：播放器位於多層形成堆疊脈絡（position＋z-index）的祖先容器內，
+       * 播放器與工具列提高 z-index 也無法跳出這些容器，整頁遮罩會連播放器與工具列一起蓋住。
+       */
+      #primary-inner {
+        position: relative;
+        z-index: 0;
+      }
+      #player {
+        position: relative;
+        z-index: 1;
+      }
       #player-container-inner {
         position: relative;
+        z-index: 0;
         padding-top: 56.25%;
       }
       #player-container {

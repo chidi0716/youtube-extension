@@ -303,72 +303,197 @@ await section('T06', async (page) => {
 });
 
 // ---------------------------------------------------------------------------
-// T07 劇院模式
+// T07 劇院模式（T07a：分區調暗）
 // ---------------------------------------------------------------------------
+// 假觀看頁的播放器位於多層形成堆疊脈絡的祖先容器內（#primary-inner、#player、#player-container-inner），
+// 重現專案擁有者回報的情境。劇院模式開啟時以 document.elementFromPoint 檢查播放器與工具列沒有被蓋住。
+const cinemaOn = (page) => page.evaluate(() => document.documentElement.classList.contains('yte-cinema'));
+
+/** 劇院模式的檢查：各檢查點最上層的元素、各區域實際的不透明度（含祖先）、頁面背景色。 */
+const cinemaProbe = (page) =>
+  page.evaluate(() => {
+    const classify = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      if (!el) return 'none';
+      if (el.closest('yte-toolbar')) return 'toolbar';
+      if (el.closest('#movie_player')) return 'player';
+      if (el.closest('.yte-cinema-overlay')) return 'overlay';
+      return el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '');
+    };
+    const center = (el) => {
+      const r = el.getBoundingClientRect();
+      return [r.left + r.width / 2, r.top + r.height / 2];
+    };
+    const opacity = (el) => {
+      let o = 1;
+      for (let e = el; e; e = e.parentElement) o *= Number(getComputedStyle(e).opacity);
+      return Math.round(o * 1000) / 1000;
+    };
+    const shadow = document.querySelector('yte-toolbar').shadowRoot;
+    const btn = (id) => shadow.querySelector(`.yte-btn[data-button="${id}"]`);
+    const points = {
+      playerCenter: center(document.querySelector('#movie_player')),
+      playerControls: center(document.querySelector('.ytp-chrome-bottom')),
+      playButton: center(document.querySelector('#fixture-play')),
+      toolbarVideo: center(btn('video')),
+      toolbarCinema: center(btn('cinema')),
+      toolbarClose: center(btn('close')),
+    };
+    const panel = shadow.querySelector('.yte-panel');
+    if (panel) points.toolbarPanel = center(panel);
+    const hits = Object.fromEntries(Object.entries(points).map(([k, [x, y]]) => [k, classify(x, y)]));
+    const regions = {
+      masthead: document.querySelector('#masthead-container'),
+      title: document.querySelector('ytd-watch-metadata h1'),
+      description: document.querySelector('#fixture-description'),
+      comments: document.querySelector('#comments'),
+      secondary: document.querySelector('#secondary a'),
+    };
+    return {
+      hits,
+      dimmed: Object.fromEntries(Object.entries(regions).map(([k, el]) => [k, opacity(el)])),
+      bright: { player: opacity(document.querySelector('#movie_player')), toolbar: opacity(document.querySelector('yte-toolbar')) },
+      background: [document.documentElement, document.body, document.querySelector('ytd-app')].map((el) => getComputedStyle(el).backgroundColor),
+    };
+  });
+
+const protectedHits = (hits) => Object.values(hits).every((h) => h === 'player' || h === 'toolbar') && hits.playerCenter === 'player' && hits.toolbarCinema === 'toolbar';
+
 await section('T07', async (page) => {
-  // 回傳畫面上某一點最上層的元素屬於哪個區域
-  const hitAt = (selector, dx = 0.5, dy = 0.5) =>
-    page.evaluate(
-      ({ selector, dx, dy }) => {
-        const el = document.querySelector(selector);
-        const r = el.getBoundingClientRect();
-        const top = document.elementFromPoint(r.left + r.width * dx, r.top + Math.min(r.height * dy, 20));
-        if (!top) return null;
-        if (top.closest('yte-toolbar')) return 'toolbar';
-        if (top.classList.contains('yte-cinema-overlay')) return 'overlay';
-        if (top.closest('#movie_player')) return 'player';
-        return top.tagName.toLowerCase() + (top.id ? `#${top.id}` : '');
-      },
-      { selector, dx, dy },
-    );
+  const { shots } = await import('./lib.mjs');
+  // 先確認假頁面確實重現回報的問題：以舊做法（整頁遮罩，播放器容器與工具列提高 z-index）會被蓋住。
+  const old = await page.evaluate(() => {
+    const overlay = document.createElement('div');
+    overlay.className = 'yte-cinema-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:2200;background:rgba(0,0,0,0.9)';
+    document.body.append(overlay);
+    const container = document.querySelector('#player-container');
+    const host = document.querySelector('yte-toolbar');
+    container.style.zIndex = '2201';
+    host.style.position = 'relative';
+    host.style.zIndex = '2201';
+    const at = (el) => {
+      const r = el.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return top === overlay ? 'overlay' : top?.closest('#movie_player') ? 'player' : top?.closest('yte-toolbar') ? 'toolbar' : top?.tagName;
+    };
+    const result = {
+      player: at(document.querySelector('#movie_player')),
+      toolbar: at(host.shadowRoot.querySelector('.yte-btn[data-button="cinema"]')),
+    };
+    overlay.remove();
+    container.style.zIndex = '';
+    host.style.position = '';
+    host.style.zIndex = '';
+    return result;
+  });
+  check('假觀看頁重現回報的問題：舊做法（整頁遮罩＋提高 z-index）會連播放器與工具列一起蓋住', old.player === 'overlay' && old.toolbar === 'overlay', JSON.stringify(old));
 
   await button(page, 'cinema').click();
   await page.waitForTimeout(200);
-  const p = await pressed(page, 'cinema');
-  const hits = {
-    player: await hitAt('#movie_player'),
-    toolbar: await hitAt('yte-toolbar', 0.02),
-    title: await hitAt('ytd-watch-metadata h1', 0.1),
-    masthead: await hitAt('#masthead-container', 0.02),
-    secondary: await hitAt('#secondary'),
-  };
+  let probe = await cinemaProbe(page);
   check(
-    '劇院模式：播放器與工具列以外都被遮罩（FR-20）',
-    p.pressed === 'true' &&
-      hits.player === 'player' &&
-      hits.toolbar === 'toolbar' &&
-      hits.title === 'overlay' &&
-      hits.masthead === 'overlay' &&
-      hits.secondary === 'overlay',
-    JSON.stringify(hits),
+    '劇院模式開啟：播放器中央、控制列、工具列按鈕位置最上層都是播放器或工具列（FR-20a）',
+    (await pressed(page, 'cinema')).pressed === 'true' && (await cinemaOn(page)) && protectedHits(probe.hits),
+    JSON.stringify(probe.hits),
   );
-  const opacity = await page.evaluate(() => getComputedStyle(document.querySelector('.yte-cinema-overlay')).backgroundColor);
-  check('遮罩約 90% 不透明', opacity === 'rgba(0, 0, 0, 0.9)', opacity);
-  await page.screenshot({ path: `${(await import('./lib.mjs')).shots}/T07-cinema-on.png` });
+  check(
+    '頂端列、標題、說明、留言、側欄都變暗到約 93%，播放器與工具列亮度正常（FR-20、FR-20a）',
+    Object.values(probe.dimmed).every((o) => o <= 0.1) && probe.bright.player === 1 && probe.bright.toolbar === 1,
+    `${JSON.stringify(probe.dimmed)} ${JSON.stringify(probe.bright)}`,
+  );
+  check('頁面背景變成黑色（FR-20）', probe.background.every((c) => c === 'rgb(0, 0, 0)'), probe.background.join(', '));
+  await page.screenshot({ path: `${shots}/T07a-cinema-light.png` });
 
-  // 工具列仍可用：在劇院模式中展開面板
+  // 播放器的控制項可以點：播放／暫停
+  const pausedBefore = await page.evaluate(() => document.querySelector('video').paused);
+  await page.locator('#fixture-play').click();
+  await page.waitForTimeout(300);
+  const pausedAfter = await page.evaluate(() => document.querySelector('video').paused);
+  check('劇院模式中播放器控制項可以點擊，且不會關閉劇院模式（FR-20a）', pausedBefore !== pausedAfter && (await cinemaOn(page)), `paused ${pausedBefore}→${pausedAfter}`);
+  await page.evaluate(() => document.querySelector('video').pause());
+
+  // 工具列的面板可以展開與點擊
   await button(page, 'help').click();
   await page.waitForTimeout(300);
-  const panelVisible = await page.evaluate(() => !!document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-panel'));
+  // 面板展開在工具列下方，捲到畫面內再檢查
+  await page.evaluate(() => document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-panel').scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(200);
+  probe = await cinemaProbe(page);
+  check('劇院模式中工具列面板可以展開，面板位置最上層是工具列（FR-20a）', probe.hits.toolbarPanel === 'toolbar' && (await cinemaOn(page)), JSON.stringify(probe.hits));
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
-  const stillOnAfterPanelEsc = (await pressed(page, 'cinema')).pressed === 'true';
-  check('劇院模式中工具列仍可用；Esc 先收起面板', panelVisible && stillOnAfterPanelEsc);
+  check('Esc 先收起面板，劇院模式維持', (await cinemaOn(page)) && (await page.locator('yte-toolbar .yte-panel').count()) === 0);
+
+  // 站內換到另一部影片時繼續生效（FR-3）
+  await page.evaluate(() => {
+    history.pushState({}, '', '/watch?v=bbbbbbbbbbb');
+    document.dispatchEvent(new CustomEvent('yt-navigate-finish'));
+  });
+  await page.waitForTimeout(300);
+  check('換到另一部影片時劇院模式繼續生效（FR-3）', (await cinemaOn(page)) && protectedHits((await cinemaProbe(page)).hits));
 
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
-  check('按 Esc 關閉劇院模式（FR-21）', (await pressed(page, 'cinema')).pressed === 'false' && (await page.locator('.yte-cinema-overlay').count()) === 0);
+  check('按 Esc 關閉劇院模式（FR-21）', (await pressed(page, 'cinema')).pressed === 'false' && !(await cinemaOn(page)));
 
+  // 點變暗區域中的連結：關閉劇院模式，但不會開啟連結
+  await button(page, 'cinema').click();
+  const urlBefore = page.url();
+  const titleBefore = await page.locator('h1').innerText();
+  await page.locator('#next').click();
+  await page.waitForTimeout(300);
+  check(
+    '點變暗區域中的連結：關閉劇院模式，不會開啟連結（FR-21）',
+    !(await cinemaOn(page)) && page.url() === urlBefore && (await page.locator('h1').innerText()) === titleBefore,
+    page.url(),
+  );
+
+  // 點變暗的頂端列（其中的按鈕不會被觸發）
+  await button(page, 'cinema').click();
+  const darkBefore = await page.evaluate(() => document.documentElement.hasAttribute('dark'));
+  await page.locator('#fixture-theme-toggle').click();
+  await page.waitForTimeout(300);
+  check(
+    '點變暗的頂端列關閉劇院模式，頂端列的按鈕不會被觸發（FR-21）',
+    !(await cinemaOn(page)) && (await page.evaluate(() => document.documentElement.hasAttribute('dark'))) === darkBefore,
+  );
+
+  // 點變暗區域的空白處
   await button(page, 'cinema').click();
   await page.mouse.click(1200, 700);
   await page.waitForTimeout(200);
-  check('點遮罩關閉劇院模式（FR-21）', (await pressed(page, 'cinema')).pressed === 'false');
+  check('點變暗區域的空白處關閉劇院模式（FR-21）', (await pressed(page, 'cinema')).pressed === 'false' && !(await cinemaOn(page)));
 
   await button(page, 'cinema').click();
   await page.reload();
   await openWatch(page);
-  check('劇院模式不記住狀態（FR-22）', (await pressed(page, 'cinema')).pressed === 'false' && (await page.locator('.yte-cinema-overlay').count()) === 0);
+  check('劇院模式不記住狀態（FR-22）', (await pressed(page, 'cinema')).pressed === 'false' && !(await cinemaOn(page)));
 });
+
+await section(
+  'T07',
+  async (page) => {
+    const { shots } = await import('./lib.mjs');
+    // 深色主題下也一樣
+    await button(page, 'cinema').click();
+    await page.waitForTimeout(200);
+    const probe = await cinemaProbe(page);
+    check(
+      '深色主題：播放器與工具列沒有被蓋住，其他區域變暗、背景黑色（FR-20、FR-20a）',
+      (await page.evaluate(() => document.documentElement.hasAttribute('dark'))) &&
+        protectedHits(probe.hits) &&
+        Object.values(probe.dimmed).every((o) => o <= 0.1) &&
+        probe.bright.player === 1 &&
+        probe.bright.toolbar === 1 &&
+        probe.background.every((c) => c === 'rgb(0, 0, 0)'),
+      `${JSON.stringify(probe.hits)} ${JSON.stringify(probe.dimmed)} ${probe.background.join(', ')}`,
+    );
+    await page.screenshot({ path: `${shots}/T07a-cinema-dark.png` });
+  },
+  { pref: 'f6=400' },
+);
 
 // ---------------------------------------------------------------------------
 // T08 浮動播放器
@@ -690,7 +815,7 @@ await section('DISABLE', async (page, context) => {
   await button(page, 'cinema').click();
   await page.waitForTimeout(200);
   const before = await page.evaluate(() => ({
-    overlay: !!document.querySelector('.yte-cinema-overlay'),
+    cinema: document.documentElement.classList.contains('yte-cinema'),
     commentsHidden: getComputedStyle(document.querySelector('#comments')).display === 'none',
   }));
 
@@ -702,12 +827,12 @@ await section('DISABLE', async (page, context) => {
   await page.waitForTimeout(500);
   const after = await page.evaluate(() => ({
     toolbar: !!document.querySelector('yte-toolbar'),
-    overlay: !!document.querySelector('.yte-cinema-overlay'),
+    cinema: document.documentElement.classList.contains('yte-cinema'),
     commentsHidden: getComputedStyle(document.querySelector('#comments')).display === 'none',
   }));
   check(
     '關閉「啟用」時移除工具列並還原頁面修改（Q11）',
-    before.overlay && before.commentsHidden && !after.toolbar && !after.overlay && !after.commentsHidden,
+    before.cinema && before.commentsHidden && !after.toolbar && !after.cinema && !after.commentsHidden,
     `${JSON.stringify(before)} → ${JSON.stringify(after)}`,
   );
   await popup.locator('#enabled').check();

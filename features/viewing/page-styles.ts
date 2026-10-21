@@ -1,23 +1,27 @@
 // 觀看輔助功能加在 YouTube 頁面上的樣式（constitution 第 6 點：只用 yte- 前綴的 class，
 // 不改 YouTube 原本的屬性）。選擇器來自 utils/youtube/dom.ts。
-import { SELECTORS } from '@/utils/youtube/dom';
+import { CINEMA_DIMMED_REGIONS, SELECTORS } from '@/utils/youtube/dom';
 
 const STYLE_ID = 'yte-page-styles';
 
+/** 劇院模式時加在 <html> 上的 class。 */
+export const CINEMA_CLASS = 'yte-cinema';
+/** 劇院模式調暗區域的不透明度：變暗約 93%（003 FR-20）。 */
+export const CINEMA_DIM_OPACITY = 0.07;
+
 export const PAGE_CSS = `
-/* 劇院模式（003 FR-20） */
-.yte-cinema-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2200;
-  background: rgba(0, 0, 0, 0.9);
+/*
+ * 劇院模式（003 FR-20、FR-20a）：分區調暗。不使用蓋住整頁的遮罩——播放器位於多層形成堆疊脈絡的
+ * 容器內，提高 z-index 無法跳出遮罩。改為只調暗播放器容器與工具列以外的區域，頁面背景改為黑色。
+ */
+html.${CINEMA_CLASS},
+html.${CINEMA_CLASS} body,
+html.${CINEMA_CLASS} ytd-app {
+  background: #000 !important;
+}
+html.${CINEMA_CLASS} :is(${CINEMA_DIMMED_REGIONS.join(', ')}) {
+  opacity: ${CINEMA_DIM_OPACITY} !important;
   cursor: pointer;
-}
-.yte-cinema-raised {
-  z-index: 2201 !important;
-}
-.yte-cinema-positioned {
-  position: relative !important;
 }
 
 /* 浮動播放器（003 FR-40）：位置與尺寸由 features/viewing/floating.ts 另外寫入。 */
