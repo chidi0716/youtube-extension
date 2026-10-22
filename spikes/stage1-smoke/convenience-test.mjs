@@ -633,6 +633,164 @@ await section(
   { viewport: { width: 1400, height: 1000 } },
 );
 
+// ---------------------------------------------------------------------------
+// T31 需要程式的選項（005）
+// ---------------------------------------------------------------------------
+const audioNow = (page) => page.evaluate(() => window.__fixtureAudio());
+
+await section(
+  'T31',
+  async (page, context) => {
+    const { shots } = await import('./lib.mjs');
+    const options = await openOptions(context);
+
+    // ---- 永遠使用原始語音（FR-10 至 FR-13）----
+    await page.bringToFront();
+    await page.goto('https://www.youtube.com/watch?v=aaaaaaaaaaa');
+    await page.waitForSelector('yte-toolbar', { state: 'attached' });
+    await page.evaluate(() => document.querySelector('video').play());
+    await page.waitForTimeout(1500);
+    const dubbedOff = await audioNow(page);
+    check('（假頁面）未開啟時，有自動配音的影片預設播放自動配音', dubbedOff.id === 'es.3', JSON.stringify(dubbedOff));
+    await page.evaluate(() => {
+      const v = document.querySelector('video');
+      v.currentTime = 6;
+    });
+    await page.waitForTimeout(300);
+    await setOption(options, 'originalAudio', true);
+    await page.bringToFront();
+    await page.waitForTimeout(600);
+    const switched = await page.evaluate(() => ({ ...window.__fixtureAudio(), paused: document.querySelector('video').paused }));
+    check(
+      '開啟後立即切換到原始語音，影片繼續播放、沒有跳回開頭（FR-10、FR-13、005 FR-3）',
+      switched.id === 'en.4' && switched.time > 5.5 && !switched.paused,
+      JSON.stringify(switched),
+    );
+
+    // 手動改成配音：這部影片維持配音
+    await page.locator('#movie_player .ytp-settings-button').click();
+    await page.locator('#movie_player .ytp-settings-menu button[data-audio="es.3"]').click();
+    await page.evaluate(() => {
+      const v = document.querySelector('video');
+      v.dispatchEvent(new Event('loadedmetadata'));
+      v.dispatchEvent(new Event('playing'));
+    });
+    await page.waitForTimeout(500);
+    check('手動改成配音後，這部影片維持配音（FR-12）', (await audioNow(page)).id === 'es.3');
+
+    // 換到下一部有自動配音的影片：恢復自動切換
+    await page.evaluate(() => window.__fixtureNavigate('ddddddddddd'));
+    await page.waitForTimeout(600);
+    check('換到下一部影片再恢復自動切換（FR-12）', (await audioNow(page)).id === 'en.4');
+
+    // 只有一個語音軌、預設就是原始語音
+    const switchesBefore = (await fixtureLog(page, 'audio')).filter((e) => e.source === 'api').length;
+    await page.evaluate(() => window.__fixtureNavigate('bbbbbbbbbbb'));
+    await page.waitForTimeout(500);
+    await page.evaluate(() => window.__fixtureNavigate('ccccccccccc'));
+    await page.waitForTimeout(500);
+    const apiSwitches = (await fixtureLog(page, 'audio')).filter((e) => e.source === 'api');
+    check(
+      '只有一個語音軌、或預設就是原始語音時不做任何事（FR-11）',
+      (await audioNow(page)).id === 'en.4' && switchesBefore === 2 && apiSwitches.length === 2,
+      JSON.stringify(apiSwitches),
+    );
+    // 重新載入有自動配音的影片
+    await page.goto('https://www.youtube.com/watch?v=ddddddddddd');
+    await page.waitForSelector('yte-toolbar', { state: 'attached' });
+    await page.evaluate(() => document.querySelector('video').play());
+    await page.waitForTimeout(800);
+    check('直接打開有自動配音的影片時播放原始語音（FR-10）', (await audioNow(page)).id === 'en.4');
+    await setOption(options, 'originalAudio', false);
+
+    // ---- 自動關閉「要繼續觀看嗎？」（FR-30、FR-31）----
+    const fresh = await context.newPage();
+    await openWatch(fresh);
+    await fresh.evaluate(() => document.querySelector('video').play());
+    await fresh.waitForTimeout(500);
+    await fresh.evaluate(() => window.__fixtureShowContinueDialog());
+    await fresh.waitForTimeout(800);
+    const offState = await fresh.evaluate(() => ({ dialog: window.__fixtureDialogVisible(), paused: document.querySelector('video').paused }));
+    check('（假頁面）未開啟時對話框維持顯示、影片暫停', offState.dialog && offState.paused, JSON.stringify(offState));
+    await fresh.screenshot({ path: `${shots}/T31-continue-dialog-fixture.png`, clip: { x: 0, y: 0, width: 1280, height: 700 } });
+    await fresh.evaluate(() => document.querySelector('#confirm-button button').click());
+    await setOption(options, 'autoContinue', true);
+    await fresh.bringToFront();
+    await fresh.waitForTimeout(300);
+    await fresh.evaluate(() => window.__fixtureShowContinueDialog());
+    await fresh.waitForTimeout(800);
+    const onState = await fresh.evaluate(() => ({
+      dialog: window.__fixtureDialogVisible(),
+      paused: document.querySelector('video').paused,
+      confirmed: window.__fixtureLog.filter((e) => e.type === 'dialog-confirm').length,
+    }));
+    check('「要繼續觀看嗎？」出現時被自動關閉並繼續播放（FR-30）', !onState.dialog && !onState.paused && onState.confirmed === 2, JSON.stringify(onState));
+    // 再出現一次（對話框被重複使用）
+    await fresh.evaluate(() => window.__fixtureShowContinueDialog());
+    await fresh.waitForTimeout(800);
+    check('對話框再次出現時同樣被關閉', !(await fresh.evaluate(() => window.__fixtureDialogVisible())) && !(await fresh.evaluate(() => document.querySelector('video').paused)));
+
+    // 使用者自己按暫停：不會被自動播放
+    await fresh.locator('#fixture-play').click();
+    await fresh.waitForTimeout(1500);
+    const userPaused = await fresh.evaluate(() => document.querySelector('video').paused);
+    // 使用者剛操作過時出現的其他確認對話框：不受影響
+    await fresh.evaluate(() => window.__fixtureShowOtherDialog());
+    await fresh.waitForTimeout(800);
+    const other = await fresh.evaluate(() => ({ dialog: window.__fixtureDialogVisible(), paused: document.querySelector('video').paused }));
+    check('自己按暫停的影片不會被自動播放，使用者自己開啟的對話框不受影響（FR-31）', userPaused && other.dialog && other.paused, JSON.stringify({ userPaused, other }));
+    await fresh.close();
+    await setOption(options, 'autoContinue', false);
+
+    // ---- Shorts 改用一般播放器（FR-50 至 FR-52）----
+    await page.bringToFront();
+    await page.goto('https://www.youtube.com/shorts/abcdefghijk');
+    await page.waitForTimeout(500);
+    check('（假頁面）未開啟時 Shorts 網址維持 Shorts 頁', new URL(page.url()).pathname === '/shorts/abcdefghijk');
+    await setOption(options, 'shortsToWatch', true);
+    await page.bringToFront();
+    await page.waitForURL((u) => u.pathname === '/watch', { timeout: 5000 });
+    check('開啟時已開著的 Shorts 頁立即轉成一般觀看頁（005 FR-3）', page.url() === 'https://www.youtube.com/watch?v=abcdefghijk', page.url());
+
+    // 直接輸入 Shorts 網址
+    await page.goto('https://www.youtube.com/');
+    await page.waitForSelector('#contents ytd-rich-item-renderer');
+    await page.goto('https://www.youtube.com/shorts/typedxxxxxx');
+    await page.waitForURL((u) => u.pathname === '/watch', { timeout: 5000 });
+    await page.waitForSelector('yte-toolbar', { state: 'attached', timeout: 10_000 });
+    check('直接輸入 Shorts 網址時以一般觀看頁播放，工具列可以使用（FR-50、FR-52）', page.url() === 'https://www.youtube.com/watch?v=typedxxxxxx', page.url());
+    await page.screenshot({ path: `${shots}/T31-shorts-as-watch.png`, clip: { x: 0, y: 0, width: 1280, height: 700 } });
+    await page.goBack();
+    await page.waitForTimeout(800);
+    check('按上一頁回到首頁，不會回到 Shorts 而被轉回來（FR-51）', new URL(page.url()).pathname === '/', page.url());
+
+    // 在 YouTube 站內點擊 Shorts（首頁的 Shorts 區塊，站內換頁）
+    await page.locator('#fixture-shorts-section a.reel-item-endpoint').first().click();
+    await page.waitForURL((u) => u.pathname === '/watch', { timeout: 5000 });
+    const clicked = page.url();
+    await page.waitForSelector('yte-toolbar', { state: 'attached', timeout: 10_000 });
+    await page.goBack();
+    await page.waitForTimeout(800);
+    const back1 = page.url();
+    await page.goForward();
+    await page.waitForTimeout(800);
+    const forward = page.url();
+    check(
+      '站內點擊 Shorts 時以一般觀看頁播放；上一頁回到首頁、下一頁回到觀看頁，沒有轉換循環（FR-50、FR-51）',
+      clicked === 'https://www.youtube.com/watch?v=short1xxxxx' && new URL(back1).pathname === '/' && forward === clicked,
+      `${clicked} → back ${back1} → forward ${forward}`,
+    );
+
+    // 觀看頁推薦清單中的 Shorts
+    await page.goto(WATCH);
+    await page.waitForSelector('#related');
+    await page.locator('#fixture-related-shorts a.reel-item-endpoint').first().click();
+    await page.waitForURL((u) => u.pathname === '/watch' && u.searchParams.get('v') === 'rsh1xxxxxxx', { timeout: 5000 });
+    check('觀看頁推薦清單中的 Shorts 也以一般觀看頁播放（FR-50）', true, page.url());
+  },
+  { viewport: { width: 1280, height: 900 } },
+);
+
 if (!summary()) process.exitCode = 1;
 void EXT_ID;
 void skip;

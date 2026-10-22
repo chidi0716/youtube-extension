@@ -10,5 +10,5 @@
 
 ## 最近一次檢查
 
-- 日期：2026-10-21（T07a）
-- 結果：0 個錯誤、2 個警告（即上表兩項）、0 個 notice。
+- 日期：2026-10-22（T27–T31，分支 `feature/convenience-and-tidy`）
+- 結果：0 個錯誤、2 個警告（即上表兩項：`manifest.json`、`content-scripts/youtube.js`）、0 個 notice。新增的 `content-scripts/tidy.js` 沒有警告。

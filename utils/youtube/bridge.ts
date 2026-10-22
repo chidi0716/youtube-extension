@@ -3,20 +3,25 @@
 // - 兩邊以 document 上的 CustomEvent 溝通，detail 一律是 JSON 字串
 //   （字串可以安全跨越 Firefox 的 Xray 邊界）。
 // - 只接受固定的幾種請求，其他一律忽略。頁面上的其他程式也能發出同名事件，
-//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉、讀取/設定畫質。
+//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉、讀取/設定畫質與語音軌。
 import {
+  AUDIO_TRACK_ID_PATTERN,
   AUTO_QUALITY,
   isQualityCode,
+  readAudioTracks,
   readAvailableQualities,
   readCurrentTime,
   readQuality,
   readVideoData,
   readVolume,
+  writeAudioTrack,
   writeQuality,
   writeSeek,
   writeVolume,
+  type AudioTrackInfo,
   type QualityCode,
   type VideoData,
+  type YtAudioApi,
   type YtPlayerApi,
   type YtQualityApi,
 } from './dom';
@@ -33,7 +38,10 @@ export type BridgeRequest =
   // 鎖定畫質（004 第 1 節、plan 3.5）：setQuality 只接受 YouTube 畫質代號白名單與 auto。
   | { id: string; type: 'getAvailableQualities' }
   | { id: string; type: 'getQuality' }
-  | { id: string; type: 'setQuality'; quality: QualityCode | typeof AUTO_QUALITY };
+  | { id: string; type: 'setQuality'; quality: QualityCode | typeof AUTO_QUALITY }
+  // 永遠使用原始語音（005 FR-10、plan 3.7.2）：setAudioTrack 只接受目前清單中存在的語音軌 ID。
+  | { id: string; type: 'getAudioTracks' }
+  | { id: string; type: 'setAudioTrack'; trackId: string };
 
 export type BridgeRequestType = BridgeRequest['type'];
 
@@ -46,10 +54,16 @@ export interface BridgeResults {
   getAvailableQualities: QualityCode[];
   getQuality: QualityCode | null;
   setQuality: null;
+  getAudioTracks: { tracks: AudioTrackInfo[]; current: string | null };
+  /** 是否已切換（清單中沒有這個 ID 時為 false）。 */
+  setAudioTrack: boolean;
 }
 
 /** 頁面橋接腳本會用到的播放器方法。 */
-export type BridgePlayer = YtPlayerApi & YtQualityApi;
+export type BridgePlayer = YtPlayerApi & YtQualityApi & YtAudioApi;
+
+/** 切換語音軌後播放位置被移動超過這個秒數時，跳回原本的位置（005 FR-13）。 */
+const AUDIO_SWITCH_SEEK_TOLERANCE = 2;
 
 export type BridgeResponse =
   | { id: string; ok: true; result: unknown }
@@ -84,7 +98,12 @@ export function parseBridgeRequest(raw: unknown): BridgeRequest | null {
     case 'getCurrentTime':
     case 'getAvailableQualities':
     case 'getQuality':
+    case 'getAudioTracks':
       return { id, type: obj.type };
+    case 'setAudioTrack':
+      return typeof obj.trackId === 'string' && AUDIO_TRACK_ID_PATTERN.test(obj.trackId)
+        ? { id, type: 'setAudioTrack', trackId: obj.trackId }
+        : null;
     case 'setQuality':
       return isQualityCode(obj.quality) || obj.quality === AUTO_QUALITY
         ? { id, type: 'setQuality', quality: obj.quality }
@@ -133,6 +152,15 @@ export function handleBridgeRequest(req: BridgeRequest, player: BridgePlayer | n
       case 'setQuality':
         writeQuality(player, req.quality);
         return { id: req.id, ok: true, result: null };
+      case 'getAudioTracks':
+        return { id: req.id, ok: true, result: readAudioTracks(player) };
+      case 'setAudioTrack': {
+        // 切換時影片繼續播放，不得跳回開頭（005 FR-13）。
+        const before = readCurrentTime(player);
+        const switched = writeAudioTrack(player, req.trackId);
+        if (switched && Math.abs(readCurrentTime(player) - before) > AUDIO_SWITCH_SEEK_TOLERANCE) writeSeek(player, before);
+        return { id: req.id, ok: true, result: switched };
+      }
     }
   } catch {
     return { id: req.id, ok: false, error: 'FAILED' };

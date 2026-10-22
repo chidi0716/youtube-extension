@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPageType, getVideoId, isValidVideoId, isWatchPage } from './page';
+import { getPageType, getShortsVideoId, getVideoId, isValidVideoId, isWatchPage, watchUrlForShorts } from './page';
 
 describe('getPageType', () => {
   it.each([
@@ -72,5 +72,39 @@ describe('isWatchPage（001 FR-1）', () => {
   it('版面不同的子網域不處理', () => {
     expect(isWatchPage('https://m.youtube.com/watch?v=jNQXAC9IVRw')).toBe(false);
     expect(isWatchPage('https://music.youtube.com/watch?v=jNQXAC9IVRw')).toBe(false);
+  });
+});
+
+describe('watchUrlForShorts（005 FR-50）', () => {
+  it('Shorts 網址轉成同一部影片的一般觀看頁', () => {
+    expect(watchUrlForShorts('https://www.youtube.com/shorts/jNQXAC9IVRw')).toBe('https://www.youtube.com/watch?v=jNQXAC9IVRw');
+    expect(watchUrlForShorts('https://youtube.com/shorts/jNQXAC9IVRw/')).toBe('https://youtube.com/watch?v=jNQXAC9IVRw');
+    expect(watchUrlForShorts('https://www.youtube.com/shorts/jNQXAC9IVRw?feature=share&si=abc')).toBe('https://www.youtube.com/watch?v=jNQXAC9IVRw');
+    expect(getShortsVideoId('https://www.youtube.com/shorts/jNQXAC9IVRw')).toBe('jNQXAC9IVRw');
+  });
+
+  it('不是 Shorts 影片網址時不轉換（避免循環：觀看頁永遠不會再被轉換）', () => {
+    for (const url of [
+      'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+      'https://www.youtube.com/shorts/',
+      'https://www.youtube.com/shorts',
+      'https://www.youtube.com/shorts/short',
+      'https://www.youtube.com/shorts/jNQXAC9IVRw/extra',
+      'https://www.youtube.com/@channel/shorts',
+      'not a url',
+    ]) {
+      expect(watchUrlForShorts(url), url).toBeNull();
+    }
+  });
+
+  it('只處理 www.youtube.com 與 youtube.com（005 FR-5）', () => {
+    expect(watchUrlForShorts('https://m.youtube.com/shorts/jNQXAC9IVRw')).toBeNull();
+    expect(watchUrlForShorts('https://music.youtube.com/shorts/jNQXAC9IVRw')).toBeNull();
+  });
+
+  it('轉換結果一定是觀看頁', () => {
+    const url = watchUrlForShorts('https://www.youtube.com/shorts/jNQXAC9IVRw')!;
+    expect(isWatchPage(url)).toBe(true);
+    expect(watchUrlForShorts(url)).toBeNull();
   });
 });

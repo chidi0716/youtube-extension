@@ -244,10 +244,55 @@
   `;
   document.getElementById('secondary').append(related);
 
+  // -------------------------------------------------------------------------
+  // 「影片已暫停，要繼續觀看嗎？」（005 FR-30、FR-31）：ytd-popup-container（真實頁面在 ytd-app 底下）
+  // 中出現 tp-yt-paper-dialog > yt-confirm-dialog-renderer，按「是」（#confirm-button）後關閉並繼續播放。
+  // 對話框的元素名稱依公開觀察，未在真實頁面看到。第一次建立，之後以 display 切換（模擬重複使用）。
+  // -------------------------------------------------------------------------
+  const popup = document.createElement('ytd-popup-container');
+  document.querySelector('ytd-app').append(popup);
+  let dialog = null;
+  const showDialog = (text, onConfirm) => {
+    if (!dialog) {
+      dialog = document.createElement('tp-yt-paper-dialog');
+      dialog.style.cssText = 'position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:2200;background:#fff;color:#0f0f0f;padding:16px 24px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.4);display:none';
+      dialog.innerHTML =
+        '<yt-confirm-dialog-renderer><p id="fixture-dialog-text"></p><div id="buttons"><yt-button-renderer id="cancel-button"><button type="button">Cancel</button></yt-button-renderer> <yt-button-renderer id="confirm-button"><button type="button">Yes</button></yt-button-renderer></div></yt-confirm-dialog-renderer>';
+      popup.append(dialog);
+    }
+    dialog.querySelector('#fixture-dialog-text').textContent = text;
+    const close = () => {
+      dialog.style.display = 'none';
+    };
+    dialog.querySelector('#confirm-button button').onclick = () => {
+      close();
+      log({ type: 'dialog-confirm' });
+      onConfirm?.();
+    };
+    dialog.querySelector('#cancel-button button').onclick = close;
+    dialog.style.display = 'block';
+  };
+  // YouTube 長時間沒有互動時：暫停影片並詢問
+  window.__fixtureShowContinueDialog = () => {
+    video.pause();
+    setTimeout(() => showDialog('Video paused. Continue watching?', () => video.play()), 50);
+  };
+  // 使用者自己的操作造成的確認對話框（例如從播放清單移除）：不暫停影片
+  window.__fixtureShowOtherDialog = () => showDialog('Remove from playlist?', () => {});
+  window.__fixtureDialogVisible = () => !!dialog && dialog.style.display !== 'none';
+
   // 縮圖自動預覽與站內換頁到 Shorts（與假首頁、假搜尋頁共用）
   const browse = document.createElement('script');
   browse.src = '/__fixture/browse.js';
   document.body.append(browse);
+
+  // 測試用：站內換頁到任一部假影片（與 watch.html 中 #secondary 連結的處理相同）。
+  window.__fixtureNavigate = (id) => {
+    history.pushState({}, '', `/watch?v=${id}`);
+    document.querySelector('h1').textContent = 'Fixture video ' + id;
+    video.currentTime = 0;
+    document.dispatchEvent(new CustomEvent('yt-navigate-finish'));
+  };
 
   // 站內換頁：模擬新影片載入。以捕獲階段先處理，擴充功能的換頁處理讀到的已是新影片的狀態。
   document.addEventListener(

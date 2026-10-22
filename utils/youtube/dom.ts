@@ -493,10 +493,86 @@ export function writeQuality(player: YtQualityApi, quality: QualityCode | typeof
   player.setPlaybackQuality?.(quality);
 }
 
+// ---------------------------------------------------------------------------
+// 語音軌（005 FR-10 至 FR-13、plan 3.7.2）
+// 依 2026-10-22 在真實觀看頁上列出的方法：getAvailableAudioTracks、getAudioTrack、setAudioTrack。
+// getAudioTrack() 回傳的物件有 id、xtags，以及一個內含 name／id／isDefault／isAutoDubbed 的物件
+// （屬性名稱是壓縮過的短名稱，例如 "Nb"，改版時會變），所以以「含有 isAutoDubbed 或 isDefault 布林值的
+// 子物件」來找（spikes/stage2c/results-watch.txt）。有多個語音軌時的實際內容在本環境無法確認。
+// ---------------------------------------------------------------------------
+
+export interface YtAudioApi {
+  getAvailableAudioTracks?: () => unknown;
+  getAudioTrack?: () => unknown;
+  setAudioTrack?: (track: unknown) => unknown;
+}
+
+export interface AudioTrackInfo {
+  id: string;
+  name: string;
+  /** 影片的預設語音軌。 */
+  isDefault: boolean;
+  /** YouTube 自動配音（AI 配音）。 */
+  isAutoDubbed: boolean;
+  /** 明確標示為原始語音（xtags 的 acont=original）。 */
+  isOriginal: boolean;
+}
+
+/** 語音軌識別值的格式（例如 "en.4"、"es-419.3"、"und"）；setAudioTrack 只接受這種格式。 */
+export const AUDIO_TRACK_ID_PATTERN = /^[A-Za-z0-9._:-]{1,64}$/;
+
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+
+/** 把播放器的語音軌物件整理成固定欄位；看不懂時回傳 null。 */
+export function describeAudioTrack(track: unknown): AudioTrackInfo | null {
+  if (!isRecord(track)) return null;
+  const id = track.id;
+  if (typeof id !== 'string' || !AUDIO_TRACK_ID_PATTERN.test(id)) return null;
+  let info: Record<string, unknown> = {};
+  for (const value of Object.values(track)) {
+    if (isRecord(value) && (typeof value.isAutoDubbed === 'boolean' || typeof value.isDefault === 'boolean')) {
+      info = value;
+      break;
+    }
+  }
+  const xtags = typeof track.xtags === 'string' ? track.xtags : '';
+  const name = [info.name, track.name, track.displayName].find((v): v is string => typeof v === 'string') ?? id;
+  return {
+    id,
+    name,
+    isDefault: info.isDefault === true || track.isDefault === true,
+    isAutoDubbed: info.isAutoDubbed === true || /(?:^|[:&])acont=dubbed-auto(?:$|[:&])/.test(xtags),
+    isOriginal: /(?:^|[:&])acont=original(?:$|[:&])/.test(xtags),
+  };
+}
+
+/** 目前影片的語音軌清單與目前播放的語音軌 ID（清單還沒載入或只有一個語音軌時可能是空陣列）。 */
+export function readAudioTracks(player: YtAudioApi): { tracks: AudioTrackInfo[]; current: string | null } {
+  const raw = player.getAvailableAudioTracks?.();
+  const tracks = Array.isArray(raw) ? raw.map(describeAudioTrack).filter((t): t is AudioTrackInfo => t !== null) : [];
+  return { tracks, current: describeAudioTrack(player.getAudioTrack?.())?.id ?? null };
+}
+
+/** 切換到清單中 ID 相同的語音軌；清單中沒有時不做任何事並回傳 false。 */
+export function writeAudioTrack(player: YtAudioApi, id: string): boolean {
+  const raw = player.getAvailableAudioTracks?.();
+  const track = Array.isArray(raw) ? raw.find((t) => describeAudioTrack(t)?.id === id) : undefined;
+  if (!track || !player.setAudioTrack) return false;
+  player.setAudioTrack(track);
+  return true;
+}
+
 /** 便利功能與頁面整理使用的 YouTube 選擇器（004、005）。 */
 export const CONVENIENCE_SELECTORS = {
   /** 播放器的設定（齒輪）選單；使用者在這裡手動改畫質或語音軌（004 FR-4、005 FR-12）。 */
   settingsMenu: '#movie_player .ytp-settings-menu',
+  /** YouTube 的彈出視窗容器（在 ytd-app 底下，已確認存在）；「要繼續觀看嗎？」對話框出現在這裡（005 FR-30）。 */
+  popupContainer: 'ytd-popup-container',
+  /** 確認對話框（未確認：本環境看不到「要繼續觀看嗎？」對話框，依公開的元素名稱）。 */
+  confirmDialog: 'yt-confirm-dialog-renderer',
+  /** 對話框中的確認（「是」）按鈕；找不到內層的 <button> 時點外層元素。 */
+  confirmButton: '#confirm-button button',
+  confirmButtonHost: '#confirm-button',
 } as const;
 
 // ---------------------------------------------------------------------------

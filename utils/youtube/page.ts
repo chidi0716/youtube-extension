@@ -49,6 +49,28 @@ export function isWatchPage(url: string | URL): boolean {
   return !!u && WATCH_HOSTS.includes(u.hostname) && getVideoId(u) !== null;
 }
 
+/** Shorts 網址（`/shorts/<影片ID>`）的影片 ID；不是 Shorts 網址或 ID 不合法時回傳 null。 */
+export function getShortsVideoId(url: string | URL): string | null {
+  const u = toUrl(url);
+  if (!u) return null;
+  const m = /^\/shorts\/([^/]+)\/?$/.exec(u.pathname);
+  return m && isValidVideoId(m[1]) ? m[1] : null;
+}
+
+/**
+ * Shorts 改用一般播放器（005 FR-50）：`/shorts/<ID>` 轉成同一網域的 `/watch?v=<ID>`。
+ * 只處理 www.youtube.com 與 youtube.com（005 FR-5）；其他網址回傳 null。
+ */
+export function watchUrlForShorts(url: string | URL): string | null {
+  const u = toUrl(url);
+  if (!u || !WATCH_HOSTS.includes(u.hostname)) return null;
+  const id = getShortsVideoId(u);
+  if (!id) return null;
+  const watch = new URL('/watch', u.origin);
+  watch.searchParams.set('v', id);
+  return watch.href;
+}
+
 /** 監聽 YouTube 換頁完成事件；回傳取消監聽的函式。 */
 export function onNavigate(callback: () => void, target: EventTarget = document): () => void {
   target.addEventListener(NAVIGATE_FINISH_EVENT, callback);

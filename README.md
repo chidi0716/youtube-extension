@@ -22,6 +22,12 @@ A YouTube browser extension that adds a native-looking toolbar under the video p
 - Pause on tab switch, autoplay toggle, audio-only mode, mouse-wheel volume, hide comments
 - Lock the playback quality (e.g. always 1080p); copy a `youtu.be` link at the current time, also as Markdown
 
+**Page tidy** (in the settings page, works on all YouTube pages)
+
+- Always play the original audio instead of an AI dub; hide end cards and the end screen
+- Dismiss “Continue watching?”; turn off thumbnail previews
+- Open Shorts in the normal player; hide Shorts; show full video titles
+
 ## Privacy and security
 
 - No analytics or tracking. The extension only talks to YouTube and to the local helper program.

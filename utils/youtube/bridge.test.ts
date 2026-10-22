@@ -182,3 +182,103 @@ describe('畫質請求（004 第 1 節、plan 3.5）', () => {
     expect(handleBridgeRequest({ id: 'a', type: 'setQuality', quality: 'hd720' }, p)).toEqual({ id: 'a', ok: true, result: null });
   });
 });
+
+describe('語音軌請求（005 FR-10、plan 3.7.2）', () => {
+  // 物件結構依真實播放器的 getAudioTrack()：id、xtags、內含 name／id／isDefault／isAutoDubbed 的子物件（短名稱）。
+  const track = (id: string, name: string, isDefault: boolean, isAutoDubbed: boolean, xtags = '') => ({
+    id,
+    Nb: { name, id, isDefault, isAutoDubbed },
+    xtags,
+    captionTracks: [],
+  });
+  const original = track('en.4', 'English original', true, false);
+  const dubbed = track('es.3', 'Spanish (auto-dubbed)', false, true);
+
+  function audioPlayer(time = 42) {
+    let current: unknown = dubbed;
+    let t = time;
+    return fakePlayer({
+      getAvailableAudioTracks: () => [original, dubbed],
+      getAudioTrack: () => current,
+      setAudioTrack: vi.fn((tr: unknown) => {
+        current = tr;
+        return true;
+      }),
+      getCurrentTime: () => t,
+      seekTo: vi.fn((s: number) => {
+        t = s;
+      }),
+      _restart: () => {
+        t = 0;
+      },
+    } as Partial<BridgePlayer>);
+  }
+
+  it('接受 getAudioTracks 與格式正確的 setAudioTrack', () => {
+    expect(req({ id: 'a', type: 'getAudioTracks' })).toEqual({ id: 'a', type: 'getAudioTracks' });
+    for (const trackId of ['en.4', 'es-419.3', 'und', 'en-US.4:x']) {
+      expect(req({ id: 'a', type: 'setAudioTrack', trackId })).toEqual({ id: 'a', type: 'setAudioTrack', trackId });
+    }
+  });
+
+  it('拒絕格式不對的語音軌 ID', () => {
+    for (const trackId of ['', 'en 4', 'a'.repeat(65), '<script>', 'en/4', 4, null, { id: 'en.4' }]) {
+      expect(req({ id: 'a', type: 'setAudioTrack', trackId })).toBeNull();
+    }
+    expect(req({ id: 'a', type: 'setAudioTrack' })).toBeNull();
+  });
+
+  it('getAudioTracks 回傳整理後的清單與目前的語音軌', () => {
+    expect(handleBridgeRequest({ id: 'a', type: 'getAudioTracks' }, audioPlayer())).toEqual({
+      id: 'a',
+      ok: true,
+      result: {
+        tracks: [
+          { id: 'en.4', name: 'English original', isDefault: true, isAutoDubbed: false, isOriginal: false },
+          { id: 'es.3', name: 'Spanish (auto-dubbed)', isDefault: false, isAutoDubbed: true, isOriginal: false },
+        ],
+        current: 'es.3',
+      },
+    });
+  });
+
+  it('getAudioTracks 依 xtags 判斷原始語音與自動配音', () => {
+    const p = fakePlayer({
+      getAvailableAudioTracks: () => [{ id: 'en.4', xtags: 'acont=original:lang=en' }, { id: 'fr.3', xtags: 'acont=dubbed-auto:lang=fr' }, 'junk'],
+      getAudioTrack: () => ({ id: 'fr.3', xtags: 'acont=dubbed-auto:lang=fr' }),
+    });
+    expect(handleBridgeRequest({ id: 'a', type: 'getAudioTracks' }, p)).toMatchObject({
+      result: {
+        tracks: [
+          { id: 'en.4', isOriginal: true, isAutoDubbed: false },
+          { id: 'fr.3', isOriginal: false, isAutoDubbed: true },
+        ],
+        current: 'fr.3',
+      },
+    });
+  });
+
+  it('setAudioTrack 只切換到清單中存在的語音軌', () => {
+    const p = audioPlayer();
+    expect(handleBridgeRequest({ id: 'a', type: 'setAudioTrack', trackId: 'en.4' }, p)).toEqual({ id: 'a', ok: true, result: true });
+    expect(p.setAudioTrack).toHaveBeenCalledWith(original);
+    expect(handleBridgeRequest({ id: 'b', type: 'setAudioTrack', trackId: 'de.3' }, p)).toEqual({ id: 'b', ok: true, result: false });
+    expect(p.setAudioTrack).toHaveBeenCalledTimes(1);
+  });
+
+  it('切換後播放位置跳回開頭時，回到原本的位置（FR-13）', () => {
+    const p = audioPlayer(42);
+    (p.setAudioTrack as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      (p as unknown as { _restart: () => void })._restart();
+      return true;
+    });
+    handleBridgeRequest({ id: 'a', type: 'setAudioTrack', trackId: 'en.4' }, p);
+    expect(p.seekTo).toHaveBeenCalledWith(42, true);
+  });
+
+  it('播放器沒有語音軌方法時不會出錯', () => {
+    const p = fakePlayer();
+    expect(handleBridgeRequest({ id: 'a', type: 'getAudioTracks' }, p)).toEqual({ id: 'a', ok: true, result: { tracks: [], current: null } });
+    expect(handleBridgeRequest({ id: 'a', type: 'setAudioTrack', trackId: 'en.4' }, p)).toEqual({ id: 'a', ok: true, result: false });
+  });
+});
