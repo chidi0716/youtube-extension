@@ -542,6 +542,93 @@ await section('T08', async (page) => {
 });
 
 // ---------------------------------------------------------------------------
+// T08a 劇院模式與浮動播放器（003 FR-45、FR-46，QUESTIONS Q22）
+// ---------------------------------------------------------------------------
+/** 播放器容器的狀態：是否浮動、位置與尺寸、捲動位置。 */
+const playerBox = (page) =>
+  page.evaluate(() => {
+    const c = document.querySelector('ytd-watch-flexy #player-container');
+    const r = c.getBoundingClientRect();
+    return {
+      floating: c.classList.contains('yte-floating'),
+      rect: [r.left, r.top, r.width, r.height].map(Math.round).join(','),
+      cinema: document.documentElement.classList.contains('yte-cinema'),
+      scrollY: Math.round(scrollY),
+    };
+  });
+/** 一段時間內每 100ms 記錄一次播放器容器的狀態，回傳出現過的不同狀態。 */
+async function watchPlayerBox(page, ms) {
+  const seen = [];
+  for (let t = 0; t < ms; t += 100) {
+    const b = JSON.stringify(await playerBox(page));
+    if (seen[seen.length - 1] !== b) seen.push(b);
+    await page.waitForTimeout(100);
+  }
+  return seen.map((s) => JSON.parse(s));
+}
+const scrollToY = async (page, y) => {
+  await page.evaluate((y) => window.scrollTo(0, y), y);
+  await page.waitForTimeout(400);
+};
+
+await section('T08a', async (page) => {
+  await button(page, 'floating').click();
+  await page.waitForTimeout(300);
+  const original = await playerBox(page);
+
+  // 1. 開浮動播放器（不捲動）後開劇院模式：播放器維持原位與大小，不浮出（回報的情境）
+  await button(page, 'cinema').click();
+  const states = await watchPlayerBox(page, 1500);
+  const toolbarVisible = await page.evaluate(() => {
+    const r = document.querySelector('yte-toolbar').getBoundingClientRect();
+    return !!document.elementFromPoint(r.left + 20, r.top + r.height / 2)?.closest('yte-toolbar');
+  });
+  check(
+    '先開浮動播放器再開劇院模式：播放器維持原位、大小正常，工具列可見（FR-45、Q22）',
+    states.length === 1 && !states[0].floating && states[0].rect === original.rect && states[0].cinema && toolbarVisible,
+    JSON.stringify(states),
+  );
+  await scrollToY(page, 1200);
+  check('劇院模式期間捲動不會浮出（FR-45）', !(await playerBox(page)).floating && (await pressed(page, 'floating')).pressed === 'true');
+  await scrollToY(page, 0);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await scrollToY(page, 1200);
+  check('關閉劇院模式後往下捲，浮動播放器正常浮出（FR-45）', (await playerBox(page)).floating && !(await playerBox(page)).cinema);
+
+  // 2. 播放器正在浮動時開劇院模式：先回到原位再進入劇院模式（以鍵盤操作按鈕，不改變捲動位置）
+  await button(page, 'cinema').evaluate((b) => b.click());
+  await page.waitForTimeout(200);
+  let box = await playerBox(page);
+  check('播放器正在浮動時開劇院模式：先回到原位（FR-45）', !box.floating && box.cinema && box.scrollY === 1200, JSON.stringify(box));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  box = await playerBox(page);
+  check('關閉劇院模式後，仍在捲動位置時恢復浮動（FR-45）', box.floating && !box.cinema, JSON.stringify(box));
+  await scrollToY(page, 0);
+
+  // 3. YouTube 自己的劇院模式切換（版面變化）不會讓播放器浮出（FR-46）
+  await page.locator('#fixture-theater').click();
+  const theaterStates = await watchPlayerBox(page, 1000);
+  check(
+    '切換 YouTube 自己的劇院模式：播放器移到加寬位置，不浮出（FR-46）',
+    theaterStates.every((s) => !s.floating) && theaterStates[theaterStates.length - 1].rect === '0,56,1280,560',
+    JSON.stringify(theaterStates),
+  );
+  await scrollToY(page, 1200);
+  box = await playerBox(page);
+  check('YouTube 劇院模式中往下捲：浮動播放器正常浮出（依新的原位置判斷）', box.floating && box.rect === '944,704,320,180', JSON.stringify(box));
+  await scrollToY(page, 0);
+  box = await playerBox(page);
+  check('捲回來後回到加寬的位置', !box.floating && box.rect === '0,56,1280,560', JSON.stringify(box));
+  await page.locator('#fixture-theater').click();
+  await page.waitForTimeout(400);
+  box = await playerBox(page);
+  check('關閉 YouTube 劇院模式：回到原本的位置，不浮出（FR-46）', !box.floating && box.rect === original.rect, JSON.stringify(box));
+  await button(page, 'floating').click();
+});
+
+// ---------------------------------------------------------------------------
 // T09 循環播放
 // ---------------------------------------------------------------------------
 await section('T09', async (page) => {

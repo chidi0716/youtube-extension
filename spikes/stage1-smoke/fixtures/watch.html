@@ -10,6 +10,8 @@
   - #movie_player 上的播放器 API（getVideoData、seekTo、getVolume、setVolume 等）；
   - 標題、說明、留言區（#comments）、右側影片清單（站內換頁會發出 yt-navigate-finish）；
   - 播放器位於多層形成堆疊脈絡的祖先容器（#primary-inner、#player、#player-container-inner）內（T07a）；
+  - YouTube 自己的劇院模式（播放器控制列的 Theater 按鈕，.ytp-size-button）：播放器容器被移到
+    #full-bleed-container > #player-full-bleed-container，原本的 #player 隱藏（T08a）；
   - <html dark> 深色主題與顏色變數，以及模擬 YouTube 選單的「切換主題」按鈕。
   - 主題的實測行為（specs/notes/T06b-dark-mode-instant.md）：
     - YouTube 依載入時的主題輸出不同的樣式表：`:root` 的顏色變數預設值就是載入時的主題，另有
@@ -141,6 +143,15 @@
         display: block;
         padding: 8px 16px;
         cursor: pointer;
+      }
+      /* YouTube 自己的劇院模式（加寬播放器）：播放器容器被移到全寬區，原本的位置隱藏（T08a 依實測結構模擬）。 */
+      ytd-watch-flexy[theater] #player-full-bleed-container {
+        position: relative;
+        height: 560px;
+        background: #000;
+      }
+      ytd-watch-flexy[theater] #player {
+        display: none;
       }
       body {
         margin: 0;
@@ -284,6 +295,7 @@
       </div>
       <div id="page-manager">
         <ytd-watch-flexy>
+          <div id="full-bleed-container"><div id="player-full-bleed-container"></div></div>
           <div id="columns">
             <div id="primary">
               <div id="primary-inner">
@@ -299,6 +311,7 @@
                               </div>
                               <div class="ytp-chrome-bottom">
                                 <button class="ytp-button" id="fixture-play" type="button">Play/Pause</button>
+                                <button class="ytp-button ytp-size-button" id="fixture-theater" type="button">Theater</button>
                                 <button class="ytp-button" data-tooltip-target-id="ytp-autonav-toggle-button" type="button">
                                   Autoplay<span class="ytp-autonav-toggle-button" aria-checked="true"></span>
                                 </button>
@@ -478,6 +491,16 @@
         window.__fixturePrefMemory = fields.map((f) => f.join('=')).join('&');
         writePref(window.__fixturePrefMemory);
       };
+
+      // 模擬 YouTube 自己的劇院模式：把播放器容器移到全寬區，原本的位置隱藏（實測真實頁面的結構）。
+      document.getElementById('fixture-theater').addEventListener('click', () => {
+        const watch = document.querySelector('ytd-watch-flexy');
+        const playerContainer = document.getElementById('player-container');
+        const theater = !watch.hasAttribute('theater');
+        watch.toggleAttribute('theater', theater);
+        (theater ? document.getElementById('player-full-bleed-container') : document.getElementById('player-container-inner')).append(playerContainer);
+        window.dispatchEvent(new Event('resize'));
+      });
 
       // 模擬 YouTube 的 t 參數：載入後跳到指定的秒數。
       const startAt = /^(\d+)s?$/.exec(new URL(location.href).searchParams.get('t') || '');

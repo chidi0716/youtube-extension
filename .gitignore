@@ -50,3 +50,6 @@ spikes/T07a/.cache/
 
 # T06d 實測打包的測試程式
 spikes/T06d/.cache/
+
+# T08a 實測的瀏覽器設定檔與暫存截圖
+spikes/T08a/.cache/
