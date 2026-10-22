@@ -56,3 +56,7 @@ spikes/T06d/.cache/
 
 # T08a 實測的瀏覽器設定檔與暫存截圖
 spikes/T08a/.cache/
+
+# 階段 3（橋接程式）：go test 的暫存資料夾、冒煙測試下載的 yt-dlp 與暫存檔
+host/.testtmp/
+spikes/stage3/.cache/
