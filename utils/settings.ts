@@ -1,11 +1,15 @@
 // 所有設定的 storage 定義集中於此（plan 3.1）。
 // 檔案位於 utils/，WXT 會自動匯入這裡的 export。
 // 設定都存在 sync 區：跨分頁、跨重新開機，並跟著使用者的瀏覽器帳號同步。
+import type { ToolbarLayout } from './toolbar-layout';
 
 /** 工具列是否顯示（001 FR-15、FR-16）。 */
 export const enabled = storage.defineItem<boolean>('sync:enabled', {
   fallback: true,
 });
+
+/** 自訂工具列（006）：工具的顯示／隱藏、順序與分隔點位置；null 表示使用預設值。讀取時以 normalizeLayout 驗證與合併。 */
+export const toolbarLayout = storage.defineItem<ToolbarLayout | null>('sync:toolbarLayout', { fallback: null });
 
 // 深色模式不另外存設定：以 YouTube 自己的主題偏好為準（003 FR-12）。
 

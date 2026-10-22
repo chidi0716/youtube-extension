@@ -24,6 +24,8 @@ export interface ToolbarButtonProps {
   onClick: () => void;
   /** 下載進度環（002 FR-3、FR-6b）。 */
   progress?: number | 'indeterminate' | null;
+  /** 右上角的小圓點：隱藏的工具有進行中的狀態（006 FR-17，只用於「更多」）。 */
+  dot?: boolean;
 }
 
 /** 按鈕外圍的圓形進度環：有百分比時畫出比例，沒有時為旋轉的不確定進度。 */
@@ -47,7 +49,7 @@ function ProgressRing({ value }: { value: number | 'indeterminate' }) {
 }
 
 export function ToolbarButton(props: ToolbarButtonProps) {
-  const { def, label, tooltip, notice, expanded, pressed, disabledReason, controls, tooltipAlign, buttonRef, onClick, progress } = props;
+  const { def, label, tooltip, notice, expanded, pressed, disabledReason, controls, tooltipAlign, buttonRef, onClick, progress, dot } = props;
   const isOn = def.kind === 'panel' ? !!expanded || !!pressed : def.kind === 'toggle' ? !!pressed : false;
   // 暫時訊息結束時滑鼠仍在按鈕上：讓訊息留到滑鼠移開為止，避免讀到一半消失（003 FR-15）。
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -72,6 +74,7 @@ export function ToolbarButton(props: ToolbarButtonProps) {
         class="yte-btn"
         data-button={def.id}
         data-on={isOn ? '' : undefined}
+        data-dot={dot ? '' : undefined}
         data-progress={progress === null || progress === undefined ? undefined : String(progress === 'indeterminate' ? 'indeterminate' : Math.round(progress))}
         aria-label={label}
         aria-description={disabledReason}
@@ -84,6 +87,7 @@ export function ToolbarButton(props: ToolbarButtonProps) {
       >
         <Icon name={def.icon} />
         {progress !== null && progress !== undefined && <ProgressRing value={progress} />}
+        {dot && <span class="yte-btn-dot" aria-hidden="true" />}
       </button>
       {/* 提示文字只是視覺輔助，按鈕本身已有 aria-label。 */}
       <span

@@ -718,3 +718,119 @@ a.yte-link {
 .yte-update[data-state='done'] {
   color: var(--yte-call-to-action);
 }
+
+/* ---------- 「更多」面板的其他工具與編輯工具列（006 FR-1、FR-15 至 FR-17） ---------- */
+
+.yte-other-tools {
+  width: 420px;
+  max-width: 100%;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--yte-outline);
+}
+
+.yte-other-title {
+  margin: 0 0 4px;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.yte-other-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yte-other-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 44px;
+}
+
+.yte-other-btn {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 16px;
+  min-height: 40px;
+  padding: 0 8px;
+  margin: 0 -8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.yte-other-btn:hover {
+  background: var(--yte-hover-background);
+}
+
+.yte-other-btn:focus-visible {
+  outline: 2px solid var(--yte-text-primary);
+}
+
+.yte-other-icon {
+  display: flex;
+}
+
+.yte-other-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.yte-other-name {
+  font-weight: 500;
+}
+
+.yte-other-desc {
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.yte-other-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--yte-call-to-action);
+}
+
+.yte-more-edit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  margin: 8px -8px 0;
+  border: 0;
+  border-top: 1px solid var(--yte-outline);
+  border-radius: 0;
+  background: transparent;
+  color: var(--yte-text-primary);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: content-box;
+}
+
+.yte-more-edit:hover {
+  background: var(--yte-hover-background);
+}
+
+.yte-more-edit:focus-visible {
+  outline: 2px solid var(--yte-text-primary);
+}
+
+.yte-help-hidden {
+  margin: 8px 0 0;
+  font-size: 12px;
+}

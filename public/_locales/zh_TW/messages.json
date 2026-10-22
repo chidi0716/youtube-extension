@@ -619,6 +619,140 @@
     "message": "開啟設定頁",
     "description": "Help panel: link that opens the extension's settings page."
   },
+  "moreOtherTools": {
+    "message": "其他工具",
+    "description": "More panel: heading of the tools hidden from the toolbar."
+  },
+  "moreHiddenActive": {
+    "message": "有隱藏的工具正在使用中",
+    "description": "Accessible text for the dot on the More button when a hidden tool is downloading, looping or on."
+  },
+  "moreEditToolbar": {
+    "message": "編輯工具列",
+    "description": "More panel: last item, enters toolbar edit mode."
+  },
+  "editToolbarLabel": {
+    "message": "編輯工具列中",
+    "description": "Accessible label of the toolbar in edit mode."
+  },
+  "editDone": {
+    "message": "完成",
+    "description": "Toolbar edit mode: save and leave."
+  },
+  "editCancel": {
+    "message": "取消",
+    "description": "Toolbar edit mode: discard changes and leave."
+  },
+  "editReset": {
+    "message": "重設為預設",
+    "description": "Toolbar edit mode: restore the default tools, order and divider."
+  },
+  "editHelp": {
+    "message": "拖曳調整順序，點眼睛圖示顯示或隱藏。隱藏的工具可以從「更多」選單使用。",
+    "description": "Toolbar edit mode: help line under the toolbar."
+  },
+  "editKeys": {
+    "message": "用左右方向鍵移動位置，空白鍵顯示或隱藏，Enter 完成，Esc 取消。",
+    "description": "Toolbar edit mode: keyboard help for screen readers."
+  },
+  "editSeparator": {
+    "message": "左右兩組的分隔點",
+    "description": "Toolbar edit mode: the draggable divider."
+  },
+  "editShown": {
+    "message": "顯示中",
+    "description": "Toolbar edit mode: state of a tool."
+  },
+  "editHidden": {
+    "message": "已隱藏",
+    "description": "Toolbar edit mode: state of a tool."
+  },
+  "editShowTool": {
+    "message": "顯示「$NAME$」",
+    "description": "Eye button: show a hidden tool.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Loop"
+      }
+    }
+  },
+  "editHideTool": {
+    "message": "隱藏「$NAME$」",
+    "description": "Eye button: hide a tool.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Loop"
+      }
+    }
+  },
+  "editMoved": {
+    "message": "「$NAME$」移到第 $POS$ 個位置（共 $TOTAL$ 個）",
+    "description": "Screen reader announcement after moving a tool with the keyboard.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "MP3"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "1"
+      },
+      "total": {
+        "content": "$3",
+        "example": "13"
+      }
+    }
+  },
+  "helpHiddenTools": {
+    "message": "隱藏的工具可以從「更多」選單使用。",
+    "description": "Help panel: shown when some tools are hidden."
+  },
+  "optionsToolbarTitle": {
+    "message": "工具列",
+    "description": "Settings page: heading of the toolbar section."
+  },
+  "optionsToolbarDesc": {
+    "message": "選擇影片下方工具列要顯示哪些工具與順序。分隔點之前的工具靠左，其餘靠右；「更多」與「關閉」固定在最右邊，隱藏的工具可以從「更多」選單使用。也可以在 YouTube 上編輯：「更多」→「編輯工具列」。",
+    "description": "Settings page: toolbar section description."
+  },
+  "optionsToolbarTools": {
+    "message": "工具",
+    "description": "Settings page: heading of the tool list."
+  },
+  "optionsToolbarDivider": {
+    "message": "分隔點：上方為左組，下方為右組",
+    "description": "Settings page: the divider row in the tool list."
+  },
+  "optionsToolbarMoveUp": {
+    "message": "上移「$NAME$」",
+    "description": "Settings page: move a tool up (accessible label).",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "MP3"
+      }
+    }
+  },
+  "optionsToolbarMoveDown": {
+    "message": "下移「$NAME$」",
+    "description": "Settings page: move a tool down (accessible label).",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "MP3"
+      }
+    }
+  },
+  "optionsToolbarDrag": {
+    "message": "拖曳調整順序",
+    "description": "Settings page: drag handle."
+  },
+  "optionsToolbarReset": {
+    "message": "重設為預設",
+    "description": "Settings page: reset the toolbar."
+  },
   "optionsTitle": {
     "message": "設定",
     "description": "Title of the extension's settings page."

@@ -385,3 +385,17 @@
     animation-duration: 4s;
   }
 }
+
+/* ---------- 「更多」按鈕的提示圓點（006 FR-17） ---------- */
+
+.yte-btn-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--yte-call-to-action);
+  box-shadow: 0 0 0 2px var(--yt-spec-base-background, var(--yt-sys-color-baseline--base-background, #fff));
+  pointer-events: none;
+}

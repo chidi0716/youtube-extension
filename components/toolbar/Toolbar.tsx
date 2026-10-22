@@ -1,9 +1,12 @@
-// 工具列外框（001）：左右兩組按鈕與目前展開的面板。
+// 工具列外框（001）：依使用者的設定（006）排出左右兩組工具，最右邊是固定的「更多」「關閉」；
+// 目前展開的面板。
 import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'preact/hooks';
 import { t } from '@/utils/i18n';
+import { defaultLayout, splitLayout, type ToolbarLayout, type ToolId } from '@/utils/toolbar-layout';
 import { ComingSoon } from '../panels/PanelStatus';
-import { LEFT_BUTTONS, RIGHT_BUTTONS, getButton, type ButtonDef, type ButtonId } from './buttons';
+import { FIXED, TOOLS, getButton, isToolOngoing, type ButtonDef, type ButtonId } from './buttons';
+import { OtherTools } from './OtherTools';
 import { initialPanelState, panelReducer } from './panel-state';
 import { PanelHost } from './PanelHost';
 import type { HorizontalRange } from './position';
@@ -36,6 +39,10 @@ export interface ToolbarProps {
   activePanels?: ReadonlySet<ButtonId>;
   /** 下載進度（002 FR-3）：0–100、不確定（FR-6b）或沒有進行中的下載（null）。 */
   progress?: Partial<Record<ButtonId, number | 'indeterminate' | null>>;
+  /** 使用者的工具列設定（006）；未提供時為預設值。 */
+  layout?: ToolbarLayout;
+  /** 儲存設定（編輯模式按「完成」時，T33）。 */
+  onSaveLayout?: (layout: ToolbarLayout) => void;
 }
 
 const COMING_SOON_MS = 1500;
@@ -49,6 +56,7 @@ export function Toolbar({
   renderPanel,
   activePanels,
   progress,
+  layout = defaultLayout(),
 }: ToolbarProps) {
   const [state, dispatch] = useReducer(panelReducer<ButtonId>, initialPanelState<ButtonId>());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,13 +71,13 @@ export function Toolbar({
     dispatch({ type: 'navigate' });
   }, [videoId]);
 
-  // 面板收起後焦點回到按鈕（FR-19）；焦點已在頁面其他地方時不搶。
+  // 面板收起後焦點回到按鈕（FR-19）；隱藏的工具從「更多」開啟時回到「更多」。焦點已在頁面其他地方時不搶。
   useEffect(() => {
     const id = state.restoreFocusTo;
     if (!id) return;
     const active = document.activeElement;
     if (host.shadowRoot?.activeElement || !active || active === document.body || active === host) {
-      buttonRefs.current.get(id)?.focus();
+      (buttonRefs.current.get(id) ?? buttonRefs.current.get('more'))?.focus();
     }
     dispatch({ type: 'focusRestored' });
   }, [state.restoreFocusTo, host]);
@@ -98,17 +106,20 @@ export function Toolbar({
     }
   };
 
-  const renderButton = (def: ButtonDef, index: number, group: readonly ButtonDef[], side: 'left' | 'right') => {
+  const { left, right, hidden } = splitLayout(layout);
+  /** 隱藏的工具有進行中的狀態（下載、循環、浮動等）：「更多」按鈕顯示提示圓點（006 FR-17）。 */
+  const hiddenOngoing = hidden.some((id) => isToolOngoing(id, { progress, activePanels, toggles }));
+
+  const renderButton = (def: ButtonDef, align: 'start' | 'center' | 'end') => {
     const label = t(def.label);
     const disabledReason = toggles[def.id]?.disabledReason;
     const toggleNotice = toggles[def.id]?.notice;
-    const align =
-      side === 'left' && index === 0 ? 'start' : side === 'right' && index === group.length - 1 ? 'end' : 'center';
+    const dot = def.id === 'more' && hiddenOngoing;
     return (
       <ToolbarButton
         key={def.id}
         def={def}
-        label={label}
+        label={dot ? `${label} (${t('moreHiddenActive')})` : label}
         tooltip={
           toggleNotice ?? (notice === def.id ? t('comingSoon') : disabledReason ? `${label}: ${disabledReason}` : label)
         }
@@ -124,17 +135,42 @@ export function Toolbar({
         }}
         onClick={() => handleClick(def)}
         progress={progress?.[def.id] ?? null}
+        dot={dot}
       />
     );
   };
 
   const openDef = state.openId ? getButton(state.openId) : null;
-  const openButton = state.openId ? buttonRefs.current.get(state.openId) : undefined;
+  // 隱藏的工具從「更多」開啟時，面板對齊「更多」按鈕（006 FR-15）。
+  const openButton = state.openId ? (buttonRefs.current.get(state.openId) ?? buttonRefs.current.get('more')) : undefined;
+  const rightDefs = [...right.map((id) => TOOLS[id]), FIXED.more, FIXED.close];
+
+  const panelContent = (id: ButtonId) => {
+    const content = renderPanel?.(id) ?? <ComingSoon />;
+    if (id !== 'more') return content;
+    // 「更多」面板：上方為隱藏的工具（006 FR-15、FR-16）。
+    return (
+      <>
+        <OtherTools
+          hidden={hidden}
+          toggles={toggles}
+          activePanels={activePanels}
+          progress={progress}
+          onOpen={(tool: ToolId) => handleClick(TOOLS[tool])}
+        />
+        {content}
+      </>
+    );
+  };
 
   return (
     <div ref={containerRef} class="yte-toolbar" role="group" aria-label={t('toolbarLabel')}>
-      <div class="yte-group">{LEFT_BUTTONS.map((d, i) => renderButton(d, i, LEFT_BUTTONS, 'left'))}</div>
-      <div class="yte-group">{RIGHT_BUTTONS.map((d, i) => renderButton(d, i, RIGHT_BUTTONS, 'right'))}</div>
+      <div class="yte-group" data-group="left">
+        {left.map((id, i) => renderButton(TOOLS[id], i === 0 ? 'start' : 'center'))}
+      </div>
+      <div class="yte-group" data-group="right">
+        {rightDefs.map((def, i) => renderButton(def, i === rightDefs.length - 1 ? 'end' : 'center'))}
+      </div>
       {openDef && openButton && containerRef.current && (
         <PanelHost
           key={openDef.id}
@@ -150,7 +186,7 @@ export function Toolbar({
           onEscape={onEscape}
           onOutside={onOutside}
         >
-          {renderPanel?.(openDef.id) ?? <ComingSoon />}
+          {panelContent(openDef.id)}
         </PanelHost>
       )}
     </div>

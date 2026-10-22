@@ -1,9 +1,11 @@
-// 說明面板（001 FR-17、FR-18）：列出每個按鈕的圖示、名稱與一句話說明，
+// 說明面板（001 FR-17、FR-18、006 FR-25）：列出目前工具列上顯示的工具（含固定的「更多」「關閉」）的圖示、
+// 名稱與一句話說明；有隱藏的工具時，最後加一行「隱藏的工具可以從『更多』選單使用」。
 // 並提供開啟設定頁的連結。內容完全內建，不開啟外部網站。
 import { t } from '@/utils/i18n';
 import type { ContentMessage } from '@/utils/messages';
+import { defaultLayout, splitLayout, type ToolbarLayout } from '@/utils/toolbar-layout';
 import { Icon } from '../icons';
-import { ALL_BUTTONS } from '../toolbar/buttons';
+import { FIXED, TOOLS } from '../toolbar/buttons';
 
 function openOptions() {
   const message: ContentMessage = { type: 'openOptions' };
@@ -12,11 +14,13 @@ function openOptions() {
   });
 }
 
-export function HelpPanel() {
+export function HelpPanel({ layout = defaultLayout() }: { layout?: ToolbarLayout }) {
+  const { left, right, hidden } = splitLayout(layout);
+  const shown = [...left.map((id) => TOOLS[id]), ...right.map((id) => TOOLS[id]), FIXED.more, FIXED.close];
   return (
     <div class="yte-help">
       <ul class="yte-help-list">
-        {ALL_BUTTONS.map((b) => (
+        {shown.map((b) => (
           <li key={b.id} class="yte-help-item" data-button={b.id}>
             <span class="yte-help-icon">
               <Icon name={b.icon} />
@@ -28,6 +32,7 @@ export function HelpPanel() {
           </li>
         ))}
       </ul>
+      {hidden.length > 0 && <p class="yte-muted yte-help-hidden">{t('helpHiddenTools')}</p>}
       <button type="button" class="yte-link" onClick={openOptions}>
         <Icon name="settings" size={20} />
         <span>{t('helpOpenSettings')}</span>

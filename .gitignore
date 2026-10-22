@@ -66,3 +66,6 @@ spikes/stage3/.cache/
 
 # 階段 4：建置的橋接程式、假 yt-dlp、瀏覽器設定檔與暫存檔
 spikes/stage4/.cache/
+
+# 階段 6 實測的暫存截圖
+spikes/stage6/.cache/

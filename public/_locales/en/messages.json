@@ -619,6 +619,140 @@
     "message": "Open settings",
     "description": "Help panel: link that opens the extension's settings page."
   },
+  "moreOtherTools": {
+    "message": "Other tools",
+    "description": "More panel: heading of the tools hidden from the toolbar."
+  },
+  "moreHiddenActive": {
+    "message": "a hidden tool is in use",
+    "description": "Accessible text for the dot on the More button when a hidden tool is downloading, looping or on."
+  },
+  "moreEditToolbar": {
+    "message": "Edit toolbar",
+    "description": "More panel: last item, enters toolbar edit mode."
+  },
+  "editToolbarLabel": {
+    "message": "Editing the toolbar",
+    "description": "Accessible label of the toolbar in edit mode."
+  },
+  "editDone": {
+    "message": "Done",
+    "description": "Toolbar edit mode: save and leave."
+  },
+  "editCancel": {
+    "message": "Cancel",
+    "description": "Toolbar edit mode: discard changes and leave."
+  },
+  "editReset": {
+    "message": "Reset to default",
+    "description": "Toolbar edit mode: restore the default tools, order and divider."
+  },
+  "editHelp": {
+    "message": "Drag to reorder. Click the eye icon to show or hide a tool. Hidden tools are available from the “More” menu.",
+    "description": "Toolbar edit mode: help line under the toolbar."
+  },
+  "editKeys": {
+    "message": "Use the Left and Right arrow keys to move, Space to show or hide, Enter to finish, Escape to cancel.",
+    "description": "Toolbar edit mode: keyboard help for screen readers."
+  },
+  "editSeparator": {
+    "message": "Divider between the left and right groups",
+    "description": "Toolbar edit mode: the draggable divider."
+  },
+  "editShown": {
+    "message": "shown",
+    "description": "Toolbar edit mode: state of a tool."
+  },
+  "editHidden": {
+    "message": "hidden",
+    "description": "Toolbar edit mode: state of a tool."
+  },
+  "editShowTool": {
+    "message": "Show $NAME$",
+    "description": "Eye button: show a hidden tool.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Loop"
+      }
+    }
+  },
+  "editHideTool": {
+    "message": "Hide $NAME$",
+    "description": "Eye button: hide a tool.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Loop"
+      }
+    }
+  },
+  "editMoved": {
+    "message": "$NAME$ moved to position $POS$ of $TOTAL$",
+    "description": "Screen reader announcement after moving a tool with the keyboard.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "MP3"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "1"
+      },
+      "total": {
+        "content": "$3",
+        "example": "13"
+      }
+    }
+  },
+  "helpHiddenTools": {
+    "message": "Hidden tools are available from the “More” menu.",
+    "description": "Help panel: shown when some tools are hidden."
+  },
+  "optionsToolbarTitle": {
+    "message": "Toolbar",
+    "description": "Settings page: heading of the toolbar section."
+  },
+  "optionsToolbarDesc": {
+    "message": "Choose which tools appear on the toolbar under the video, and their order. Tools before the divider are aligned left, the others right. “More” and “Close” always stay at the right end, and hidden tools are available from the “More” menu. You can also edit the toolbar on YouTube: “More” → “Edit toolbar”.",
+    "description": "Settings page: toolbar section description."
+  },
+  "optionsToolbarTools": {
+    "message": "Tools",
+    "description": "Settings page: heading of the tool list."
+  },
+  "optionsToolbarDivider": {
+    "message": "Divider: left group above, right group below",
+    "description": "Settings page: the divider row in the tool list."
+  },
+  "optionsToolbarMoveUp": {
+    "message": "Move $NAME$ up",
+    "description": "Settings page: move a tool up (accessible label).",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "MP3"
+      }
+    }
+  },
+  "optionsToolbarMoveDown": {
+    "message": "Move $NAME$ down",
+    "description": "Settings page: move a tool down (accessible label).",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "MP3"
+      }
+    }
+  },
+  "optionsToolbarDrag": {
+    "message": "Drag to reorder",
+    "description": "Settings page: drag handle."
+  },
+  "optionsToolbarReset": {
+    "message": "Reset to default",
+    "description": "Settings page: reset the toolbar."
+  },
   "optionsTitle": {
     "message": "Settings",
     "description": "Title of the extension's settings page."

@@ -24,7 +24,8 @@ import { downloadJobs } from '@/features/downloads/host-client';
 import { buttonProgress } from '@/features/downloads/jobs';
 import { createViewingController } from '@/features/viewing';
 import { t } from '@/utils/i18n';
-import { enabled, QUALITY_LOCK_VALUES, type QualityLock } from '@/utils/settings';
+import { enabled, QUALITY_LOCK_VALUES, toolbarLayout, type QualityLock } from '@/utils/settings';
+import { normalizeLayout, type ToolbarLayout } from '@/utils/toolbar-layout';
 import { WATCH_HOSTS, findPlayer, findToolbarAnchor } from '@/utils/youtube/dom';
 import { getVideoId, isWatchPage, onNavigate } from '@/utils/youtube/page';
 
@@ -43,6 +44,8 @@ const qualityOptions = () =>
 
 export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   let isEnabled = await enabled.getValue();
+  // 自訂工具列（006）：讀取時驗證並與預設清單合併；其他分頁或設定頁改變時立即重新繪製（FR-21、FR-22）。
+  let layout: ToolbarLayout = normalizeLayout(await toolbarLayout.getValue());
   let videoId: string | null = null;
   let parentObserver: MutationObserver | null = null;
   let observedParent: Element | null = null;
@@ -113,7 +116,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   const renderPanel = (id: ButtonId) => {
     switch (id) {
       case 'help':
-        return <HelpPanel />;
+        return <HelpPanel layout={layout} />;
       case 'link':
         return videoId ? <LinkPanel videoId={videoId} /> : undefined;
       case 'loop':
@@ -158,10 +161,18 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         renderPanel={renderPanel}
         activePanels={viewing.activePanels()}
         progress={downloadProgress(videoId)}
+        layout={layout}
+        onSaveLayout={saveLayout}
       />,
       container,
     );
   }
+
+  const saveLayout = (next: ToolbarLayout) => {
+    layout = normalizeLayout(next);
+    rerender();
+    toolbarLayout.setValue(layout).catch((err: unknown) => console.info(`${LOG_PREFIX} failed to save toolbar layout`, err));
+  };
 
   const rerender = () => {
     if (ui.mounted) renderInto(ui.uiContainer, ui.shadowHost);
@@ -264,6 +275,12 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
       isEnabled = value;
       updateViewing();
       sync();
+    }),
+  );
+  ctx.onInvalidated(
+    toolbarLayout.watch((value) => {
+      layout = normalizeLayout(value);
+      rerender();
     }),
   );
   ctx.onInvalidated(viewing.subscribe(rerender));
