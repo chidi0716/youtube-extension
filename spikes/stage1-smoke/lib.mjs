@@ -17,7 +17,6 @@ const fixture = readFileSync(join(here, 'fixtures', 'watch.html'), 'utf8');
 // 階段 2b、2c：觀看頁的附加模擬，以及首頁、搜尋、Shorts 的假頁面。
 const fixtureFile = (name) => (existsSync(join(here, 'fixtures', name)) ? readFileSync(join(here, 'fixtures', name), 'utf8') : null);
 const pageFixtures = {
-  addon: fixtureFile('stage2c-watch.js'),
   home: fixtureFile('home.html'),
   search: fixtureFile('search.html'),
   shorts: fixtureFile('shorts.html'),
@@ -74,8 +73,10 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport, color
         body: video.subarray(start, end + 1),
       });
     }
-    if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/stage2c-watch.js') {
-      return route.fulfill({ status: 200, contentType: 'text/javascript', body: pageFixtures.addon });
+    // 假頁面共用的腳本（fixtures/*.js）
+    const script = /^\/__fixture\/([a-z0-9-]+\.js)$/.exec(url.pathname);
+    if (url.hostname === 'www.youtube.com' && script && fixtureFile(script[1]) !== null) {
+      return route.fulfill({ status: 200, contentType: 'text/javascript', body: fixtureFile(script[1]) });
     }
     if (url.hostname === 'www.youtube.com') {
       return route.fulfill({ status: 200, contentType: 'text/html', body: fixtureFor(url.pathname) });

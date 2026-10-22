@@ -30,6 +30,24 @@ describe('設定頁的分類（005 FR-1）', () => {
   });
 });
 
+/** 以最外層的逗號分開選擇器清單（括號內的逗號不算）。 */
+function splitTopLevel(list: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < list.length; i++) {
+    const c = list[i];
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if (c === ',' && depth === 0) {
+      out.push(list.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  out.push(list.slice(start).trim());
+  return out.filter(Boolean);
+}
+
 describe('CSS 開關機制（plan 3.7.2）', () => {
   it('每個 class 都有 yte- 前綴、不重複', () => {
     const names = PAGE_CLASS_TOGGLES.map((t) => t.className);
@@ -43,7 +61,7 @@ describe('CSS 開關機制（plan 3.7.2）', () => {
       .split('}')
       .map((block) => block.split('{')[0]!.trim())
       .filter(Boolean)
-      .flatMap((sel) => sel.split(/,(?![^(]*\))/).map((s) => s.trim()));
+      .flatMap(splitTopLevel);
     expect(selectors.length).toBeGreaterThan(0);
     for (const sel of selectors) expect(sel).toMatch(/^html\.yte-[a-z-]+[\s.:[]/);
   });
@@ -52,6 +70,23 @@ describe('CSS 開關機制（plan 3.7.2）', () => {
     expect(pageClasses({ hideComments: true }, true)).toContain('yte-hide-comments');
     expect(pageClasses({ hideComments: true }, false)).not.toContain('yte-hide-comments');
     expect(pageClasses({ hideComments: false }, true)).not.toContain('yte-hide-comments');
+  });
+
+  it('005 的樣式選項不受工具列影響（005 FR-6）', () => {
+    const all = { hideEndCards: true, noThumbnailPreview: true, hideShorts: true, fullTitles: true };
+    const expected = ['yte-hide-end-cards', 'yte-no-thumbnail-preview', 'yte-hide-shorts', 'yte-full-titles'];
+    expect(pageClasses(all, true)).toEqual(expected);
+    expect(pageClasses(all, false)).toEqual(expected);
+    expect(pageClasses({}, true)).toEqual([]);
+  });
+
+  it('需要程式的選項不使用 class', () => {
+    expect(pageClasses({ originalAudio: true, autoContinue: true, shortsToWatch: true }, true)).toEqual([]);
+  });
+
+  it('樣式不包含自動播放倒數、不隱藏 Shorts 頁面本身的播放器', () => {
+    expect(TIDY_CSS).not.toMatch(/autonav/);
+    expect(TIDY_CSS).not.toMatch(/ytd-shorts|ytd-reel-video-renderer/);
   });
 
   it('applyPageClasses 只增減這個機制的 class，其他 class 不動', () => {

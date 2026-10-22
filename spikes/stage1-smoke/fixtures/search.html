@@ -1,0 +1,219 @@
+<!doctype html>
+<!--
+  本機測試用的「搜尋結果頁」。內容全部是假的。結構依 2026-10-22 觀察真實 YouTube 搜尋頁的結果
+  （spikes/stage2c/results-home.txt、results-watch.txt）：
+  ytd-search > ytd-two-column-search-results-renderer > #primary > ytd-section-list-renderer > #contents >
+  ytd-item-section-renderer > #contents，其中有：
+  - ytd-video-renderer（標題 h3.title-and-badge > a#video-title，2 行截斷、max-height 52px）；
+  - grid-shelf-view-model（Shorts 格狀區塊，項目為 ytm-shorts-lockup-view-model-v2）；
+  - 縮圖連到 /shorts/ 的 ytd-video-renderer（個別 Shorts 項目）；
+  - yt-lockup-view-model；舊版的 Shorts 區塊 ytd-reel-shelf-renderer。
+-->
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fixture search results</title>
+    <style>
+      html {
+        font-family: Roboto, Arial, sans-serif;
+        background: #fff;
+        color: #0f0f0f;
+      }
+      body {
+        margin: 0;
+      }
+      ytd-app,
+      ytd-search,
+      ytd-two-column-search-results-renderer,
+      ytd-section-list-renderer,
+      ytd-item-section-renderer,
+      ytd-reel-shelf-renderer,
+      grid-shelf-view-model,
+      yt-lockup-view-model {
+        display: block;
+      }
+      #masthead-container {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 2020;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        background: #fff;
+      }
+      tp-yt-app-drawer#guide {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        width: 200px;
+        padding: 12px;
+      }
+      ytd-guide-entry-renderer {
+        display: block;
+      }
+      ytd-guide-entry-renderer a {
+        display: flex;
+        gap: 16px;
+        height: 40px;
+        align-items: center;
+        padding: 0 12px;
+        color: inherit;
+        text-decoration: none;
+      }
+      #page-manager {
+        margin-left: 240px;
+        padding: 80px 24px 24px;
+        max-width: 1000px;
+      }
+      ytd-video-renderer,
+      ytd-item-section-renderer > #contents > yt-lockup-view-model {
+        display: flex;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      a#thumbnail {
+        display: block;
+        flex: none;
+        width: 360px;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #ddd;
+      }
+      a#thumbnail img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .text-wrapper {
+        flex: 1;
+        min-width: 0;
+      }
+      h3.title-and-badge {
+        margin: 0;
+        overflow: hidden;
+      }
+      #video-title,
+      .ytLockupMetadataViewModelTitle {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        max-height: 52px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 26px;
+        color: inherit;
+        text-decoration: none;
+      }
+      .meta {
+        color: #606060;
+        font-size: 12px;
+        line-height: 18px;
+      }
+      .ytGridShelfViewModelGridShelfRow,
+      ytd-reel-shelf-renderer #items {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      ytm-shorts-lockup-view-model-v2 {
+        display: block;
+        width: 160px;
+      }
+      .shortsLockupViewModelHostEndpoint.reel-item-endpoint {
+        display: block;
+        aspect-ratio: 9 / 16;
+        border-radius: 8px;
+        background: #c9c9ff;
+      }
+      .shortsLockupViewModelHostMetadataTitle {
+        margin: 6px 0 0;
+        font-size: 14px;
+      }
+      .shortsLockupViewModelHostMetadataTitle a {
+        color: inherit;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <ytd-app>
+      <div id="masthead-container"><ytd-masthead id="masthead"><strong>Fixture search</strong></ytd-masthead></div>
+      <tp-yt-app-drawer id="guide">
+        <ytd-guide-renderer>
+          <ytd-guide-entry-renderer><a id="endpoint" href="/" title="Home">Home</a></ytd-guide-entry-renderer>
+          <ytd-guide-entry-renderer id="fixture-guide-shorts"
+            ><a id="endpoint" role="link" title="Shorts"
+              ><svg height="24" viewBox="0 0 24 24" width="24"><path d="m13.467 1.19-8 4.7a5 5 0 00-.255 8.46 5 5 0 005.32 0l8-4.7z"></path></svg
+              ><span>Shorts</span></a
+            ></ytd-guide-entry-renderer
+          >
+        </ytd-guide-renderer>
+      </tp-yt-app-drawer>
+      <div id="page-manager">
+        <ytd-search>
+          <ytd-two-column-search-results-renderer>
+            <div id="primary">
+              <ytd-section-list-renderer>
+                <div id="contents">
+                  <ytd-item-section-renderer>
+                    <div id="contents"></div>
+                  </ytd-item-section-renderer>
+                </div>
+              </ytd-section-list-renderer>
+            </div>
+          </ytd-two-column-search-results-renderer>
+        </ytd-search>
+      </div>
+    </ytd-app>
+    <script>
+      const LONG =
+        'An extremely long fixture search result title with many words in it, so long that YouTube cuts it off with an ellipsis after the second line of text';
+      const list = document.querySelector('ytd-item-section-renderer #contents');
+      const thumb = (id, href) => `<ytd-thumbnail><a id="thumbnail" href="${href}"><img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt=""></a></ytd-thumbnail>`;
+      const videoRenderer = (n, title, shorts) => {
+        const id = ((shorts ? 'srs' : 'res') + n + 'xxxxxxxxxx').slice(0, 11);
+        const href = shorts ? `/shorts/${id}` : `/watch?v=${id}`;
+        const el = document.createElement('ytd-video-renderer');
+        el.dataset.fixture = shorts ? 'short' : 'video';
+        el.innerHTML = `${thumb(id, href)}<div class="text-wrapper"><h3 class="title-and-badge"><a id="video-title" href="${href}" title="${title}">${title}</a></h3><div class="meta">Fixture channel • ${n}K views</div><div class="meta">Description snippet of the result ${n}.</div></div>`;
+        return el;
+      };
+      const shortLockup = (n) => {
+        const id = ('sgr' + n + 'xxxxxxxxxx').slice(0, 11);
+        const el = document.createElement('ytm-shorts-lockup-view-model-v2');
+        el.innerHTML = `<ytm-shorts-lockup-view-model class="shortsLockupViewModelHost"><a class="shortsLockupViewModelHostEndpoint reel-item-endpoint" href="/shorts/${id}"></a><h3 class="shortsLockupViewModelHostMetadataTitle"><a class="shortsLockupViewModelHostEndpoint" href="/shorts/${id}">Short ${n}</a></h3></ytm-shorts-lockup-view-model>`;
+        return el;
+      };
+      list.append(videoRenderer(1, LONG));
+      const grid = document.createElement('grid-shelf-view-model');
+      grid.id = 'fixture-grid-shelf';
+      grid.className = 'ytGridShelfViewModelHost grid-shelf-with-top-margin';
+      grid.innerHTML = '<h2>Shorts</h2><div><div class="ytGridShelfViewModelGridShelfRow"></div></div>';
+      for (let n = 1; n <= 5; n++) {
+        const cell = document.createElement('div');
+        cell.className = 'ytGridShelfViewModelGridShelfItem';
+        cell.append(shortLockup(n));
+        grid.querySelector('.ytGridShelfViewModelGridShelfRow').append(cell);
+      }
+      list.append(grid);
+      list.append(videoRenderer(2, 'A normal title'));
+      list.append(videoRenderer(3, 'A short shown as a normal result', true));
+      const lockup = document.createElement('yt-lockup-view-model');
+      lockup.dataset.fixture = 'video';
+      lockup.innerHTML = `${thumb('lck1xxxxxxx', '/watch?v=lck1xxxxxxx')}<div class="text-wrapper"><h3 class="ytLockupMetadataViewModelHeadingReset"><a class="ytLockupMetadataViewModelTitle" href="/watch?v=lck1xxxxxxx"><span>${LONG}</span></a></h3><div class="meta">Lockup channel</div></div>`;
+      list.append(lockup);
+      const reel = document.createElement('ytd-reel-shelf-renderer');
+      reel.id = 'fixture-reel-shelf';
+      reel.innerHTML = '<h2>Shorts</h2><yt-horizontal-list-renderer><div id="items"></div></yt-horizontal-list-renderer>';
+      for (let n = 6; n <= 8; n++) reel.querySelector('#items').append(shortLockup(n));
+      list.append(reel);
+      list.append(videoRenderer(4, LONG));
+    </script>
+    <script src="/__fixture/browse.js"></script>
+  </body>
+</html>

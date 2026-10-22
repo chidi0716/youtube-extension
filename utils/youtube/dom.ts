@@ -498,3 +498,72 @@ export const CONVENIENCE_SELECTORS = {
   /** 播放器的設定（齒輪）選單；使用者在這裡手動改畫質或語音軌（004 FR-4、005 FR-12）。 */
   settingsMenu: '#movie_player .ytp-settings-menu',
 } as const;
+
+// ---------------------------------------------------------------------------
+// 頁面整理中只靠樣式的選項（005、plan 3.7.2）：要隱藏或調整的元素。
+// 依 2026-10-22 在真實 YouTube 首頁、搜尋頁、觀看頁（站內換頁進入）上的觀察
+// （spikes/stage2c/results-home.txt、results-watch.txt、results-details.txt）；
+// 標示「未確認」的項目在本環境看不到（例如影片無法播放、未登入時首頁沒有內容），依公開的元素名稱加入。
+// ---------------------------------------------------------------------------
+
+/** 片尾推薦卡片與播完後的推薦畫面（005 FR-20、FR-21）。不含自動播放倒數（FR-22）。 */
+export const END_SCREEN_SELECTORS: readonly string[] = [
+  // 影片最後幾秒的推薦卡片（影片、頻道、訂閱、連結）（未確認：本環境影片無法播放）
+  '#movie_player .ytp-ce-element',
+  // 自動播放關閉時，播完後的推薦影片格狀畫面（未確認）
+  '#movie_player .html5-endscreen.videowall-endscreen',
+  '#movie_player .ytp-endscreen-content',
+  // 新版播放器的推薦格子（觀看頁上有 .ytp-fullscreen-grid，平時不顯示）；只在播完時隱藏（未確認）
+  '#movie_player.ended-mode .ytp-fullscreen-grid-stills-container',
+];
+
+/** 縮圖自動預覽（005 FR-40）：ytd-app 底下共用的預覽播放器，以及舊版縮圖上的動態預覽。 */
+export const THUMBNAIL_PREVIEW_SELECTORS: readonly string[] = [
+  'ytd-app > #video-preview',
+  'ytd-video-preview',
+  'ytd-moving-thumbnail-renderer',
+];
+
+/** Shorts 的區塊與個別項目（005 FR-60）。以 :has() 判斷項目是否連到 /shorts/。 */
+export const SHORTS_SELECTORS: readonly string[] = [
+  // 首頁、訂閱：Shorts 區塊（未確認：未登入時首頁沒有內容）
+  'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])',
+  'ytd-rich-section-renderer:has(ytm-shorts-lockup-view-model)',
+  'ytd-rich-shelf-renderer[is-shorts]',
+  // 搜尋：Shorts 格狀區塊（已確認）
+  'grid-shelf-view-model:has(ytm-shorts-lockup-view-model)',
+  // 觀看頁推薦清單與舊版搜尋：Shorts 橫向區塊（已確認）
+  'ytd-reel-shelf-renderer',
+  // 個別 Shorts 項目
+  'ytd-rich-item-renderer:has(ytm-shorts-lockup-view-model)',
+  'ytd-rich-item-renderer:has(a#thumbnail[href^="/shorts/"])',
+  'ytd-video-renderer:has(a#thumbnail[href^="/shorts/"])',
+  'ytd-grid-video-renderer:has(a#thumbnail[href^="/shorts/"])',
+  'ytd-compact-video-renderer:has(a#thumbnail[href^="/shorts/"])',
+  'yt-lockup-view-model:has(a[href^="/shorts/"])',
+  'ytm-shorts-lockup-view-model-v2',
+  'ytm-shorts-lockup-view-model',
+];
+
+/**
+ * 左側導覽與迷你導覽的 Shorts 入口（005 FR-61）。實測 Shorts 入口的連結沒有 href、title 為 "Shorts"；
+ * 為了不依賴介面語言，也以 Shorts 圖示的 SVG path 開頭辨識（YouTube 換圖示時需要更新）。
+ */
+export const SHORTS_GUIDE_SELECTORS: readonly string[] = [
+  'ytd-guide-entry-renderer:has(> a#endpoint[title="Shorts"])',
+  'ytd-guide-entry-renderer:has(a[href^="/shorts"])',
+  'ytd-guide-entry-renderer:has(path[d^="m13.467 1.19-8 4.7"])',
+  'ytd-mini-guide-entry-renderer[aria-label="Shorts"]',
+  'ytd-mini-guide-entry-renderer:has(a[href^="/shorts"])',
+  'ytd-mini-guide-entry-renderer:has(path[d^="m13.467 1.19-8 4.7"])',
+];
+
+/**
+ * 影片清單中的標題（005 FR-70）：實測一般影片 a#video-title、新版 a.ytLockupMetadataViewModelTitle
+ * 都是 2 行截斷（-webkit-line-clamp: 2、max-height: 52px），Shorts 的標題截斷在外層 h3。
+ */
+export const VIDEO_TITLE_SELECTORS: readonly string[] = [
+  '#video-title',
+  '.ytLockupMetadataViewModelTitle',
+  '.shortsLockupViewModelHostMetadataTitle',
+];

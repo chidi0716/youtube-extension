@@ -1,0 +1,239 @@
+<!doctype html>
+<!--
+  本機測試用的「首頁」（也用於訂閱 /feed/subscriptions 與頻道 /@…）。內容全部是假的，由 Playwright 的
+  route 提供。元素結構依 2026-10-22 觀察真實 YouTube 首頁、搜尋頁的結果（spikes/stage2c/results-*.txt）：
+  - 左側導覽 tp-yt-app-drawer#guide 的 ytd-guide-entry-renderer；Shorts 入口的 a#endpoint 沒有 href、
+    title="Shorts"，圖示是特定的 SVG path；收合時的迷你導覽 ytd-mini-guide-entry-renderer[aria-label]；
+  - ytd-rich-grid-renderer #contents 中的 ytd-rich-item-renderer（內含 yt-lockup-view-model，標題為
+    a.ytLockupMetadataViewModelTitle，2 行截斷、max-height 52px），以及舊版 #video-title；
+  - Shorts 區塊 ytd-rich-section-renderer > ytd-rich-shelf-renderer[is-shorts]，項目為
+    ytm-shorts-lockup-view-model-v2 > ytm-shorts-lockup-view-model；格狀清單中的個別 Shorts 項目；
+  - 縮圖自動預覽 #video-preview（browse.js）。
+-->
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fixture home page</title>
+    <style>
+      html {
+        font-family: Roboto, Arial, sans-serif;
+        background: #fff;
+        color: #0f0f0f;
+      }
+      body {
+        margin: 0;
+      }
+      ytd-app,
+      ytd-browse,
+      ytd-rich-grid-renderer,
+      yt-lockup-view-model,
+      ytd-rich-shelf-renderer,
+      ytd-guide-renderer,
+      ytd-guide-section-renderer,
+      ytd-mini-guide-renderer {
+        display: block;
+      }
+      #masthead-container {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 2020;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        background: #fff;
+      }
+      tp-yt-app-drawer#guide {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        bottom: 0;
+        width: 200px;
+        padding: 12px;
+      }
+      ytd-guide-entry-renderer,
+      ytd-mini-guide-entry-renderer {
+        display: block;
+      }
+      ytd-guide-entry-renderer a {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 10px;
+        color: inherit;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      ytd-mini-guide-renderer {
+        position: fixed;
+        top: 56px;
+        left: 200px;
+        width: 64px;
+        font-size: 10px;
+        text-align: center;
+      }
+      ytd-mini-guide-entry-renderer a {
+        display: block;
+        padding: 12px 0;
+        color: inherit;
+      }
+      #page-manager {
+        margin-left: 280px;
+        padding: 80px 24px 24px;
+      }
+      #contents {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px 16px;
+      }
+      ytd-rich-item-renderer {
+        display: block;
+        width: calc((100% - 48px) / 4);
+      }
+      ytd-rich-section-renderer {
+        display: block;
+        flex-basis: 100%;
+      }
+      a#thumbnail,
+      .shortsLockupViewModelHostEndpoint.reel-item-endpoint {
+        display: block;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #ddd center / cover;
+      }
+      a#thumbnail img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      /* YouTube：標題 2 行截斷、最高 52px（實測） */
+      .ytLockupMetadataViewModelTitle,
+      #video-title {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        max-height: 52px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 12px 0 4px;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 22px;
+        color: inherit;
+        text-decoration: none;
+      }
+      h3 {
+        margin: 0;
+        font-size: inherit;
+      }
+      .meta {
+        color: #606060;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      ytd-rich-shelf-renderer #shelf-items {
+        display: flex;
+        gap: 16px;
+      }
+      ytm-shorts-lockup-view-model-v2 {
+        display: block;
+        width: 180px;
+      }
+      .shortsLockupViewModelHostEndpoint.reel-item-endpoint {
+        aspect-ratio: 9 / 16;
+        background: #c9c9ff;
+      }
+      .shortsLockupViewModelHostMetadataTitle {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        margin: 8px 0 0;
+        font-size: 14px;
+        line-height: 20px;
+      }
+      .shortsLockupViewModelHostMetadataTitle a {
+        color: inherit;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <ytd-app>
+      <div id="masthead-container"><ytd-masthead id="masthead"><strong>Fixture home</strong></ytd-masthead></div>
+      <tp-yt-app-drawer id="guide">
+        <ytd-guide-renderer>
+          <ytd-guide-section-renderer id="guide-section">
+            <ytd-guide-entry-renderer><a id="endpoint" href="/" title="Home"><span>⌂</span><span>Home</span></a></ytd-guide-entry-renderer>
+            <ytd-guide-entry-renderer id="fixture-guide-shorts"
+              ><a id="endpoint" role="link" title="Shorts"
+                ><yt-icon class="guide-icon"
+                  ><span class="yt-icon-shape"
+                    ><div>
+                      <svg height="24" viewBox="0 0 24 24" width="24"><path d="m13.467 1.19-8 4.7a5 5 0 00-.255 8.46 5 5 0 005.32 0l8-4.7z"></path></svg></div></span></yt-icon
+                ><span>Shorts</span></a
+              ></ytd-guide-entry-renderer
+            >
+            <ytd-guide-entry-renderer><a id="endpoint" href="/feed/subscriptions" title="Subscriptions"><span>▤</span><span>Subscriptions</span></a></ytd-guide-entry-renderer>
+          </ytd-guide-section-renderer>
+        </ytd-guide-renderer>
+      </tp-yt-app-drawer>
+      <ytd-mini-guide-renderer>
+        <ytd-mini-guide-entry-renderer aria-label="Home"><a href="/">Home</a></ytd-mini-guide-entry-renderer>
+        <ytd-mini-guide-entry-renderer id="fixture-mini-shorts" aria-label="Shorts"
+          ><a><svg height="24" viewBox="0 0 24 24" width="24"><path d="m13.467 1.19-8 4.7a5 5 0 00-.255 8.46 5 5 0 005.32 0l8-4.7z"></path></svg>Shorts</a></ytd-mini-guide-entry-renderer
+        >
+        <ytd-mini-guide-entry-renderer aria-label="Subscriptions"><a href="/feed/subscriptions">Subs</a></ytd-mini-guide-entry-renderer>
+      </ytd-mini-guide-renderer>
+      <div id="page-manager">
+        <ytd-browse>
+          <ytd-rich-grid-renderer>
+            <div id="contents"></div>
+          </ytd-rich-grid-renderer>
+        </ytd-browse>
+      </div>
+    </ytd-app>
+    <script>
+      const LONG =
+        'A very long fixture video title that goes on and on, describing everything that happens in the video so that YouTube has to cut it off after two lines';
+      const contents = document.getElementById('contents');
+      const videoItem = (n, title, legacy) => {
+        const id = ('video' + n + 'xxxxxxxxx').slice(0, 11);
+        const item = document.createElement('ytd-rich-item-renderer');
+        item.dataset.fixture = 'video';
+        const titleHtml = legacy
+          ? `<h3><a id="video-title" href="/watch?v=${id}" title="${title}">${title}</a></h3>`
+          : `<h3 class="ytLockupMetadataViewModelHeadingReset"><a class="ytLockupMetadataViewModelTitle" href="/watch?v=${id}"><span class="ytAttributedStringHost">${title}</span></a></h3>`;
+        item.innerHTML = `<yt-lockup-view-model><ytd-thumbnail><a id="thumbnail" href="/watch?v=${id}"><img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt=""></a></ytd-thumbnail>${titleHtml}<div class="meta">Fixture channel • ${n}K views</div></yt-lockup-view-model>`;
+        return item;
+      };
+      const shortLockup = (n) => {
+        const id = ('short' + n + 'xxxxxxxxxx').slice(0, 11);
+        const el = document.createElement('ytm-shorts-lockup-view-model-v2');
+        el.innerHTML = `<ytm-shorts-lockup-view-model class="shortsLockupViewModelHost"><a class="shortsLockupViewModelHostEndpoint reel-item-endpoint" href="/shorts/${id}"></a><h3 class="shortsLockupViewModelHostMetadataTitle"><a class="shortsLockupViewModelHostEndpoint" href="/shorts/${id}">Fixture short ${n} with a fairly long title for a short</a></h3></ytm-shorts-lockup-view-model>`;
+        return el;
+      };
+      for (let n = 1; n <= 4; n++) contents.append(videoItem(n, n % 2 ? LONG : `Short title ${n}`, n === 3));
+      const section = document.createElement('ytd-rich-section-renderer');
+      section.id = 'fixture-shorts-section';
+      section.innerHTML = '<ytd-rich-shelf-renderer is-shorts><h2 id="title">Shorts</h2><div id="shelf-items"></div></ytd-rich-shelf-renderer>';
+      for (let n = 1; n <= 4; n++) section.querySelector('#shelf-items').append(shortLockup(n));
+      contents.append(section);
+      // 格狀清單中的個別 Shorts 項目（第 6 格）
+      for (let n = 5; n <= 9; n++) {
+        if (n === 6) {
+          const item = document.createElement('ytd-rich-item-renderer');
+          item.dataset.fixture = 'short';
+          item.append(shortLockup(9));
+          contents.append(item);
+        }
+        contents.append(videoItem(n, n % 2 ? LONG : `Short title ${n}`, n === 7));
+      }
+    </script>
+    <script src="/__fixture/browse.js"></script>
+  </body>
+</html>

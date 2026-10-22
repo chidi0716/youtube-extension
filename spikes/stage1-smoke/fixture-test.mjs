@@ -13,7 +13,6 @@ const root = join(here, '..', '..');
 const extDir = join(root, '.output', 'chrome-mv3');
 const shots = process.env.SHOTS ?? join(root, 'specs', 'notes', 'screenshots');
 const fixture = readFileSync(join(here, 'fixtures', 'watch.html'), 'utf8');
-const fixtureAddon = readFileSync(join(here, 'fixtures', 'stage2c-watch.js'), 'utf8');
 const video = readFileSync(join(here, 'fixtures', 'test.webm'));
 const EXT_ID = 'bkjlangdjfpllnkcpfpdlajchbginjdj';
 const WATCH = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
@@ -42,8 +41,10 @@ async function launch(lang) {
     if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/test.webm') {
       return route.fulfill({ status: 200, contentType: 'video/webm', body: video });
     }
-    if (url.hostname === 'www.youtube.com' && url.pathname === '/__fixture/stage2c-watch.js') {
-      return route.fulfill({ status: 200, contentType: 'text/javascript', body: fixtureAddon });
+    // 假頁面共用的腳本（fixtures/*.js）
+    const script = /^\/__fixture\/([a-z0-9-]+\.js)$/.exec(url.pathname);
+    if (url.hostname === 'www.youtube.com' && script) {
+      return route.fulfill({ status: 200, contentType: 'text/javascript', body: readFileSync(join(here, 'fixtures', script[1]), 'utf8') });
     }
     if (url.hostname === 'www.youtube.com') {
       return route.fulfill({ status: 200, contentType: 'text/html', body: fixture });

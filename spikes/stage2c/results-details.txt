@@ -1,0 +1,76 @@
+== guide entries (inner structure of the 2nd entry and its neighbours)
+<ytd-guide-entry-renderer class=style-scope ytd-guide-section-renderer active is-primary line-end-style=none>
+  <a id=endpoint class=yt-simple-endpoint style-scope ytd-guide-entry-ren tabindex=-1 role=link href=/ title=Home>
+    <tp-yt-paper-item role=link class=style-scope ytd-guide-entry-renderer style-target=host tabindex=0 aria-disabled=false>
+      <yt-icon class=guide-icon style-scope ytd-guide-entry-renderer>
+        <span class=yt-icon-shape style-scope yt-icon ytSpecIconShapeH>
+          <div >
+            <svg xmlns=http://www.w3.org/2000/svg height=24 viewBox=0 0 24 24 width=24 focusable=false aria-hidden=true>
+              <path d=m11.485 2.143-8 4.8-2 1.2a1 1 0 001.03 1.714L3 9.5>
+      <yt-img-shadow height=24 width=24 class=style-scope ytd-guide-entry-renderer no-transition hidden>
+        <img id=img draggable=false class=style-scope yt-img-shadow alt height=24 width=24>
+      <yt-formatted-string class=title style-scope ytd-guide-entry-renderer>
+      <yt-icon class=arrow-icon style-scope ytd-guide-entry-renderer icon=chevron_right size=16 disable-upgrade hidden>
+      <span class=guide-entry-count style-scope ytd-guide-entry-rend>
+      <yt-icon class=guide-entry-badge style-scope ytd-guide-entry-rend size=16 disable-upgrade>
+      <div id=newness-dot class=style-scope ytd-guide-entry-renderer>
+  <yt-interaction class=style-scope ytd-guide-entry-renderer>
+    <div class=stroke style-scope yt-interaction>
+    <div class=fill style-scope yt-interaction>
+
+----
+<ytd-guide-entry-renderer class=style-scope ytd-guide-section-renderer is-primary line-end-style=none>
+  <a id=endpoint class=yt-simple-endpoint style-scope ytd-guide-entry-ren tabindex=-1 role=link title=Shorts>
+    <tp-yt-paper-item role=link class=style-scope ytd-guide-entry-renderer style-target=host tabindex=0 aria-disabled=false>
+      <yt-icon class=guide-icon style-scope ytd-guide-entry-renderer>
+        <span class=yt-icon-shape style-scope yt-icon ytSpecIconShapeH>
+          <div >
+            <svg xmlns=http://www.w3.org/2000/svg height=24 viewBox=0 0 24 24 width=24 focusable=false aria-hidden=true>
+              <path d=m13.467 1.19-8 4.7a5 5 0 00-.255 8.46 5 5 0 005.32>
+      <yt-img-shadow height=24 width=24 class=style-scope ytd-guide-entry-renderer no-transition hidden>
+        <img id=img draggable=false class=style-scope yt-img-shadow alt height=24 width=24>
+      <yt-formatted-string class=title style-scope ytd-guide-entry-renderer>
+      <yt-icon class=arrow-icon style-scope ytd-guide-entry-renderer icon=chevron_right size=16 disable-upgrade hidden>
+      <span class=guide-entry-count style-scope ytd-guide-entry-rend>
+      <yt-icon class=guide-entry-badge style-scope ytd-guide-entry-rend size=16 disable-upgrade>
+      <div id=newness-dot class=style-scope ytd-guide-entry-renderer>
+  <yt-interaction class=style-scope ytd-guide-entry-renderer>
+    <div class=stroke style-scope yt-interaction>
+    <div class=fill style-scope yt-interaction>
+
+----
+<ytd-guide-entry-renderer class=style-scope ytd-guide-section-renderer is-primary line-end-style=none>
+  <a id=endpoint class=yt-simple-endpoint style-scope ytd-guide-entry-ren tabindex=-1 role=link href=/feed/subscriptions title=Subscriptions>
+    <tp-yt-paper-item role=link class=style-scope ytd-guide-entry-renderer style-target=host tabindex=0 aria-disabled=false>
+      <yt-icon class=guide-icon style-scope ytd-guide-entry-renderer>
+        <span class=yt-icon-shape style-scope yt-icon ytSpecIconShapeH>
+          <div >
+            <svg xmlns=http://www.w3.org/2000/svg height=24 viewBox=0 0 24 24 width=24 focusable=false aria-hidden=true>
+              <path d=M18 1H6a2 2 0 00-2 2h16a2 2 0 00-2-2Zm3 4H3a2 2 0 >
+      <yt-img-shadow height=24 width=24 class=style-scope ytd-guide-entry-renderer no-transition hidden>
+        <img id=img draggable=false class=style-scope yt-img-shadow alt height=24 width=24>
+      <yt-formatted-string class=title style-scope ytd-guide-entry-renderer>
+      <yt-icon class=arrow-icon style-scope ytd-guide-entry-renderer icon=chevron_right size=16 disable-upgrade hidden>
+      <span class=guide-entry-count style-scope ytd-guide-entry-rend>
+      <yt-icon class=guide-entry-badge style-scope ytd-guide-entry-rend size=16 disable-upgrade>
+      <div id=newness-dot class=style-scope ytd-guide-entry-renderer>
+  <yt-interaction class=style-scope ytd-guide-entry-renderer>
+    <div class=stroke style-scope yt-interaction>
+    <div class=fill style-scope yt-interaction>
+
+
+== mini guide entries
+
+
+== search: individual shorts in ytd-video-renderer
+none
+
+== watch: .ytp-fullscreen-grid structure https://www.youtube.com/watch?v=6MJf515KJ4g
+player class: html5-video-player ytp-transparent ytp-exp-bottom-control-flexbox ytp-modern-caption ytp-exp-ppp-update ytp-livebadge-color ytp-grid-scrollable ytp-delhi-modern ytp-delhi-modern-icons ytp-delhi-horizontal-volume-controls ytp-cards-teaser-dismissible ytp-hide-info-bar ytp-disable-bottom-gradient ytp-delhi-modern-compact-controls ytp-large-width-mode ytp-fine-scrubbing-exp ytp-fit-cover-video ytp-autonav-endscreen-cancelled-state ytp-hide-fullscreen-title ytp-fullscreen-metadata-top ytp-iv-drawer-enabled
+<div class="ytp-fullscreen-grid"> display=none children=3
+  <div class="ytp-fullscreen-grid-hover-overlay"> display=block children=0
+  <div class="ytp-fullscreen-grid-buttons-container"> display=flex children=1
+    <button class="ytp-fullscreen-grid-expand-button ytp-button"> display=none children=0
+  <div class="ytp-fullscreen-grid-main-content"> display=block children=1
+    <div class="ytp-fullscreen-grid-stills-container"> display=grid children=0
+

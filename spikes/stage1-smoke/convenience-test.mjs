@@ -388,6 +388,251 @@ await section(
   },
 );
 
+// ---------------------------------------------------------------------------
+// T30 只靠樣式的選項（005）
+// ---------------------------------------------------------------------------
+/** 元素是否實際顯示（自己與祖先都不是 display: none，且有大小）。 */
+const visibleCount = (page, selector) =>
+  page.evaluate((selector) => [...document.querySelectorAll(selector)].filter((el) => el.getClientRects().length > 0).length, selector);
+/** 標題是否完整顯示、是否與下一行文字重疊。 */
+const titleState = (page, selector) =>
+  page.evaluate((selector) =>
+    [...document.querySelectorAll(selector)]
+      .filter((el) => el.getClientRects().length > 0)
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        const box = el.closest('h3') ?? el;
+        const next = box.nextElementSibling?.getBoundingClientRect();
+        return {
+          truncated: el.scrollHeight > el.clientHeight + 1,
+          height: Math.round(r.height),
+          overlap: next ? r.bottom > next.top + 1 : false,
+        };
+      }),
+    selector,
+  );
+/** 首頁格狀清單每一列顯示幾個項目（依 top 分組）。 */
+const gridRows = (page) =>
+  page.evaluate(() => {
+    const rows = new Map();
+    for (const el of document.querySelectorAll('#contents > ytd-rich-item-renderer')) {
+      if (el.getClientRects().length === 0) continue;
+      const top = Math.round(el.getBoundingClientRect().top);
+      rows.set(top, (rows.get(top) ?? 0) + 1);
+    }
+    return [...rows.values()];
+  });
+
+await section(
+  'T30',
+  async (page, context) => {
+    const { shots } = await import('./lib.mjs');
+    const options = await openOptions(context);
+
+    // ---- 開關立即生效（FR-3）：觀看頁開著時從設定頁開關 ----
+    const classes = { hideEndCards: 'yte-hide-end-cards', noThumbnailPreview: 'yte-no-thumbnail-preview', hideShorts: 'yte-hide-shorts', fullTitles: 'yte-full-titles' };
+    const immediate = {};
+    for (const [id, cls] of Object.entries(classes)) {
+      await setOption(options, id, true);
+      await page.waitForTimeout(250);
+      immediate[id] = await htmlHas(page, cls);
+      await setOption(options, id, false);
+      await page.waitForTimeout(250);
+      immediate[id] = immediate[id] && !(await htmlHas(page, cls));
+    }
+    check('開關任一選項，已開啟的 YouTube 分頁立即生效，不需重新整理（005 FR-3）', Object.values(immediate).every(Boolean), JSON.stringify(immediate));
+
+    // ---- 片尾推薦卡片與結尾畫面（FR-20 至 FR-22）----
+    await page.bringToFront();
+    const endState = () =>
+      page.evaluate(() => {
+        const vis = (sel) => [...document.querySelectorAll(sel)].some((el) => el.getClientRects().length > 0);
+        return {
+          cards: vis('.ytp-ce-element'),
+          wall: vis('.ytp-endscreen-content'),
+          grid: vis('.ytp-fullscreen-grid-stills-container'),
+          countdown: vis('.ytp-autonav-endscreen-countdown-overlay'),
+        };
+      });
+    const playToEnd = () =>
+      page.evaluate(async () => {
+        const v = document.querySelector('video');
+        v.currentTime = v.duration - 1.5;
+        await v.play();
+        await new Promise((r) => v.addEventListener('ended', r, { once: true }));
+      });
+    // 先確認假頁面在沒有開啟選項時會顯示
+    await page.evaluate(() => {
+      const t = document.querySelector('.ytp-autonav-toggle-button');
+      if (t.getAttribute('aria-checked') === 'true') t.closest('button').click();
+    });
+    await seek(page, 24);
+    await page.evaluate(() => document.querySelector('video').dispatchEvent(new Event('timeupdate')));
+    const cardsOff = await endState();
+    await playToEnd();
+    await page.waitForTimeout(200);
+    const endOff = await endState();
+    check('（假頁面）未開啟時片尾卡片與結尾畫面會顯示', cardsOff.cards && endOff.wall && endOff.grid, JSON.stringify({ cardsOff, endOff }));
+
+    await setOption(options, 'hideEndCards', true);
+    await page.bringToFront();
+    await page.waitForTimeout(250);
+    await seek(page, 24);
+    await page.evaluate(() => document.querySelector('video').dispatchEvent(new Event('timeupdate')));
+    const cardsOn = await endState();
+    check('影片最後幾秒沒有推薦卡片（FR-20）', !cardsOn.cards && (await page.evaluate(() => document.querySelector('.ytp-ce-element').classList.contains('ytp-ce-element-show'))), JSON.stringify(cardsOn));
+    await playToEnd();
+    await page.waitForTimeout(200);
+    const endOn = await endState();
+    check('播完後沒有推薦格狀畫面（FR-21）', !endOn.wall && !endOn.grid, JSON.stringify(endOn));
+    await page.screenshot({ path: `${shots}/T30-end-screen-hidden.png`, clip: await page.evaluate(() => { const r = document.querySelector('#movie_player').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; }) });
+
+    // 自動播放下一部仍正常（FR-22）
+    await page.evaluate(() => document.querySelector('.ytp-autonav-toggle-button').closest('button').click());
+    const urlBefore = page.url();
+    await playToEnd();
+    await page.waitForTimeout(300);
+    const countdown = (await endState()).countdown;
+    await page.waitForTimeout(2300);
+    const autonav = await page.evaluate(() => window.__fixtureAutonavFired);
+    check('自動播放下一部的倒數照常顯示，倒數結束後換到下一部（FR-22）', countdown && autonav && page.url() !== urlBefore, `countdown=${countdown} url=${page.url()}`);
+
+    // ---- 停用縮圖自動預覽（FR-40、FR-41）----
+    const hoverThumb = async (p, selector) => {
+      await p.mouse.move(5, 300);
+      const box = await p.locator(selector).first().boundingBox();
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await p.waitForTimeout(900);
+      return p.evaluate(({ x, y }) => {
+        const prev = document.querySelector('#video-preview');
+        const top = document.elementFromPoint(x, y);
+        return {
+          previewVisible: !!prev && prev.getClientRects().length > 0,
+          topIsThumbnail: !!top?.closest('a#thumbnail'),
+          img: getComputedStyle(document.querySelector('a#thumbnail img')).display !== 'none',
+        };
+      }, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    };
+    const home = await context.newPage();
+    await home.goto('https://www.youtube.com/');
+    await home.waitForSelector('#contents ytd-rich-item-renderer');
+    const previewOff = await hoverThumb(home, '#contents ytd-rich-item-renderer a#thumbnail');
+    await setOption(options, 'noThumbnailPreview', true);
+    await home.bringToFront();
+    await home.waitForTimeout(250);
+    const previewOn = await hoverThumb(home, '#contents ytd-rich-item-renderer a#thumbnail');
+    check('（假頁面）未開啟時滑鼠停在縮圖上會播放預覽', previewOff.previewVisible && !previewOff.topIsThumbnail, JSON.stringify(previewOff));
+    check('開啟後滑鼠停在縮圖上不顯示預覽，縮圖維持靜態圖片（FR-40）', !previewOn.previewVisible && previewOn.topIsThumbnail && previewOn.img, JSON.stringify(previewOn));
+    const thumbHref = await home.locator('#contents ytd-rich-item-renderer a#thumbnail').first().getAttribute('href');
+    await home.locator('#contents ytd-rich-item-renderer a#thumbnail').first().click();
+    await home.waitForURL((u) => u.pathname === '/watch');
+    check('點擊縮圖仍正常開啟影片（FR-41）', new URL(home.url()).pathname + new URL(home.url()).search === thumbHref, home.url());
+
+    // 搜尋結果、觀看頁推薦清單也不顯示預覽
+    await home.goto('https://www.youtube.com/results?search_query=fixture');
+    await home.waitForSelector('ytd-video-renderer');
+    const previewSearch = await hoverThumb(home, 'ytd-video-renderer a#thumbnail');
+    await home.goto(WATCH);
+    await home.waitForSelector('#related a#thumbnail');
+    const previewRelated = await hoverThumb(home, '#related a#thumbnail');
+    check('搜尋結果與推薦清單的縮圖也不播放預覽（FR-40）', !previewSearch.previewVisible && !previewRelated.previewVisible, JSON.stringify({ previewSearch, previewRelated }));
+
+    // ---- 隱藏 Shorts（FR-60 至 FR-63）----
+    await home.goto('https://www.youtube.com/');
+    await home.waitForSelector('#contents ytd-rich-item-renderer');
+    const shortsVisible = (p) =>
+      p.evaluate(() => ({
+        links: [...document.querySelectorAll('a[href^="/shorts/"]')].filter((a) => a.getClientRects().length > 0).length,
+        guide: ['#fixture-guide-shorts', '#fixture-mini-shorts'].filter((s) => document.querySelector(s)?.getClientRects().length > 0).length,
+      }));
+    const homeBefore = { ...(await shortsVisible(home)), rows: await gridRows(home) };
+    await home.screenshot({ path: `${shots}/T30-home-before.png` });
+    await setOption(options, 'hideShorts', true);
+    await home.bringToFront();
+    await home.waitForTimeout(250);
+    const homeAfter = { ...(await shortsVisible(home)), rows: await gridRows(home) };
+    check('（假頁面）未開啟時首頁有 Shorts 區塊、Shorts 項目與導覽入口', homeBefore.links > 0 && homeBefore.guide === 2, JSON.stringify(homeBefore));
+    check('首頁看不到 Shorts 區塊、個別 Shorts 項目（FR-60）', homeAfter.links === 0, JSON.stringify(homeAfter));
+    check('左側導覽與迷你導覽的 Shorts 入口隱藏（FR-61）', homeAfter.guide === 0);
+    check(
+      '隱藏後格狀清單重新排列，沒有空位（FR-62）',
+      homeAfter.rows.slice(0, -1).every((n) => n === 4) && (await visibleCount(home, '#contents > ytd-rich-item-renderer')) === 9,
+      `每列 ${homeAfter.rows.join(',')}（隱藏前 ${homeBefore.rows.join(',')}）`,
+    );
+    await home.goto('https://www.youtube.com/feed/subscriptions');
+    await home.waitForSelector('#contents ytd-rich-item-renderer');
+    check('訂閱頁看不到 Shorts（FR-60）', (await shortsVisible(home)).links === 0);
+    await home.goto('https://www.youtube.com/results?search_query=fixture');
+    await home.waitForSelector('ytd-video-renderer');
+    const search = {
+      ...(await shortsVisible(home)),
+      results: await visibleCount(home, 'ytd-item-section-renderer #contents > [data-fixture="video"]'),
+    };
+    check('搜尋結果看不到 Shorts 區塊與個別 Shorts 項目，一般結果照常顯示（FR-60）', search.links === 0 && search.guide === 0 && search.results === 4, JSON.stringify(search));
+    await home.goto(WATCH);
+    await home.waitForSelector('#related');
+    const related = { links: (await shortsVisible(home)).links, videos: await visibleCount(home, '#related [data-fixture="video"]') };
+    check('觀看頁推薦清單看不到 Shorts，一般推薦照常顯示（FR-60）', related.links === 0 && related.videos === 2, JSON.stringify(related));
+    await home.goto('https://www.youtube.com/shorts/abcdefghijk');
+    await home.waitForTimeout(500);
+    check(
+      '直接開啟 Shorts 網址不受「隱藏 Shorts」影響（FR-63）',
+      new URL(home.url()).pathname === '/shorts/abcdefghijk' && (await visibleCount(home, '#fixture-short-player')) === 1,
+    );
+
+    // ---- 顯示完整影片標題（FR-70、FR-71）----
+    await home.goto('https://www.youtube.com/');
+    await home.waitForSelector('#contents ytd-rich-item-renderer');
+    const titleSel = '#video-title, .ytLockupMetadataViewModelTitle';
+    const titlesBefore = await titleState(home, titleSel);
+    await setOption(options, 'fullTitles', true);
+    await home.bringToFront();
+    await home.waitForTimeout(250);
+    const titlesAfter = await titleState(home, titleSel);
+    await home.screenshot({ path: `${shots}/T30-home-after.png` });
+    check('（假頁面）未開啟時長標題被截斷', titlesBefore.some((t) => t.truncated), JSON.stringify(titlesBefore.map((t) => t.height)));
+    check(
+      '首頁的長標題完整顯示，且不與下一行文字重疊（FR-70、FR-71）',
+      titlesAfter.every((t) => !t.truncated && !t.overlap) && titlesAfter.some((t) => t.height > 52),
+      JSON.stringify(titlesAfter.map((t) => t.height)),
+    );
+    const titlePages = {};
+    for (const [name, url, sel] of [
+      ['search', 'https://www.youtube.com/results?search_query=fixture', titleSel],
+      ['channel', 'https://www.youtube.com/@fixture/videos', titleSel],
+      ['related', WATCH, '#related #video-title, #related .ytLockupMetadataViewModelTitle'],
+    ]) {
+      await home.goto(url);
+      await home.waitForTimeout(400);
+      const s = await titleState(home, sel);
+      titlePages[name] = s.length > 0 && s.every((t) => !t.truncated && !t.overlap);
+      if (name === 'search') await home.screenshot({ path: `${shots}/T30-search-after.png` });
+    }
+    check('搜尋、頻道、觀看頁推薦清單的標題也完整顯示（FR-70）', Object.values(titlePages).every(Boolean), JSON.stringify(titlePages));
+
+    // ---- 關閉工具列後仍生效（FR-6）----
+    await options.goto(`chrome-extension://${EXT_ID}/popup.html`);
+    await options.waitForFunction(() => !!document.querySelector('h1')?.textContent);
+    await options.waitForTimeout(300);
+    await options.locator('#enabled').uncheck();
+    await home.bringToFront();
+    await home.waitForTimeout(400);
+    const afterClose = await home.evaluate(() => ({
+      toolbar: !!document.querySelector('yte-toolbar'),
+      classes: ['yte-hide-end-cards', 'yte-no-thumbnail-preview', 'yte-hide-shorts', 'yte-full-titles'].filter((c) => document.documentElement.classList.contains(c)),
+    }));
+    await home.reload();
+    await home.waitForTimeout(600);
+    const afterReload = await home.evaluate(() => document.documentElement.className);
+    check(
+      '關閉工具列（「啟用」關閉）後，頁面整理的選項仍照設定生效（005 FR-6）',
+      !afterClose.toolbar && afterClose.classes.length === 4 && afterReload.split(' ').filter((c) => c.startsWith('yte-')).length === 4,
+      `${JSON.stringify(afterClose)} reload=${afterReload}`,
+    );
+  },
+  { viewport: { width: 1400, height: 1000 } },
+);
+
 if (!summary()) process.exitCode = 1;
 void EXT_ID;
 void skip;

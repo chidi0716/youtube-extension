@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+  本機測試用的「Shorts 頁」（/shorts/<影片ID>）。內容全部是假的，只用來確認：
+  - 「Shorts 改用一般播放器」開啟時轉到 /watch?v=<影片ID>（005 FR-50、FR-51）；
+  - 關閉時維持 Shorts 頁，且「隱藏 Shorts」不影響直接開啟的 Shorts 頁（005 FR-63）。
+-->
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fixture Shorts page</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Roboto, Arial, sans-serif;
+      }
+      ytd-app,
+      ytd-shorts,
+      ytd-reel-video-renderer {
+        display: block;
+      }
+      ytd-reel-video-renderer {
+        width: 320px;
+        height: 568px;
+        margin: 72px auto 0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #000;
+      }
+      ytd-reel-video-renderer video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <ytd-app>
+      <ytd-shorts>
+        <ytd-reel-video-renderer id="fixture-short-player">
+          <video src="/__fixture/test.webm" muted playsinline autoplay></video>
+        </ytd-reel-video-renderer>
+        <p id="fixture-short-title" style="text-align: center">Fixture short</p>
+      </ytd-shorts>
+    </ytd-app>
+    <script>
+      window.__fixtureShortsLoaded = true;
+    </script>
+  </body>
+</html>

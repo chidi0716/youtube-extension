@@ -1,0 +1,44 @@
+== home
+{
+  "url": "https://www.youtube.com/",
+  "shortsLinks": 0,
+  "chains": []
+}
+titles:
+  
+guide:
+  ytd-guide-entry-renderer href=/ title=Home text=Home
+  ytd-guide-entry-renderer href=null title=Shorts text=Shorts
+  ytd-guide-entry-renderer href=/feed/subscriptions title=Subscriptions text=Subscriptions
+  ytd-guide-entry-renderer href=/feed/you title=You text=You
+  ytd-guide-entry-renderer href=/feed/history title=History text=History
+  ytd-guide-entry-renderer href=/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ title=Music text=Music
+  ytd-guide-entry-renderer href=/channel/UC4R8DWoMoI7CAwX8_LjQHig title=Live text=Live
+  ytd-guide-entry-renderer href=/gaming title=Gaming text=Gaming
+  ytd-guide-entry-renderer href=null title=Show more text=Show more
+  ytd-guide-entry-renderer href=null title=Show less text=Show less
+  ytd-guide-entry-renderer href=https://tv.youtube.com/?utm_source=youtube_web&utm_medium=ep&utm_campaign=home&ve=34273 title=YouTube TV text=YouTube TV
+  ytd-guide-entry-renderer href=https://music.youtube.com/ title=YouTube Music text=YouTube Music
+home feed items: 0
+
+== search
+{
+  "url": "https://www.youtube.com/results?search_query=cat+videos",
+  "shortsLinks": 40,
+  "chains": [
+    "20x a.shortsLockupViewModelHostEndpoint.reel-item-endpoint < ytm-shorts-lockup-view-model.shortsLockupViewModelHost < ytm-shorts-lockup-view-model-v2 < div.ytGridShelfViewModelGridShelfItem < div.ytGridShelfViewModelGridShelfRow.ytd-item-section-renderer.grid-shelf-with-top-margin < div < grid-shelf-view-model < div#contents.ytd-item-section-renderer.ytd-item-section-renderer",
+    "20x a.shortsLockupViewModelHostEndpoint.shortsLockupViewModelHostOutsideMetadataEndpoint < h3.shortsLockupViewModelHostMetadataTitle.shortsLockupViewModelHostOutsideMetadataTitle < div < div.shortsLockupViewModelHostOutsideMetadata.shortsLockupViewModelHostMetadataRounded.shortsLockupViewModelHostOutsideMetadataHasMenu < ytm-shorts-lockup-view-model.shortsLockupViewModelHost < ytm-shorts-lockup-view-model-v2 < div.ytGridShelfViewModelGridShelfItem < div.ytGridShelfViewModelGridShelfRow.ytd-item-section-renderer.grid-shelf-with-top-margin < div < grid-shelf-view-model < div#contents.ytd-item-section-renderer.ytd-item-section-renderer"
+  ]
+}
+titles:
+  a.shortsLockupViewModelHostEndpoint.shortsLockupViewModelHostOutsideMetadataEndpoint in ?: {"clamp":"none","display":"block","overflow":"visible","maxHeight":"none","textOverflow":"clip","whiteSpace":"normal","parentTag":"h3","parentClamp":"2","parentMaxHeight":"none","truncated":false}
+  a#video-title.yt-simple-endpoint.ytd-video-renderer in ytd-video-renderer: {"clamp":"2","display":"flow-root","overflow":"hidden","maxHeight":"52px","textOverflow":"ellipsis","whiteSpace":"normal","parentTag":"h3","parentClamp":"none","parentMaxHeight":"none","truncated":false}
+  a.ytLockupMetadataViewModelTitle in yt-lockup-view-model: {"clamp":"2","display":"flow-root","overflow":"hidden","maxHeight":"52px","textOverflow":"ellipsis","whiteSpace":"normal","parentTag":"h3","parentClamp":"none","parentMaxHeight":"none","truncated":false}
+hover preview: {
+  "videos": [
+    "video < div < div#movie_player < div#container < ytd-player#ytd-player < div#player-container < div#player-container-inner < div#player-container-outer < div#player < div#primary-inner paused=true rect=0,0 0x0",
+    "video < div < div#inline-preview-player < div#container < ytd-player < div < div < a < div < div paused=true rect=262,316 504x283"
+  ],
+  "previewEl": "div#video-preview hidden=false active=false display=block attrs=id,class",
+  "thumbAttrs": "use-hovered-property,class,size,is-live-video,loaded"
+}
