@@ -50,7 +50,7 @@ describe('panelReducer', () => {
 
   it('沒有展開的面板時，其他動作不改變狀態', () => {
     const s = initialPanelState();
-    for (const type of ['escape', 'outside', 'pin', 'unpin', 'navigate', 'focusRestored'] as const) {
+    for (const type of ['escape', 'outside', 'pin', 'unpin', 'navigate', 'close', 'focusRestored'] as const) {
       expect(panelReducer(s, { type })).toBe(s);
     }
   });
@@ -58,5 +58,10 @@ describe('panelReducer', () => {
   it('focusRestored 清除待還焦點', () => {
     const closed = run([{ type: 'toggle', id: 'video' }, { type: 'escape' }]);
     expect(run([{ type: 'focusRestored' }], closed).restoreFocusTo).toBeNull();
+  });
+
+  it('close：釘選的面板也收起，焦點不移動（進入編輯模式，006 FR-1）', () => {
+    const pinned = run([{ type: 'toggle', id: 'more' }, { type: 'pin' }]);
+    expect(run([{ type: 'close' }], pinned)).toEqual({ openId: null, pinned: false, restoreFocusTo: null });
   });
 });

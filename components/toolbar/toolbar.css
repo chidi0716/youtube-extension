@@ -399,3 +399,172 @@
   box-shadow: 0 0 0 2px var(--yt-spec-base-background, var(--yt-sys-color-baseline--base-background, #fff));
   pointer-events: none;
 }
+
+/* ---------- 編輯模式（006 FR-3、FR-10 至 FR-14、外觀） ---------- */
+
+.yte-toolbar[data-editing] {
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 48px;
+  padding: 14px 8px 6px;
+  border: 1px dashed var(--yte-text-secondary);
+  border-radius: 12px;
+  column-gap: 16px;
+  row-gap: 4px;
+}
+
+/* 工具列不夠寬時，「重設為預設」「取消」「完成」換到下一行（仍靠右）。 */
+.yte-edit-row {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.yte-edit-spacer {
+  flex: 1;
+  min-width: 8px;
+}
+
+.yte-edit-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  touch-action: none;
+}
+
+.yte-edit-item[data-dragging] {
+  z-index: 2;
+  opacity: 0.85;
+}
+
+.yte-edit-tool,
+.yte-edit-sep {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--yte-text-primary);
+  font: inherit;
+  cursor: grab;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+}
+
+/* 工具略為放大，顯示可拖曳。 */
+.yte-edit-tool {
+  width: 40px;
+  transform: scale(1.08);
+}
+
+.yte-edit-tool:hover,
+.yte-edit-sep:hover {
+  background: var(--yte-hover-background);
+}
+
+.yte-edit-item[data-dragging] .yte-edit-tool,
+.yte-edit-item[data-dragging] .yte-edit-sep {
+  cursor: grabbing;
+  background: var(--yte-active-background);
+}
+
+.yte-edit-tool:focus-visible,
+.yte-edit-sep:focus-visible {
+  box-shadow: 0 0 0 2px var(--yte-text-primary);
+}
+
+/* 隱藏的工具：半透明，角落有「隱藏」標記（006 FR-10）。 */
+.yte-edit-item[data-hidden] .yte-edit-tool > .yte-icon {
+  opacity: 0.35;
+}
+
+.yte-edit-hidden-mark {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--yte-badge-background);
+  color: var(--yte-badge-text);
+}
+
+/* 「眼睛」切換按鈕：16px 圓形，在工具上方（006 FR-11）。 */
+.yte-edit-eye {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0 0 0 -8px;
+  border: 1px solid var(--yte-outline);
+  border-radius: 50%;
+  background: var(--yte-menu-background);
+  color: var(--yte-text-primary);
+  cursor: pointer;
+}
+
+.yte-edit-eye:hover {
+  background: var(--yte-active-background);
+}
+
+.yte-edit-item[data-hidden] .yte-edit-eye {
+  color: var(--yte-text-secondary);
+}
+
+/* 分隔點：2px 寬、與工具同高的直線（006 外觀）。 */
+.yte-edit-sep {
+  width: 16px;
+  border-radius: 4px;
+  cursor: ew-resize;
+}
+
+.yte-edit-sep-line {
+  width: 2px;
+  height: 40px;
+  border-radius: 1px;
+  background: var(--yte-text-secondary);
+}
+
+/* 拖曳時插入位置的指示線。 */
+.yte-edit-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--yte-call-to-action);
+  pointer-events: none;
+}
+
+.yte-edit-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 2px 0;
+}
+
+.yte-edit-help {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}

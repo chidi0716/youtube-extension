@@ -1,9 +1,10 @@
 // 工具列外框（001）：依使用者的設定（006）排出左右兩組工具，最右邊是固定的「更多」「關閉」；
-// 目前展開的面板。
+// 目前展開的面板；以及編輯模式（006 FR-1、FR-3 至 FR-5）。
 import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'preact/hooks';
 import { t } from '@/utils/i18n';
 import { defaultLayout, splitLayout, type ToolbarLayout, type ToolId } from '@/utils/toolbar-layout';
+import { Icon } from '../icons';
 import { ComingSoon } from '../panels/PanelStatus';
 import { FIXED, TOOLS, getButton, isToolOngoing, type ButtonDef, type ButtonId } from './buttons';
 import { OtherTools } from './OtherTools';
@@ -11,6 +12,7 @@ import { initialPanelState, panelReducer } from './panel-state';
 import { PanelHost } from './PanelHost';
 import type { HorizontalRange } from './position';
 import { ToolbarButton } from './ToolbarButton';
+import { ToolbarEditor } from './ToolbarEditor';
 
 /** 切換按鈕背後的功能（003 由各功能模組提供）。 */
 export interface ToggleFeature {
@@ -41,7 +43,7 @@ export interface ToolbarProps {
   progress?: Partial<Record<ButtonId, number | 'indeterminate' | null>>;
   /** 使用者的工具列設定（006）；未提供時為預設值。 */
   layout?: ToolbarLayout;
-  /** 儲存設定（編輯模式按「完成」時，T33）。 */
+  /** 編輯模式按「完成」時儲存設定（006 FR-4）。 */
   onSaveLayout?: (layout: ToolbarLayout) => void;
 }
 
@@ -57,18 +59,23 @@ export function Toolbar({
   activePanels,
   progress,
   layout = defaultLayout(),
+  onSaveLayout,
 }: ToolbarProps) {
   const [state, dispatch] = useReducer(panelReducer<ButtonId>, initialPanelState<ButtonId>());
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef(new Map<ButtonId, HTMLButtonElement>());
   const [notice, setNotice] = useState<ButtonId | null>(null);
+  /** 編輯中的暫存設定；null 表示不在編輯模式（006 FR-4：按「完成」才儲存）。 */
+  const [draft, setDraft] = useState<ToolbarLayout | null>(null);
+  const editing = draft !== null;
 
-  // YouTube 換頁：未釘選的面板收起，釘選的面板維持並更新內容（FR-4、FR-13）。
+  // YouTube 換頁：未釘選的面板收起，釘選的面板維持並更新內容（FR-4、FR-13）；編輯模式自動取消（006 FR-5）。
   const lastVideoId = useRef(videoId);
   useEffect(() => {
     if (lastVideoId.current === videoId) return;
     lastVideoId.current = videoId;
     dispatch({ type: 'navigate' });
+    setDraft(null);
   }, [videoId]);
 
   // 面板收起後焦點回到按鈕（FR-19）；隱藏的工具從「更多」開啟時回到「更多」。焦點已在頁面其他地方時不搶。
@@ -93,6 +100,37 @@ export function Toolbar({
   const onOutside = useCallback(() => dispatch({ type: 'outside' }), []);
   const onPin = useCallback(() => dispatch({ type: 'pin' }), []);
   const onUnpin = useCallback(() => dispatch({ type: 'unpin' }), []);
+
+  // ---- 編輯模式 ----
+  const focusMoreLater = useRef(false);
+  const startEditing = useCallback(() => {
+    dispatch({ type: 'close' });
+    setDraft(layout);
+  }, [layout]);
+  const finishEditing = (save: boolean) => {
+    if (save && draft) onSaveLayout?.(draft);
+    setDraft(null);
+    focusMoreLater.current = true;
+  };
+  useEffect(() => {
+    if (editing || !focusMoreLater.current) return;
+    focusMoreLater.current = false;
+    if (host.shadowRoot?.activeElement || document.activeElement === document.body) buttonRefs.current.get('more')?.focus();
+  }, [editing, host]);
+  // Esc 取消編輯（006 FR-4）。工具列內的按鍵在 Shadow DOM 邊界被停止冒泡，所以在 document 的 capture 階段監聽；
+  // 只在編輯模式中監聽（006 NFR-1）。
+  useEffect(() => {
+    if (!editing) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setDraft(null);
+      focusMoreLater.current = true;
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [editing]);
 
   const handleClick = (def: ButtonDef) => {
     if (def.kind === 'panel') {
@@ -145,10 +183,24 @@ export function Toolbar({
   const openButton = state.openId ? (buttonRefs.current.get(state.openId) ?? buttonRefs.current.get('more')) : undefined;
   const rightDefs = [...right.map((id) => TOOLS[id]), FIXED.more, FIXED.close];
 
+  if (draft) {
+    return (
+      <div ref={containerRef} class="yte-toolbar" data-editing="" role="group" aria-label={t('editToolbarLabel')}>
+        <ToolbarEditor
+          draft={draft}
+          onChange={setDraft}
+          onDone={() => finishEditing(true)}
+          onCancel={() => finishEditing(false)}
+          onReset={() => setDraft(defaultLayout())}
+        />
+      </div>
+    );
+  }
+
   const panelContent = (id: ButtonId) => {
     const content = renderPanel?.(id) ?? <ComingSoon />;
     if (id !== 'more') return content;
-    // 「更多」面板：上方為隱藏的工具（006 FR-15、FR-16）。
+    // 「更多」面板：上方為隱藏的工具（006 FR-15、FR-16），最下方為「編輯工具列」（006 FR-1）。
     return (
       <>
         <OtherTools
@@ -159,6 +211,10 @@ export function Toolbar({
           onOpen={(tool: ToolId) => handleClick(TOOLS[tool])}
         />
         {content}
+        <button type="button" class="yte-more-edit" onClick={startEditing}>
+          <Icon name="edit" size={20} />
+          <span>{t('moreEditToolbar')}</span>
+        </button>
       </>
     );
   };

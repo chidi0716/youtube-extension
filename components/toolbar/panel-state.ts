@@ -25,6 +25,8 @@ export type PanelAction<Id extends string = string> =
   | { type: 'unpin' }
   /** YouTube 換頁：釘選的面板維持展開，未釘選的收起（FR-13）。 */
   | { type: 'navigate' }
+  /** 不論是否釘選都收起，焦點不移動（例如進入編輯模式，006 FR-1）。 */
+  | { type: 'close' }
   /** 焦點已經還給按鈕。 */
   | { type: 'focusRestored' };
 
@@ -49,6 +51,8 @@ export function panelReducer<Id extends string>(state: PanelState<Id>, action: P
       return state.openId !== null ? closed(state.openId) : state;
     case 'navigate':
       return state.openId !== null && !state.pinned ? closed(null) : state;
+    case 'close':
+      return state.openId !== null ? closed(null) : state;
     case 'focusRestored':
       return state.restoreFocusTo === null ? state : { ...state, restoreFocusTo: null };
   }
