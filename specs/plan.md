@@ -180,6 +180,7 @@ host/                           橋接程式（Go），見第 4 節
   - 標籤規則依 002 FR-11。
 - **縮圖**：背景腳本依序檢查 `maxresdefault`、`sddefault`、`hqdefault`、`mqdefault`。YouTube 對不存在的尺寸會回傳 404 或 120×90 的預設圖，兩者都排除。以 `downloads.download` 存檔。
 - **截圖**：在內容腳本把 `<video>` 畫到 canvas，轉成 PNG Blob，交給背景腳本以 `downloads.download` 存檔。若 canvas 被汙染而失敗，顯示錯誤（FR-52）。
+- **字幕（直接下載，002 FR-44）**：頁面橋接腳本新增 `getCaptionTracks` 請求（不帶參數），從播放器的影片資料取得字幕清單（語言代碼、名稱、是否自動產生、字幕網址）。字幕網址必須是 `youtube.com` 網域，背景腳本以 `fetch` 取得 VTT 格式（或 YouTube 的 XML 格式再轉換），在擴充功能內轉成 SRT、TXT（轉換函式有單元測試），以 `downloads.download` 存檔。失敗且橋接程式可用時，改用 yt-dlp（4.5 節）。
 - 縮圖與截圖存到瀏覽器的預設下載位置；設定頁的「下載資料夾」只影響經由橋接程式的下載。設定頁要寫明這點。
 - **下載工作狀態**：背景腳本維護工作清單（ID、影片 ID、類型、進度、狀態），以 `storage.session` 保存，並推播給開著的 YouTube 分頁。
 - **通知**：完成時建立通知；點擊通知送出「在檔案總管中顯示」指令。
