@@ -1,0 +1,15 @@
+# 2026-10-22 以 curl（經由環境的 proxy）直接取得 i.ytimg.com 的縮圖各尺寸（T17）
+# 指令：curl -sS -o <檔案> -w "%{http_code} %{content_type} %{size_download}" https://i.ytimg.com/vi/<ID>/<尺寸>.jpg
+# 尺寸以 Pillow 讀取圖片得到。jNQXAC9IVRw 是 2005 年的影片（沒有高解析度縮圖），dQw4w9WgXcQ 有全部尺寸。
+video        size           http  type        bytes  pixels
+jNQXAC9IVRw  maxresdefault  404   image/jpeg  1097   120x90
+jNQXAC9IVRw  sddefault      404   image/jpeg  1097   120x90
+jNQXAC9IVRw  hqdefault      200   image/jpeg  15921  480x360
+jNQXAC9IVRw  mqdefault      200   image/jpeg  8710   320x180
+jNQXAC9IVRw  default        200   image/jpeg  4523   120x90
+dQw4w9WgXcQ  maxresdefault  200   image/jpeg  65324  1280x720
+dQw4w9WgXcQ  sddefault      200   image/jpeg  31029  640x480
+dQw4w9WgXcQ  hqdefault      200   image/jpeg  21011  480x360
+dQw4w9WgXcQ  mqdefault      200   image/jpeg  10303  320x180
+dQw4w9WgXcQ  default        200   image/jpeg  2888   120x90
+# 結論：不存在的尺寸回傳 404，內容是 120x90 的預設圖（plan 3.8 的兩種情況都要排除）。

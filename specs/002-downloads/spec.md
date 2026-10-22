@@ -30,6 +30,7 @@
 
 - **FR-1**：直播中與尚未開始的影片，影片、MP3、字幕面板顯示「直播與尚未開始的影片無法下載」，不顯示選項。
 - **FR-2**：影片、MP3 面板開啟時（字幕面板見 FR-44），若處於未連線狀態，顯示：
+  - 必要元件為橋接程式、yt-dlp、ffmpeg、deno（yt-dlp 取得 YouTube 完整格式所需的 JavaScript 執行環境）；安裝提示一次列出全部缺少的元件（macOS：`brew install yt-dlp ffmpeg deno`；Windows：`winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno`）。
   - 缺少的元件（橋接程式、yt-dlp 或 ffmpeg）；
   - 依目前作業系統（macOS／Windows）顯示對應的安裝步驟，連到本 repo README 的安裝章節；
   - 「重新檢查」按鈕。
@@ -37,6 +38,16 @@
 - **FR-4**：同一時間可以有多個下載；面板內列出目前這部影片正在進行的下載。
 - **FR-5**：下載完成時顯示瀏覽器通知，內容包含檔名，點通知會在檔案總管／Finder 中顯示該檔案。
 - **FR-6**：下載失敗時，面板與通知顯示易懂的錯誤原因（例如「網路中斷」「影片需要登入」「磁碟空間不足」「yt-dlp 版本過舊，請更新」），並提供「重試」。
+- **FR-6a**：橋接程式的錯誤代碼對應的使用者訊息（中英文），至少包含：
+  - `YTDLP_NOT_FOUND`／`FFMPEG_NOT_FOUND`：缺少元件，顯示 FR-2 的安裝說明
+  - `YTDLP_OUTDATED`、`VERIFICATION_REQUIRED`：「YouTube 有變動，請更新 yt-dlp」，附更新按鈕
+  - `LOGIN_REQUIRED`：「這部影片需要登入才能觀看，目前不支援」
+  - `VIDEO_UNAVAILABLE`、`LIVE_NOT_SUPPORTED`、`FORMAT_UNAVAILABLE`、`NO_SUBTITLES`：對應的簡短說明
+  - `NETWORK`、`TIMEOUT`：「網路連線問題，請重試」
+  - `DISK_FULL`、`PERMISSION_DENIED`：「無法寫入下載資料夾」，附開啟設定頁
+  - `TOO_MANY_JOBS`：「同時下載數已達上限（8 個）」
+  - `INTERRUPTED`、`UNKNOWN` 與其他：「下載失敗」，附重試；詳細代碼只寫進 console
+- **FR-6b**：沒有百分比的進度（例如裁切下載由 ffmpeg 處理時）顯示為不確定進度。
 - **FR-7**：使用者關閉 YouTube 分頁不會中斷已開始的下載。
 - **FR-8**：檔名預設為「影片標題 [影片ID].副檔名」，移除作業系統不允許的字元。MP3 有裁切時，檔名加上時間範圍，例如「標題 [ID] 01m30s-03m45s.mp3」。
 

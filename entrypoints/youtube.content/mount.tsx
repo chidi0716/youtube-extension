@@ -7,15 +7,19 @@
 import { render } from 'preact';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
+import { DownloadSetupPanel } from '@/components/panels/DownloadSetupPanel';
 import { HelpPanel } from '@/components/panels/HelpPanel';
 import { LinkPanel } from '@/components/panels/LinkPanel';
 import { LoopPanel } from '@/components/panels/LoopPanel';
 import { MorePanel, type MoreItem, type MoreSwitchItem } from '@/components/panels/MorePanel';
+import { SubtitlePanel } from '@/components/panels/SubtitlePanel';
+import { ThumbnailPanel } from '@/components/panels/ThumbnailPanel';
 import panelsCss from '@/components/panels/panels.css?inline';
 import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
 import controlsCss from '@/components/controls/controls.css?inline';
 import toolbarCss from '@/components/toolbar/toolbar.css?inline';
+import { createScreenshot } from '@/features/downloads/content';
 import { createViewingController } from '@/features/viewing';
 import { t } from '@/utils/i18n';
 import { enabled, QUALITY_LOCK_VALUES, type QualityLock } from '@/utils/settings';
@@ -75,10 +79,13 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
 
   // ✕：隱藏工具列並記住，等同把彈出視窗的「啟用」關掉（001 FR-15、FR-16）。
   // enabled.watch 收到變更後會呼叫 sync() 移除工具列。
+  // 截圖（002 FR-50 至 FR-53）：點了直接擷取；完成或錯誤時按鈕短暫顯示提示。
+  const screenshot = createScreenshot();
   const actions = {
     close: () => {
       void enabled.setValue(false);
     },
+    screenshot: () => screenshot.capture(),
   };
 
   const { more } = viewing;
@@ -111,6 +118,14 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         return <LoopPanel loop={viewing.loop} />;
       case 'more':
         return <MorePanel items={moreItems} onOpen={refreshMore} />;
+      // 下載（階段 4a）：縮圖、字幕不需要橋接程式；影片、MP3 在橋接程式完成前顯示未連線狀態（T22a）。
+      case 'thumbnail':
+        return videoId ? <ThumbnailPanel videoId={videoId} /> : undefined;
+      case 'subtitles':
+        return videoId ? <SubtitlePanel videoId={videoId} /> : undefined;
+      case 'video':
+      case 'mp3':
+        return videoId ? <DownloadSetupPanel videoId={videoId} /> : undefined;
       default:
         return undefined;
     }
@@ -124,7 +139,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         host={host}
         videoId={videoId}
         getBounds={getBounds}
-        toggles={viewing.toggles()}
+        toggles={{ ...viewing.toggles(), screenshot: { ...screenshot.state.get(), toggle: actions.screenshot } }}
         actions={actions}
         renderPanel={renderPanel}
         activePanels={viewing.activePanels()}
@@ -237,6 +252,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     }),
   );
   ctx.onInvalidated(viewing.subscribe(rerender));
+  ctx.onInvalidated(screenshot.state.subscribe(rerender));
   ctx.onInvalidated(() => viewing.setActive(false));
   ctx.addEventListener(document, 'fullscreenchange', applyFullscreen);
   ctx.onInvalidated(() => {

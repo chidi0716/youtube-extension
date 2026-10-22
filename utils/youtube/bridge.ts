@@ -3,7 +3,7 @@
 // - 兩邊以 document 上的 CustomEvent 溝通，detail 一律是 JSON 字串
 //   （字串可以安全跨越 Firefox 的 Xray 邊界）。
 // - 只接受固定的幾種請求，其他一律忽略。頁面上的其他程式也能發出同名事件，
-//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉、讀取/設定畫質與語音軌，
+//   所以每種操作都必須是無害的：讀取影片資料與字幕清單、讀取/設定音量、跳轉、讀取/設定畫質與語音軌，
 //   以及在 YouTube 外觀子選單的選項上加上標記屬性（markThemeOptions，不點擊、不帶參數）。
 import {
   AUDIO_TRACK_ID_PATTERN,
@@ -11,6 +11,7 @@ import {
   isQualityCode,
   markThemeOptions,
   readAudioTracks,
+  readCaptionTracks,
   readAvailableQualities,
   readCurrentTime,
   readQuality,
@@ -21,6 +22,7 @@ import {
   writeSeek,
   writeVolume,
   type AudioTrackInfo,
+  type CaptionTrack,
   type QualityCode,
   type VideoData,
   type YtAudioApi,
@@ -44,7 +46,9 @@ export type BridgeRequest =
   | { id: string; type: 'setQuality'; quality: QualityCode | typeof AUTO_QUALITY }
   // 永遠使用原始語音（005 FR-10、plan 3.7.2）：setAudioTrack 只接受目前清單中存在的語音軌 ID。
   | { id: string; type: 'getAudioTracks' }
-  | { id: string; type: 'setAudioTrack'; trackId: string };
+  | { id: string; type: 'setAudioTrack'; trackId: string }
+  // 字幕直接下載（002 FR-44、plan 3.8）：只讀取，不帶參數；回傳的字幕網址只有 youtube.com 網域。
+  | { id: string; type: 'getCaptionTracks' };
 
 export type BridgeRequestType = BridgeRequest['type'];
 
@@ -61,6 +65,7 @@ export interface BridgeResults {
   /** 是否已切換（清單中沒有這個 ID 時為 false）。 */
   setAudioTrack: boolean;
   markThemeOptions: { dark: boolean; light: boolean };
+  getCaptionTracks: CaptionTrack[];
 }
 
 /** 頁面橋接腳本會用到的播放器方法。 */
@@ -103,6 +108,7 @@ export function parseBridgeRequest(raw: unknown): BridgeRequest | null {
     case 'getAvailableQualities':
     case 'getQuality':
     case 'getAudioTracks':
+    case 'getCaptionTracks':
     case 'markThemeOptions':
       return { id, type: obj.type };
     case 'setAudioTrack':
@@ -169,6 +175,8 @@ export function handleBridgeRequest(req: BridgeRequest, player: BridgePlayer | n
         return { id: req.id, ok: true, result: null };
       case 'getAudioTracks':
         return { id: req.id, ok: true, result: readAudioTracks(player) };
+      case 'getCaptionTracks':
+        return { id: req.id, ok: true, result: readCaptionTracks(player as { getPlayerResponse?: () => unknown }) };
       case 'setAudioTrack': {
         // 切換時影片繼續播放，不得跳回開頭（005 FR-13）。
         const before = readCurrentTime(player);

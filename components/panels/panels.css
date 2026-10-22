@@ -238,3 +238,232 @@
   resize: none;
   font-family: inherit;
 }
+
+/* ---------- 下載面板共通：清單列（001 外觀規格：每列約 56px、懸停時整列變亮並帶圓角） ---------- */
+
+.yte-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yte-list-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 56px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.yte-list-row:hover:not(:disabled) {
+  background: var(--yte-hover-background);
+}
+
+.yte-list-row:focus-visible {
+  outline: 2px solid var(--yte-call-to-action);
+  outline-offset: -2px;
+}
+
+.yte-list-row:disabled {
+  cursor: progress;
+}
+
+.yte-row-status {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+}
+
+.yte-row-status[data-state='saved'] {
+  color: var(--yte-call-to-action);
+  font-weight: 500;
+}
+
+.yte-row-status[data-state='error'] {
+  color: var(--yte-error);
+}
+
+/* ---------- 縮圖面板（002 FR-30） ---------- */
+
+.yte-thumbs {
+  width: 360px;
+  max-width: 100%;
+}
+
+.yte-thumb-preview {
+  display: block;
+  flex: none;
+  width: 96px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--yte-hover-background);
+}
+
+.yte-thumb-size {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 字幕面板（002 FR-40 至 FR-44） ---------- */
+
+.yte-subs {
+  width: 380px;
+  max-width: 100%;
+}
+
+.yte-subs-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.yte-subs-group + .yte-subs-group {
+  margin-top: 12px;
+}
+
+.yte-subs-legend {
+  padding: 0;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.yte-subs-track {
+  font-weight: 400;
+}
+
+.yte-subs-auto {
+  display: inline-flex;
+  color: var(--yte-text-secondary);
+}
+
+.yte-subs-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.yte-subs-status {
+  min-height: 20px;
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+.yte-subs-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--yte-call-to-action);
+  font-weight: 500;
+}
+
+.yte-subs-error {
+  flex-wrap: wrap;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.yte-subs-error > span {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* ---------- 影片、MP3 面板的未連線狀態（002 FR-1、FR-2） ---------- */
+
+.yte-setup {
+  width: 420px;
+  max-width: 100%;
+  line-height: 20px;
+}
+
+.yte-setup-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.yte-setup-intro,
+.yte-setup-os-title {
+  margin: 0 0 8px;
+  color: var(--yte-text-secondary);
+}
+
+.yte-setup-os-title {
+  margin-top: 16px;
+  color: var(--yte-text-primary);
+  font-weight: 500;
+}
+
+.yte-setup-components {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yte-setup-components li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--yte-outline);
+}
+
+.yte-setup-state {
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+}
+
+.yte-setup-components li[data-component='host'][data-missing] .yte-setup-state {
+  color: var(--yte-error);
+}
+
+.yte-setup-steps {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.yte-setup-steps li + li {
+  margin-top: 8px;
+}
+
+.yte-code {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--yte-hover-background);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+
+.yte-setup-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+a.yte-link {
+  margin: 0;
+  text-decoration: none;
+}

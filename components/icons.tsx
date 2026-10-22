@@ -32,6 +32,9 @@ import hd from '@material-symbols/svg-400/outlined/hd.svg?raw';
 import check from '@material-symbols/svg-400/outlined/check.svg?raw';
 import contentCopy from '@material-symbols/svg-400/outlined/content_copy.svg?raw';
 import link from '@material-symbols/svg-400/outlined/link.svg?raw';
+import download from '@material-symbols/svg-400/outlined/download.svg?raw';
+import graphicEq from '@material-symbols/svg-400/outlined/graphic_eq.svg?raw';
+import openInNew from '@material-symbols/svg-400/outlined/open_in_new.svg?raw';
 
 const SOURCES = {
   autoplay: autoplay,
@@ -47,8 +50,10 @@ const SOURCES = {
   close,
   content_copy: contentCopy,
   dark_mode: darkMode,
+  download,
   drag_indicator: dragIndicator,
   error,
+  graphic_eq: graphicEq,
   hd,
   help,
   image,
@@ -59,6 +64,7 @@ const SOURCES = {
   more_vert: moreVert,
   movie,
   music_note: musicNote,
+  open_in_new: openInNew,
   photo_camera: photoCamera,
   picture_in_picture_alt: pictureInPictureAlt,
   progress_activity: progressActivity,

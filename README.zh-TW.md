@@ -45,7 +45,7 @@
 YouTube 上的工具列  →  擴充功能背景腳本  →  本機橋接程式  →  yt-dlp  →  ffmpeg
 ```
 
-之後會提供 macOS 與 Windows 的安裝腳本。縮圖、截圖與所有觀看輔助功能不需要橋接程式。
+安裝方式見[安裝下載功能（橋接程式）](#install-the-helper)，只需安裝一次。縮圖、截圖、字幕與所有觀看輔助功能不需要橋接程式。
 
 <a id="install-the-helper"></a>
 

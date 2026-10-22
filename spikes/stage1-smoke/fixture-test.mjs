@@ -99,12 +99,14 @@ const toolbarState = (page) =>
     check('滑鼠停留時顯示提示文字（FR-7）', tip.text === 'MP3' && tip.opacity === '1', JSON.stringify(tip));
     await shotToolbar(page, 'T03-tooltip.png');
 
-    // 尚未實作的按鈕（截圖）：點了顯示「即將推出」
+    // 直接執行的按鈕（截圖，T17）：點了在提示文字中顯示結果（002 FR-52）
     await page.locator('yte-toolbar .yte-btn[data-button="screenshot"]').click();
-    const soon = await page.evaluate(
-      () => document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="screenshot"] + .yte-tooltip').textContent,
-    );
-    check('尚未實作的按鈕顯示「即將推出」', soon === 'Coming soon.', soon);
+    await page.waitForTimeout(300);
+    const soon = await page.evaluate(() => {
+      const tip = document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="screenshot"] + .yte-tooltip');
+      return { text: tip.textContent, notice: tip.hasAttribute('data-notice') };
+    });
+    check('直接執行的按鈕（截圖）在提示文字中顯示結果', soon.notice && soon.text !== 'Screenshot', JSON.stringify(soon));
     await page.mouse.move(5, 5);
 
     await page.locator('yte-toolbar .yte-btn[data-button="help"]').click();

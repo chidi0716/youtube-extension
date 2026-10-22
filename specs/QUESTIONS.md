@@ -225,30 +225,56 @@
 - **目前做法**：搜尋頁、左側導覽、觀看頁推薦清單的 Shorts，以及縮圖預覽的元素已在真實頁面確認；首頁 Shorts 區塊、片尾卡片、播完後的推薦格子依公開的元素名稱加入，並在假頁面驗證（`specs/notes/T29-T30-page-tidy-css.md`）。新版播放器的推薦格子（`.ytp-fullscreen-grid`）只在播完時隱藏，避免影響全螢幕時使用者自己捲出的推薦清單。
 - **請專案擁有者**依筆記中的手動驗證步驟確認；不符時回報元素資訊。
 
+## 階段 4a（T17、T21a、T22a）
+
+### Q31 縮圖與字幕的檔名（T17、T21a） — 已回答：接受（縮圖不加尺寸、字幕加語言代碼、截圖一小時以上用 01h02m03s）
+
+- **狀況**：002 FR-8 的預設檔名為「影片標題 [影片ID].副檔名」，FR-51 規定了截圖的時間點格式，但沒有規定縮圖（不同尺寸）與字幕（不同語言）是否要在檔名中區分。
+- **目前做法**：縮圖依 FR-8 為「標題 [ID].jpg」（不加尺寸；同名時瀏覽器自動加上編號）；字幕加上語言代碼「標題 [ID].zh-TW.srt」（與 yt-dlp 的慣例相同，避免不同語言互相覆蓋）。截圖一小時以上時為「01h02m03s」。
+- **請規格方確認**，或在 FR-8 補充。
+
+### Q32 字幕直接下載可能被 YouTube 擋下（T21a） — 已回答：先維持背景腳本取得；若專案擁有者實測常失敗，再改由內容腳本以同源請求取得，最後才改用橋接程式
+
+- **狀況**：plan 3.8 規定由背景腳本以 `fetch` 取得字幕網址。本環境的觀看頁影片無法播放、沒有字幕清單，無法確認 YouTube 是否允許擴充功能的背景腳本直接取得字幕（例如是否需要頁面才有的額外驗證參數）。
+- **目前做法**：依 plan 由背景腳本取得（帶 cookie）；取得失敗、回應空白或不是字幕時，依 FR-44 顯示「安裝橋接程式可改善」的錯誤。沒有改由內容腳本（頁面的網域）取得。
+- **請專案擁有者**依 `specs/notes/T17-T21a-T22a-downloads.md` 的步驟測試；若常常失敗，請規格方決定是否改由內容腳本取得字幕。
+
+### Q33 未連線狀態的「安裝說明」連結（T22a） — 已回答：錨點 install-the-helper；已通知橋接程式實作方（T15）在 README 中使用此錨點
+
+- **狀況**：002 FR-2 要求連到本 repo README 的安裝章節，章節尚未撰寫。說明面板（001 FR-18）不得開啟外部網站，但未連線狀態沒有同樣的限制。
+- **目前做法**：以新分頁開啟 `https://github.com/chidi0716/youtube-extension#install-the-helper`（使用者點擊才開啟，擴充功能本身不連線）。T15 撰寫 README 時，安裝章節的標題需要產生 `install-the-helper` 這個錨點（例如 `## Install the helper`），或修改 `features/downloads/host-status.ts` 的 `INSTALL_GUIDE_URL`。
+- **請規格方確認**錨點名稱與開啟 GitHub 頁面的做法。
+
+### Q34 未連線時 yt-dlp、ffmpeg 的狀態（T22a） — 已回答：接受
+
+- **狀況**：FR-2 要求顯示「缺少的元件」。找不到橋接程式時，擴充功能無法知道 yt-dlp、ffmpeg 是否已安裝。
+- **目前做法**：橋接程式顯示「無法連線」，yt-dlp 與 ffmpeg 顯示「需要橋接程式才能確認」，並列出三者的安裝步驟。T16 接上連線檢查後，改為顯示實際缺少的元件。
+- **請規格方確認**。
+
 ## 階段 3（T11–T15，橋接程式）
 
 題號注意：規格方告知 `main` 已用到 Q34，本段從 Q35 開始。實作細節見 `specs/notes/T11-T15-host.md`。
 
-### Q35 下載改由脫離瀏覽器的執行程序負責（T13）
+### Q35 下載改由脫離瀏覽器的執行程序負責（T13） — 已回答：接受（比 plan 4.6 更能滿足 002 FR-7），plan 4.6 以筆記 T11-T15-host.md 為準
 
 - **狀況**：plan 4.6 寫「瀏覽器關閉連線時，橋接程式等進行中的下載完成才結束，最長 6 小時」。但瀏覽器在連線關閉後可能直接結束原生程式（例如瀏覽器結束時），下載若在橋接程式內執行就會中斷。
 - **目前做法**：每個下載由橋接程式以 `--run-job <工作 ID>` 啟動自己，作為脫離瀏覽器的執行程序（macOS 新工作階段；Windows 無主控台並嘗試脫離瀏覽器的 Job）。參數存在使用者資料夾的狀態檔中，執行程序只接受合法的工作 ID 並再驗證一次參數；這不是可以從擴充功能使用的入口。stdin 結束後，橋接程式仍依 plan 等這次連線開始的下載結束才離開（最長 6 小時），但下載本身不受此時限影響；單一下載另有 24 小時上限。
 - **風險**：Windows 上若瀏覽器的 Job 不允許脫離，瀏覽器結束時下載仍會中斷（無法在本環境驗證）。
 - **請規格方確認**這個做法與兩個時限，並視需要更新 plan 4.6。
 
-### Q36 download 指令新增 subAuto 參數、檔名格式的 ID（T11）
+### Q36 download 指令新增 subAuto 參數、檔名格式的 ID（T11） — 已回答：接受
 
 - **狀況**：plan 4.5 依字幕是否為自動產生而使用 `--write-subs` 或 `--write-auto-subs`，但 plan 4.3 的 `download` 參數沒有對應欄位；`namePreset` 的白名單也未定義。
 - **目前做法**：新增布林參數 `subAuto`（只用於 `kind: subtitle`，預設 false）。`namePreset` 定義四個：`title-id`（預設，「標題 [ID]」，FR-8）、`title`、`channel-title`（「頻道 - 標題 [ID]」）、`date-title`（「上傳日期 標題 [ID]」）；`status` 回傳清單與範例供設定頁顯示。`embed` 省略時視為 true（004 FR-11 預設開啟）；字幕不接受 `embed` 與 `section`。
 - **請規格方確認**，並把 `subAuto` 與檔名格式清單寫進 plan 4.3／002 FR-60。
 
-### Q37 一小時以上的時間範圍在檔名中的格式（T12）
+### Q37 一小時以上的時間範圍在檔名中的格式（T12） — 已回答：統一為小時補零的 `01h02m03s`，與截圖檔名（Q31）一致；tasks T15a 修改
 
 - **狀況**：FR-8 與 004 FR-22 的例子只有分秒（`01m30s-03m45s`）。
 - **目前做法**：未滿一小時為 `MMmSSs`，一小時以上為 `1h02m03s`（小時不補零）。
 - **請規格方確認**；擴充功能的截圖檔名（FR-51）若有相同情況，建議使用同一格式。
 
-### Q38 yt-dlp 參數與 plan 4.4、4.5 的差異（T11、T12）
+### Q38 yt-dlp 參數與 plan 4.4、4.5 的差異（T11、T12） — 已回答：六點全部接受，plan 4.4、4.5 以筆記 T11-T15-host.md 為準
 
 - **狀況與目前做法**：
   1. 加上 `--ignore-config`：不讀使用者自己的 yt-dlp 設定檔，避免其中的 `-o`、`--exec`、cookie 等選項改變行為或帶入帳號資訊。代價是使用者無法用設定檔讓 yt-dlp 使用 cookie（需要登入的影片本來就不在範圍內）。
@@ -259,13 +285,13 @@
   6. `formatId` 與 `subLang` 比 plan 4.4 更嚴格：每段開頭必須是英數字（避免以「-」開頭被當成選項或排除條件），`subLang` 不接受 `all`。
 - **請規格方確認**，並視需要更新 plan 4.4、4.5。
 
-### Q39 yt-dlp 建議安裝 JavaScript 執行環境（deno）（T15）
+### Q39 yt-dlp 建議安裝 JavaScript 執行環境（deno）（T15） — 已回答：deno 列為必要元件：status 回報、002 FR-2 的缺少元件清單列出、安裝提示改為一次安裝三者；tasks T15a、T22
 
 - **狀況**：冒煙測試中 yt-dlp（2026.10.21）對 YouTube 警告「沒有 JavaScript 執行環境，部分格式可能缺少」；官方 README 建議安裝 deno。plan 4.8 的安裝提示只有 `brew install yt-dlp ffmpeg` 與 `winget install yt-dlp.yt-dlp Gyan.FFmpeg`。
 - **目前做法**：安裝提示維持 plan 的指令，另外在找不到 deno 時建議 `brew install deno`／`winget install DenoLand.Deno`（README 也寫明）。橋接程式給 yt-dlp 的 PATH 會補上 Homebrew 與 WinGet 的資料夾，讓 yt-dlp 找得到 deno。`status` 不檢查 deno。
 - **請規格方決定**是否把 deno 列為必要元件（例如 FR-2 的缺少元件清單、`status` 回報）。
 
-### Q40 錯誤代碼、事件與補報的細節（T11、T13）
+### Q40 錯誤代碼、事件與補報的細節（T11、T13） — 已回答：接受；使用者訊息對應寫入 002 FR-6a；裁切時顯示不確定進度
 
 - **目前做法**：
   1. 錯誤代碼除 plan 4.2 的例子外，另有 `INVALID_REQUEST`、`UNKNOWN_COMMAND`、`RESPONSE_TOO_LARGE`、`UNSUPPORTED_PLATFORM`、`VERIFICATION_REQUIRED`（YouTube 要求確認不是機器人）、`VIDEO_UNAVAILABLE`、`LIVE_NOT_SUPPORTED`、`FORMAT_UNAVAILABLE`、`NO_SUBTITLES`、`PERMISSION_DENIED`、`TIMEOUT`、`UPDATE_FAILED`、`JOB_NOT_FOUND`、`JOB_NOT_FINISHED`、`FILE_NOT_FOUND`、`TOO_MANY_JOBS`（同時 8 個）、`BUSY`、`INTERRUPTED`。全表見筆記。
@@ -274,13 +300,13 @@
   4. 裁切下載由 ffmpeg 執行時，yt-dlp 只回報完成時的一行進度，下載途中 `percent` 可能一直沒有值（擴充功能需顯示不確定的進度）。
 - **請規格方確認**，並把錯誤代碼對應的使用者訊息寫進 002 FR-6。
 
-### Q41 Zen 的原生訊息設定檔位置（T15）
+### Q41 Zen 的原生訊息設定檔位置（T15） — 已回答：維持 Mozilla 位置（公開回報顯示 Zen 會讀取 Mozilla 位置）；待專案擁有者實測
 
 - **狀況**：安裝腳本依 plan 4.8 只寫入 Chrome 與 Firefox 的位置。constitution 第 5 點要求 Zen 比照 Firefox，但 Zen 是否讀取 `~/Library/Application Support/Mozilla/NativeMessagingHosts/`（macOS）與 `HKCU\Software\Mozilla\NativeMessagingHosts`（Windows）無法在本環境確認。
 - **目前做法**：不另外處理 Zen；Edge、Brave 等其他 Chromium 瀏覽器不在支援範圍，也不寫入。
 - **請專案擁有者**在 Zen 上依筆記的手動驗證步驟 3 確認；若 Zen 找不到橋接程式，請回報，再由規格方決定是否加入 Zen 的位置。
 
-### Q42 README 中既有的「之後會提供安裝腳本」一句（T15）
+### Q42 README 中既有的「之後會提供安裝腳本」一句（T15） — 已回答：已改為連到安裝章節
 
 - **狀況**：README 的「How downloads work」／「下載功能的運作方式」仍寫「Installation scripts for macOS and Windows will be provided.」。本次指示只允許新增安裝章節，所以沒有修改這一句。
 - **請規格方**決定是否改為連到 `#install-the-helper`。

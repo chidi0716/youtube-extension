@@ -10,5 +10,5 @@
 
 ## 最近一次檢查
 
-- 日期：2026-10-22（合併階段 2a 與階段 2b、2c 後）
-- 結果：0 個錯誤、2 個警告（即上表兩項：`manifest.json`、`content-scripts/youtube.js`）、0 個 notice。`content-scripts/tidy.js` 沒有警告。
+- 日期：2026-10-22（階段 4a：T17、T21a、T22a）
+- 結果：0 個錯誤、2 個警告（即上表兩項：`manifest.json`、`content-scripts/youtube.js`）、0 個 notice。`background.js`、`content-scripts/tidy.js` 沒有警告。

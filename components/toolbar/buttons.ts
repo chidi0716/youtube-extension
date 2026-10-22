@@ -40,9 +40,9 @@ export interface ButtonDef {
 /** 左組（下載類），由左至右。 */
 export const LEFT_BUTTONS: readonly ButtonDef[] = [
   { id: 'video', kind: 'panel', icon: 'movie', label: 'btnVideo', description: 'helpVideo', panelTitle: 'panelTitleVideo' },
-  { id: 'mp3', kind: 'panel', icon: 'music_note', label: 'btnMp3', description: 'helpMp3' },
-  { id: 'thumbnail', kind: 'panel', icon: 'image', label: 'btnThumbnail', description: 'helpThumbnail' },
-  { id: 'subtitles', kind: 'panel', icon: 'subtitles', label: 'btnSubtitles', description: 'helpSubtitles' },
+  { id: 'mp3', kind: 'panel', icon: 'music_note', label: 'btnMp3', description: 'helpMp3', panelTitle: 'panelTitleMp3' },
+  { id: 'thumbnail', kind: 'panel', icon: 'image', label: 'btnThumbnail', description: 'helpThumbnail', panelTitle: 'panelTitleThumbnail' },
+  { id: 'subtitles', kind: 'panel', icon: 'subtitles', label: 'btnSubtitles', description: 'helpSubtitles', panelTitle: 'panelTitleSubtitles' },
   { id: 'screenshot', kind: 'action', icon: 'photo_camera', label: 'btnScreenshot', description: 'helpScreenshot' },
   // 004 第 4 節：複製帶時間的連結。
   { id: 'link', kind: 'panel', icon: 'link', label: 'btnLink', description: 'helpLink', panelTitle: 'panelTitleLink' },
