@@ -58,3 +58,18 @@ export function orderCaptions(tracks: readonly CaptionTrack[], uiLanguage: strin
   const sorted = selected ? [selected, ...tracks.filter((t) => t !== selected)] : [...tracks];
   return { groups: groupCaptions(sorted), selected };
 }
+
+// ---------------------------------------------------------------------------
+// 未連線狀態（FR-2）
+// ---------------------------------------------------------------------------
+
+export type HostOs = 'mac' | 'windows' | 'other';
+
+/** 依瀏覽器提供的平台資訊判斷作業系統（只用來決定顯示哪一份安裝說明）。 */
+export function detectOs(platform: string, userAgent: string): HostOs {
+  const text = `${platform} ${userAgent}`.toLowerCase();
+  if (/\b(iphone|ipad|android)\b/.test(text)) return 'other';
+  if (/mac/.test(text)) return 'mac';
+  if (/win/.test(text)) return 'windows';
+  return 'other';
+}

@@ -7,6 +7,7 @@
 import { render } from 'preact';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
+import { DownloadSetupPanel } from '@/components/panels/DownloadSetupPanel';
 import { HelpPanel } from '@/components/panels/HelpPanel';
 import { LinkPanel } from '@/components/panels/LinkPanel';
 import { LoopPanel } from '@/components/panels/LoopPanel';
@@ -117,11 +118,14 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         return <LoopPanel loop={viewing.loop} />;
       case 'more':
         return <MorePanel items={moreItems} onOpen={refreshMore} />;
-      // 下載（階段 4a）：縮圖、字幕不需要橋接程式。
+      // 下載（階段 4a）：縮圖、字幕不需要橋接程式；影片、MP3 在橋接程式完成前顯示未連線狀態（T22a）。
       case 'thumbnail':
         return videoId ? <ThumbnailPanel videoId={videoId} /> : undefined;
       case 'subtitles':
         return videoId ? <SubtitlePanel videoId={videoId} /> : undefined;
+      case 'video':
+      case 'mp3':
+        return videoId ? <DownloadSetupPanel videoId={videoId} /> : undefined;
       default:
         return undefined;
     }

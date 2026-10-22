@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CaptionTrack } from '@/utils/youtube/dom';
-import { defaultCaptionIndex, groupCaptions, isRealThumbnail, orderCaptions } from './logic';
+import { defaultCaptionIndex, detectOs, groupCaptions, isRealThumbnail, orderCaptions } from './logic';
 
 describe('isRealThumbnail（002 FR-30、plan 3.8）', () => {
   it('200 且不是 120×90 的圖片才算存在', () => {
@@ -59,5 +59,16 @@ describe('字幕分組與預設選擇（002 FR-40、FR-43）', () => {
     expect(selected?.languageCode).toBe('zh-TW');
     expect(groups.uploaded.map((t) => t.languageCode)).toEqual(['zh-TW', 'en', 'ja']);
     expect(orderCaptions([], 'en')).toEqual({ groups: { uploaded: [], auto: [] }, selected: null });
+  });
+});
+
+describe('detectOs（002 FR-2）', () => {
+  it('macOS、Windows 與其他', () => {
+    expect(detectOs('MacIntel', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)')).toBe('mac');
+    expect(detectOs('macOS', '')).toBe('mac');
+    expect(detectOs('Win32', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe('windows');
+    expect(detectOs('Windows', '')).toBe('windows');
+    expect(detectOs('Linux x86_64', 'Mozilla/5.0 (X11; Linux x86_64)')).toBe('other');
+    expect(detectOs('iPhone', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)')).toBe('other');
   });
 });

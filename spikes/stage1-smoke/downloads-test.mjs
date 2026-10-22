@@ -317,6 +317,117 @@ await section(
   { lang: 'zh-TW' },
 );
 
+// ---------------------------------------------------------------------------
+// T22a 影片／MP3 面板的未連線狀態（002 FR-1、FR-2）
+// ---------------------------------------------------------------------------
+const MAC_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
+const WIN_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
+const setupState = (page) =>
+  page.evaluate(() => {
+    const root = document.querySelector('yte-toolbar').shadowRoot;
+    const setup = root.querySelector('.yte-setup');
+    if (!setup) return null;
+    const link = setup.querySelector('a.yte-link');
+    return {
+      title: setup.querySelector('.yte-setup-title')?.textContent,
+      components: [...setup.querySelectorAll('.yte-setup-components li')].map((li) => `${li.dataset.component}:${li.querySelector('.yte-setup-state').textContent}`),
+      os: setup.querySelector('.yte-setup-steps')?.dataset.os ?? 'other',
+      osTitle: setup.querySelector('.yte-setup-os-title')?.textContent,
+      commands: [...setup.querySelectorAll('.yte-code')].map((c) => c.textContent),
+      link: link ? { href: link.getAttribute('href'), target: link.getAttribute('target'), rel: link.getAttribute('rel') } : null,
+      recheck: setup.querySelector('.yte-setup-actions .yte-button-primary')?.textContent,
+    };
+  });
+const openPanel = async (page, id) => {
+  await button(page, id).click();
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-panel');
+    return panel && !panel.querySelector('.yte-spinner');
+  });
+};
+
+for (const [task, ua, os] of [
+  ['T22a-mac', MAC_UA, 'mac'],
+  ['T22a-win', WIN_UA, 'windows'],
+]) {
+  await section(
+    task,
+    async (page) => {
+      await openPanel(page, 'video');
+      const s = await setupState(page);
+      check(
+        `${os}：影片面板列出需要的元件（橋接程式無法連線、yt-dlp 與 ffmpeg 無法確認）（FR-2）`,
+        s?.title === "The download helper isn't connected" &&
+          s.components.join('|') === "host:Not connected|ytDlp:Can't check without the helper|ffmpeg:Can't check without the helper",
+        JSON.stringify(s?.components),
+      );
+      check(
+        `${os}：依作業系統顯示對應的安裝步驟（FR-2）`,
+        s.os === os &&
+          (os === 'mac'
+            ? s.osTitle === 'Install on macOS' && s.commands[0] === 'brew install yt-dlp ffmpeg' && s.commands[1] === './install.sh'
+            : s.osTitle === 'Install on Windows' && s.commands[0] === 'winget install yt-dlp.yt-dlp Gyan.FFmpeg' && /install\.ps1$/.test(s.commands[1])),
+        `${s.osTitle}: ${s.commands.join(' / ')}`,
+      );
+      check(
+        `${os}：連到 README 的安裝章節（新分頁）（FR-2）`,
+        s.link?.href === 'https://github.com/chidi0716/youtube-extension#install-the-helper' && s.link.target === '_blank' && /noopener/.test(s.link.rel),
+        JSON.stringify(s.link),
+      );
+      await shot(page, `T22a-video-panel-${os}.png`);
+      if (os === 'mac') {
+        // 重新檢查
+        await page.locator('yte-toolbar .yte-setup-actions .yte-button-primary').click();
+        const during = await page
+          .waitForFunction(() => document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-setup-actions .yte-button-primary').textContent === 'Checking…', null, { timeout: 1000 })
+          .then(() => 'Checking…', () => 'not shown');
+        await page.waitForTimeout(700);
+        const after = await setupState(page);
+        check('「重新檢查」按鈕：檢查中顯示「Checking…」，完成後更新狀態（FR-2）', during === 'Checking…' && after.recheck === 'Check again' && after.components[0] === 'host:Not connected', `${during} → ${after.recheck}`);
+        await page.keyboard.press('Escape');
+        // MP3 面板相同
+        await openPanel(page, 'mp3');
+        const mp3 = await setupState(page);
+        check('MP3 面板同樣顯示未連線狀態（FR-2）', mp3?.title === "The download helper isn't connected" && mp3.os === 'mac');
+        await page.keyboard.press('Escape');
+        // 縮圖仍可使用（未連線狀態下）
+        await openPanel(page, 'thumbnail');
+        check('未連線時縮圖面板仍可使用（FR-32）', (await page.locator('yte-toolbar .yte-thumb-row').count()) === 2);
+        await page.keyboard.press('Escape');
+        // 直播、尚未開始的影片
+        for (const id of ['liveliveliv', 'upcomingvid']) {
+          await page.evaluate((id) => window.__fixtureNavigate(id), id);
+          await page.waitForTimeout(300);
+          await openPanel(page, 'video');
+          const text = await panelText(page);
+          await page.keyboard.press('Escape');
+          await openPanel(page, 'mp3');
+          const mp3Text = await panelText(page);
+          check(
+            `${id === 'liveliveliv' ? '直播中' : '尚未開始'}的影片，影片與 MP3 面板顯示無法下載、不顯示選項（FR-1）`,
+            text.includes("Live and upcoming videos can't be downloaded.") && !text.includes('Check again') && mp3Text.includes("Live and upcoming videos can't be downloaded."),
+            text.split('\n').slice(0, 2).join(' / '),
+          );
+          if (id === 'liveliveliv') await shot(page, 'T22a-live-unavailable.png');
+          await page.keyboard.press('Escape');
+        }
+      }
+    },
+    { userAgent: ua, viewport: { width: 1280, height: 1250 } },
+  );
+}
+
+await section(
+  'T22a-zh',
+  async (page) => {
+    await openPanel(page, 'video');
+    const s = await setupState(page);
+    check('繁體中文的未連線說明（NFR-4）', s?.title === '尚未連接下載工具' && s.osTitle === '在 Windows 上安裝' && s.recheck === '重新檢查', JSON.stringify(s));
+    await shot(page, 'T22a-video-panel-zh-TW.png');
+  },
+  { lang: 'zh-TW', userAgent: WIN_UA, viewport: { width: 1280, height: 1250 } },
+);
+
 if (!summary()) process.exitCode = 1;
 void EXT_ID;
 void skip;
