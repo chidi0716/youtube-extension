@@ -142,3 +142,107 @@ h2 {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* 下載區（T23） */
+.status-list {
+  padding: 8px 0;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+}
+
+.status-row + .status-row {
+  border-top: 1px solid var(--outline);
+}
+
+.status-row[data-ok='false'] .option-desc {
+  color: #c30027;
+}
+
+@media (prefers-color-scheme: dark) {
+  .status-row[data-ok='false'] .option-desc {
+    color: #ff4e45;
+  }
+}
+
+.status-install {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.status-install a {
+  color: var(--accent);
+}
+
+.code {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--group-background);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+
+.button {
+  padding: 6px 14px;
+  border: 1px solid var(--outline);
+  border-radius: 18px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--group-background);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.update-result,
+.error {
+  padding-bottom: 8px;
+}
+
+.error {
+  color: #c30027;
+}
+
+.folder-path {
+  overflow-wrap: anywhere;
+}
+
+.select {
+  flex-shrink: 0;
+  max-width: 50%;
+  padding: 6px 8px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.select option {
+  color: #0f0f0f;
+}

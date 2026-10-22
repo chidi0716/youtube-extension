@@ -1,10 +1,10 @@
 import './style.css';
 import { TIDY_CATEGORIES, type TidyOption } from '@/features/tidy/options';
 import { applyI18n, t } from '@/utils/i18n';
+import { renderDownloads } from './downloads';
 
 // 設定頁：偏好設定依類別分組，每個選項一個開關、附一行說明（constitution 第 7a 點、005 FR-1）。
 // 開關後立即寫入 sync 設定；已開啟的 YouTube 分頁由內容腳本監聽設定變更而立即生效（005 FR-3）。
-// 下載資料夾、檔名格式、連線狀態等設定在 T23 加入。
 applyI18n(document);
 document.title = t('optionsTitle');
 
@@ -60,3 +60,6 @@ for (const category of TIDY_CATEGORIES) {
   fieldset.append(legend, ...category.options.map(optionRow));
   groups.append(fieldset);
 }
+
+// 下載（T23）
+renderDownloads(document.querySelector<HTMLElement>('#downloads-groups')!);
