@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/chidi0716/youtube-extension/host/internal/errs"
@@ -24,7 +25,7 @@ func TestRevealAndUpdate(t *testing.T) {
 		Emit:   func(*jobs.Event) error { return nil },
 	}
 	m.Init()
-	a := &App{Version: "x", Env: envWithPath(testenv.FakeToolsDir(t, true)), Manager: m, Actions: platform.NewActions()}
+	a := &App{Version: "x", Env: envWithPath(testenv.FakeToolsDir(t, "ffmpeg", "deno")), Manager: m, Actions: platform.NewActions()}
 	ctx := context.Background()
 	if _, err := a.Reveal(ctx, "0123456789abcdef"); errs.From(err).Code != errs.JobNotFound {
 		t.Errorf("unknown job: %v", err)
@@ -50,7 +51,7 @@ func TestRevealAndUpdate(t *testing.T) {
 		t.Errorf("update: %+v %v", r, err)
 	}
 	// 沒有 ffmpeg 時，影片下載立即回報 FFMPEG_NOT_FOUND。
-	a.Env = envWithPath(testenv.FakeToolsDir(t, false))
+	a.Env = envWithPath(testenv.FakeToolsDir(t))
 	_, err = a.Download(ctx, &validate.Download{VideoID: "dQw4w9WgXcQ", Kind: "video", FormatID: "18", Container: "mp4", Dir: dir, NamePreset: "title-id"})
 	if errs.From(err).Code != errs.FFmpegNotFound {
 		t.Errorf("no ffmpeg: %v", err)
@@ -82,36 +83,65 @@ func envWithPath(dir string) ytdlp.Env {
 }
 
 func TestStatus(t *testing.T) {
-	a := &App{Version: "1.2.3", Env: envWithPath(testenv.FakeToolsDir(t, true))}
+	a := &App{Version: "1.2.3", Env: envWithPath(testenv.FakeToolsDir(t, "ffmpeg", "deno"))}
 	v, err := a.Status(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
 	s := v.(*StatusResult)
-	if !s.Ready || s.HostVersion != "1.2.3" || s.YtDlp.Version != "2026.10.21" || s.FFmpeg.Version != "7.1-fake" {
+	if !s.Ready || !s.Complete || s.HostVersion != "1.2.3" || s.YtDlp.Version != "2026.10.21" ||
+		s.FFmpeg.Version != "7.1-fake" || s.Deno.Version != "2.1.4" || !s.Deno.Found {
 		t.Fatalf("%+v", s)
+	}
+	if len(s.Missing) != 0 || s.InstallCommand != "" || s.YtDlp.Error != "" || s.Deno.Error != "" {
+		t.Fatalf("nothing should be missing: %+v", s)
 	}
 	if s.DefaultDir == "" || len(s.NamePresets) != 4 || s.NamePresets[0].ID != "title-id" {
 		t.Fatalf("%+v", s)
 	}
 
-	a.Env = envWithPath(testenv.FakeToolsDir(t, false))
+	// deno 缺少時仍可下載（ready），但不完整，並列出缺少的元件。
+	a.Env = envWithPath(testenv.FakeToolsDir(t, "ffmpeg"))
 	v, _ = a.Status(context.Background())
 	s = v.(*StatusResult)
-	if s.Ready || !s.YtDlp.Found || s.FFmpeg.Found {
+	if !s.Ready || s.Complete || s.Deno.Found || s.Deno.Error != "DENO_NOT_FOUND" || strings.Join(s.Missing, ",") != "deno" {
+		t.Fatalf("without deno: %+v", s)
+	}
+
+	a.Env = envWithPath(testenv.FakeToolsDir(t))
+	v, _ = a.Status(context.Background())
+	s = v.(*StatusResult)
+	if s.Ready || !s.YtDlp.Found || s.FFmpeg.Found || s.FFmpeg.Error != "FFMPEG_NOT_FOUND" || strings.Join(s.Missing, ",") != "ffmpeg,deno" {
 		t.Fatalf("without ffmpeg: %+v", s)
 	}
 
 	a.Env = envWithPath(t.TempDir())
 	v, _ = a.Status(context.Background())
 	s = v.(*StatusResult)
-	if s.Ready || s.YtDlp.Found || s.FFmpeg.Found {
+	if s.Ready || s.Complete || s.YtDlp.Found || s.FFmpeg.Found || s.YtDlp.Error != "YTDLP_NOT_FOUND" ||
+		strings.Join(s.Missing, ",") != "yt-dlp,ffmpeg,deno" {
 		t.Fatalf("nothing installed: %+v", s)
 	}
 }
 
+func TestInstallCommand(t *testing.T) {
+	all := []string{"yt-dlp", "ffmpeg", "deno"}
+	if got := InstallCommand("darwin", all); got != "brew install yt-dlp ffmpeg deno" {
+		t.Errorf("darwin: %s", got)
+	}
+	if got := InstallCommand("windows", all); got != "winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno" {
+		t.Errorf("windows: %s", got)
+	}
+	if got := InstallCommand("windows", []string{"deno"}); got != "winget install DenoLand.Deno" {
+		t.Errorf("windows deno: %s", got)
+	}
+	if InstallCommand("darwin", nil) != "" || InstallCommand("linux", all) != "" {
+		t.Error("expected empty command")
+	}
+}
+
 func TestGetInfo(t *testing.T) {
-	a := &App{Version: "x", Env: envWithPath(testenv.FakeToolsDir(t, true))}
+	a := &App{Version: "x", Env: envWithPath(testenv.FakeToolsDir(t, "ffmpeg", "deno"))}
 	v, err := a.GetInfo(context.Background(), "jNQXAC9IVRw")
 	if err != nil {
 		t.Fatal(err)

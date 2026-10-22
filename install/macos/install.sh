@@ -3,7 +3,7 @@
 #
 #   1. 複製橋接程式到 ~/Library/Application Support/youtube-extension-host/，並移除隔離屬性；
 #   2. 寫入 Chrome 與 Firefox 的原生訊息設定檔；
-#   3. 檢查 yt-dlp 與 ffmpeg，缺少時提示安裝方式。
+#   3. 檢查 yt-dlp、ffmpeg 與 deno，缺少時提示一次安裝三者的指令。
 #
 # 用法：sh install.sh [橋接程式的路徑]
 # 沒有指定路徑時，依序尋找與本腳本同一個資料夾、以及 repo 的 host/dist/ 中
@@ -99,7 +99,8 @@ write_manifest() {
 write_manifest "$MANIFESTS/chrome.json" "$CHROME_DIR"
 write_manifest "$MANIFESTS/firefox.json" "$FIREFOX_DIR"
 
-# 檢查 yt-dlp 與 ffmpeg（橋接程式也會在 /opt/homebrew/bin、/usr/local/bin 中尋找）。
+# 檢查 yt-dlp、ffmpeg 與 deno（yt-dlp 取得 YouTube 完整格式所需的 JavaScript 執行環境，002 FR-2）。
+# 橋接程式也會在 /opt/homebrew/bin、/usr/local/bin 中尋找。
 find_tool() {
   for dir in /opt/homebrew/bin /usr/local/bin; do
     if [ -x "$dir/$1" ]; then
@@ -111,7 +112,7 @@ find_tool() {
 }
 
 missing=""
-for tool in yt-dlp ffmpeg; do
+for tool in yt-dlp ffmpeg deno; do
   if path=$(find_tool "$tool"); then
     echo "Found $tool: $path"
   else
@@ -122,15 +123,9 @@ done
 
 echo
 if [ -n "$missing" ]; then
-  echo "Downloads need yt-dlp and ffmpeg. Install them with Homebrew (https://brew.sh):"
+  echo "Downloads need yt-dlp, ffmpeg and deno. Install them with Homebrew (https://brew.sh):"
   echo
-  echo "    brew install yt-dlp ffmpeg"
-  echo
-fi
-if ! find_tool deno >/dev/null 2>&1; then
-  echo "yt-dlp recommends a JavaScript runtime for full YouTube support. If some qualities are missing, run:"
-  echo
-  echo "    brew install deno"
+  echo "    brew install yt-dlp ffmpeg deno"
   echo
 fi
 echo "Done. Restart Chrome or Firefox if it was open, then click \"Check again\" in the extension's download panel."

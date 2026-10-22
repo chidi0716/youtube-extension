@@ -77,9 +77,9 @@ func FakeYtDlpDir(t testing.TB) string {
 	return fakeDir
 }
 
-// FakeToolsDir 建立一個新的資料夾，放入假 yt-dlp；withFFmpeg 時另外放一份名為 ffmpeg 的複本
-// （假程式依檔名模擬 ffmpeg -version）。
-func FakeToolsDir(t testing.TB, withFFmpeg bool) string {
+// FakeToolsDir 建立一個新的資料夾，放入假 yt-dlp，以及 extra 中列出的其他工具
+// （"ffmpeg"、"deno"：同一個假程式的複本，依檔名模擬各自的 --version）。
+func FakeToolsDir(t testing.TB, extra ...string) string {
 	t.Helper()
 	src := FakeYtDlpDir(t)
 	exe := ""
@@ -91,10 +91,7 @@ func FakeToolsDir(t testing.TB, withFFmpeg bool) string {
 		t.Fatal(err)
 	}
 	dir := t.TempDir()
-	names := []string{"yt-dlp"}
-	if withFFmpeg {
-		names = append(names, "ffmpeg")
-	}
+	names := append([]string{"yt-dlp"}, extra...)
 	for _, n := range names {
 		if err := os.WriteFile(filepath.Join(dir, n+exe), b, 0o755); err != nil {
 			t.Fatal(err)

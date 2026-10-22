@@ -200,7 +200,7 @@ func TestInfoArgs(t *testing.T) {
 }
 
 func TestClipLabel(t *testing.T) {
-	for sec, want := range map[int64]string{0: "00m00s", 90: "01m30s", 225: "03m45s", 3599: "59m59s", 3600: "1h00m00s", 3723: "1h02m03s", 36000: "10h00m00s"} {
+	for sec, want := range map[int64]string{0: "00m00s", 90: "01m30s", 225: "03m45s", 3599: "59m59s", 3600: "01h00m00s", 3723: "01h02m03s", 36000: "10h00m00s", 360000: "100h00m00s"} {
 		if got := ClipLabel(sec); got != want {
 			t.Errorf("%d: %s", sec, got)
 		}
@@ -463,6 +463,39 @@ func TestRunWithFake(t *testing.T) {
 	}
 	if _, err := missing.FFmpegVersion(ctx); errs.From(err).Code != errs.FFmpegNotFound {
 		t.Errorf("missing ffmpeg: %v", err)
+	}
+}
+
+func TestFindDeno(t *testing.T) {
+	mac := fakeEnv("darwin", map[string]string{"PATH": "/usr/bin:/bin"}, "/opt/homebrew/bin/deno")
+	if got := mac.Find("deno"); got != "/opt/homebrew/bin/deno" {
+		t.Errorf("darwin deno = %q", got)
+	}
+	la := `C:\Users\me\AppData\Local`
+	deno := la + `\Microsoft\WinGet\Packages\DenoLand.Deno_Microsoft.Winget.Source_8wekyb3d8bbwe\deno.exe`
+	win := fakeEnv("windows", map[string]string{"LOCALAPPDATA": la, "PATH": `C:\Windows`}, deno)
+	if got := win.Find("deno"); got != deno {
+		t.Errorf("windows deno = %q", got)
+	}
+	// deno 所在的資料夾要加進 yt-dlp 的 PATH。
+	want := `C:\Windows;` + la + `\Microsoft\WinGet\Links;` + la + `\Microsoft\WinGet\Packages\DenoLand.Deno_Microsoft.Winget.Source_8wekyb3d8bbwe`
+	if got := win.ChildPath("", deno); got != want {
+		t.Errorf("ChildPath = %q", got)
+	}
+}
+
+func TestDenoVersion(t *testing.T) {
+	dir := testenv.FakeToolsDir(t, "deno")
+	exe := ""
+	if SystemEnv().GOOS == "windows" {
+		exe = ".exe"
+	}
+	tools := &Tools{Env: SystemEnv(), Deno: filepath.Join(dir, "deno"+exe)}
+	if v, err := tools.DenoVersion(context.Background()); err != nil || v != "2.1.4" {
+		t.Fatalf("deno version: %q %v", v, err)
+	}
+	if _, err := (&Tools{Env: SystemEnv()}).DenoVersion(context.Background()); errs.From(err).Code != errs.DenoNotFound {
+		t.Fatalf("missing deno: %v", err)
 	}
 }
 

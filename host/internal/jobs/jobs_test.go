@@ -34,7 +34,7 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
-	bin := testenv.FakeToolsDir(t, true)
+	bin := testenv.FakeToolsDir(t, "ffmpeg", "deno")
 	exe := ""
 	if runtime.GOOS == "windows" {
 		exe = ".exe"

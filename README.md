@@ -49,7 +49,7 @@ Install it once with the scripts described in [Install the helper](#install-the-
 
 ## Install the helper
 
-Video and MP3 downloads (and subtitles, when the direct download fails) need three programs on your computer: the **helper** from this project, [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ffmpeg](https://ffmpeg.org). Thumbnails, screenshots, subtitles and all viewing tools work without them. Everything is installed for the current user only; no administrator rights or `sudo` are needed.
+Video and MP3 downloads (and subtitles, when the direct download fails) need four programs on your computer: the **helper** from this project, [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org) and [deno](https://deno.com) (the JavaScript runtime yt-dlp needs to get all YouTube formats). Thumbnails, screenshots, subtitles and all viewing tools work without them. Everything is installed for the current user only; no administrator rights or `sudo` are needed.
 
 ### 1. Build the helper
 
@@ -63,30 +63,28 @@ This creates two ready-to-use folders: `host/dist/youtube-extension-host-macos/`
 
 ### 2a. macOS (Apple Silicon and Intel)
 
-1. Install yt-dlp and ffmpeg with [Homebrew](https://brew.sh). yt-dlp also recommends a JavaScript runtime (deno) for full YouTube support:
+1. Install yt-dlp, ffmpeg and deno with [Homebrew](https://brew.sh):
    ```bash
-   brew install yt-dlp ffmpeg
-   brew install deno
+   brew install yt-dlp ffmpeg deno
    ```
 2. Run the installer (do not use `sudo`):
    ```bash
    sh host/dist/youtube-extension-host-macos/install.sh
    ```
-   It copies the helper to `~/Library/Application Support/youtube-extension-host/`, removes the quarantine attribute so Gatekeeper does not block it, registers it for Chrome (`~/Library/Application Support/Google/Chrome/NativeMessagingHosts/`) and Firefox (`~/Library/Application Support/Mozilla/NativeMessagingHosts/`), and checks for yt-dlp and ffmpeg.
+   It copies the helper to `~/Library/Application Support/youtube-extension-host/`, removes the quarantine attribute so Gatekeeper does not block it, registers it for Chrome (`~/Library/Application Support/Google/Chrome/NativeMessagingHosts/`) and Firefox (`~/Library/Application Support/Mozilla/NativeMessagingHosts/`), and checks for yt-dlp, ffmpeg and deno.
 3. Restart Chrome or Firefox, open a YouTube video and click **Check again** in the Video or MP3 panel.
 
 ### 2b. Windows 10/11 (x64)
 
-1. Install yt-dlp and ffmpeg with [winget](https://learn.microsoft.com/windows/package-manager/winget/), and optionally deno:
+1. Install yt-dlp, ffmpeg and deno with [winget](https://learn.microsoft.com/windows/package-manager/winget/):
    ```powershell
-   winget install yt-dlp.yt-dlp Gyan.FFmpeg
-   winget install DenoLand.Deno
+   winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno
    ```
 2. Run the installer in PowerShell (`-ExecutionPolicy Bypass` allows this one script to run without changing your settings):
    ```powershell
    powershell -ExecutionPolicy Bypass -File host\dist\youtube-extension-host-windows\install.ps1
    ```
-   It copies the helper to `%LOCALAPPDATA%\youtube-extension-host\`, writes the native messaging manifests there, creates the registry keys `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.chidi0716.youtube_extension` and `HKCU\Software\Mozilla\NativeMessagingHosts\com.chidi0716.youtube_extension`, and checks for yt-dlp and ffmpeg.
+   It copies the helper to `%LOCALAPPDATA%\youtube-extension-host\`, writes the native messaging manifests there, creates the registry keys `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.chidi0716.youtube_extension` and `HKCU\Software\Mozilla\NativeMessagingHosts\com.chidi0716.youtube_extension`, and checks for yt-dlp, ffmpeg and deno.
 3. Restart Chrome or Firefox, open a YouTube video and click **Check again** in the Video or MP3 panel.
 
 If you open a terminal in a different folder, pass the full path of the script. You can also run `install/macos/install.sh` or `install/windows/install.ps1` straight from the repository after `npm run build:host`.
@@ -111,7 +109,7 @@ This removes the helper, its manifests and registry keys, its state and its logs
 ### Troubleshooting
 
 - **"Check again" still says the helper is missing:** restart the browser after installing. Firefox-based browsers such as Zen use the Firefox registration.
-- **"yt-dlp is out of date" or some qualities are missing:** update yt-dlp (see above) and install deno.
+- **"yt-dlp is out of date" or some qualities are missing:** update yt-dlp (see above) and make sure deno is installed (the settings page shows whether it was found).
 - **macOS says the helper cannot be opened:** run the installer again; it removes the quarantine attribute. You can also build the helper from source yourself.
 - **Logs:** `~/Library/Logs/youtube-extension-host/host.log` (macOS) or `%LOCALAPPDATA%\youtube-extension-host\logs\host.log` (Windows). They contain command names and error messages only, never cookies or account data.
 - Downloads keep running if you close the YouTube tab or the browser. Unfinished files are kept in a hidden `.yte-tmp-…` folder inside the download folder and are removed when the download finishes, fails or is cancelled.

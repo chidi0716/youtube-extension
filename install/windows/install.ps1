@@ -2,7 +2,7 @@
 #
 #   1. 複製橋接程式到 %LOCALAPPDATA%\youtube-extension-host\；
 #   2. 寫入原生訊息設定檔，並在 HKCU 建立 Chrome 與 Firefox 的登錄機碼；
-#   3. 檢查 yt-dlp 與 ffmpeg，缺少時提示安裝方式。
+#   3. 檢查 yt-dlp、ffmpeg 與 deno，缺少時提示一次安裝三者的指令。
 #
 # 用法（PowerShell 預設不允許執行腳本，所以以 -ExecutionPolicy Bypass 執行這一次）：
 #   powershell -ExecutionPolicy Bypass -File install.ps1 [-Binary <橋接程式的路徑>]
@@ -89,7 +89,8 @@ foreach ($entry in $RegistryKeys) {
     Write-Host "Registered for $($entry.Browser): $($entry.Key) -> $manifestPath"
 }
 
-# 檢查 yt-dlp 與 ffmpeg（橋接程式也會在 WinGet 的資料夾中尋找）。
+# 檢查 yt-dlp、ffmpeg 與 deno（yt-dlp 取得 YouTube 完整格式所需的 JavaScript 執行環境，002 FR-2）。
+# 橋接程式也會在 WinGet 的資料夾中尋找。
 function Find-Tool([string]$Tool) {
     $cmd = Get-Command "$Tool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($cmd) { return $cmd.Path }
@@ -104,7 +105,7 @@ function Find-Tool([string]$Tool) {
 }
 
 $missing = @()
-foreach ($tool in @('yt-dlp', 'ffmpeg')) {
+foreach ($tool in @('yt-dlp', 'ffmpeg', 'deno')) {
     $path = Find-Tool $tool
     if ($path) {
         Write-Host "Found ${tool}: $path"
@@ -116,15 +117,9 @@ foreach ($tool in @('yt-dlp', 'ffmpeg')) {
 
 Write-Host ''
 if ($missing.Count -gt 0) {
-    Write-Host 'Downloads need yt-dlp and ffmpeg. Install them with winget:'
+    Write-Host 'Downloads need yt-dlp, ffmpeg and deno. Install them with winget:'
     Write-Host ''
-    Write-Host '    winget install yt-dlp.yt-dlp Gyan.FFmpeg'
-    Write-Host ''
-}
-if (-not (Find-Tool 'deno')) {
-    Write-Host 'yt-dlp recommends a JavaScript runtime for full YouTube support. If some qualities are missing, run:'
-    Write-Host ''
-    Write-Host '    winget install DenoLand.Deno'
+    Write-Host '    winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno'
     Write-Host ''
 }
 Write-Host 'Done. Restart Chrome or Firefox if it was open, then click "Check again" in the extension''s download panel.'

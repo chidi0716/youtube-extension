@@ -212,7 +212,7 @@ func errCode(resp map[string]any) string {
 }
 
 func newEnv(t *testing.T, extra ...string) env {
-	return env{home: t.TempDir(), tools: testenv.FakeToolsDir(t, true), extra: extra}
+	return env{home: t.TempDir(), tools: testenv.FakeToolsDir(t, "ffmpeg", "deno"), extra: extra}
 }
 
 func TestEndToEnd(t *testing.T) {
@@ -224,7 +224,7 @@ func TestEndToEnd(t *testing.T) {
 
 	// status
 	st := ok(t, b.request("status", nil, nil))
-	if st["ready"] != true || st["ytDlp"].(map[string]any)["version"] != "2026.10.21" || st["ffmpeg"].(map[string]any)["version"] != "7.1-fake" {
+	if st["ready"] != true || st["complete"] != true || st["deno"].(map[string]any)["version"] != "2.1.4" || st["ytDlp"].(map[string]any)["version"] != "2026.10.21" || st["ffmpeg"].(map[string]any)["version"] != "7.1-fake" {
 		t.Fatalf("status: %v", st)
 	}
 

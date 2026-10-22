@@ -39,11 +39,11 @@ func InfoArgs(videoID string) []string {
 	}
 }
 
-// ClipLabel 把秒數轉成檔名用的時間標記，例如 90 → 01m30s、3723 → 1h02m03s（FR-8）。
+// ClipLabel 把秒數轉成檔名用的時間標記，例如 90 → 01m30s、3723 → 01h02m03s（FR-8、Q37：小時補零）。
 func ClipLabel(sec int64) string {
 	h, m, s := sec/3600, (sec/60)%60, sec%60
 	if h > 0 {
-		return fmt.Sprintf("%dh%02dm%02ds", h, m, s)
+		return fmt.Sprintf("%02dh%02dm%02ds", h, m, s)
 	}
 	return fmt.Sprintf("%02dm%02ds", m, s)
 }

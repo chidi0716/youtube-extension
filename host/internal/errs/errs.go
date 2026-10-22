@@ -22,6 +22,7 @@ const (
 	// 執行環境
 	YtDlpNotFound       Code = "YTDLP_NOT_FOUND"
 	FFmpegNotFound      Code = "FFMPEG_NOT_FOUND"
+	DenoNotFound        Code = "DENO_NOT_FOUND"       // 只在 status 中回報，不阻擋 getInfo 與 download（Q39）
 	UnsupportedPlatform Code = "UNSUPPORTED_PLATFORM" // 此作業系統不支援的指令（例如 Linux 上的 pickFolder）
 
 	// yt-dlp 回報的錯誤（依 stderr 分類，見 ytdlp.Classify）
@@ -52,7 +53,7 @@ const (
 // All 列出全部代碼，供測試與文件對照。
 var All = []Code{
 	InvalidRequest, UnknownCommand, InvalidArgs, ResponseTooLarge,
-	YtDlpNotFound, FFmpegNotFound, UnsupportedPlatform,
+	YtDlpNotFound, FFmpegNotFound, DenoNotFound, UnsupportedPlatform,
 	YtDlpOutdated, LoginRequired, VerificationRequired, VideoUnavailable, LiveNotSupported,
 	FormatUnavailable, NoSubtitles, Network, DiskFull, PermissionDenied, Timeout, UpdateFailed,
 	JobNotFound, JobNotFinished, FileNotFound, TooManyJobs, Busy, Interrupted,

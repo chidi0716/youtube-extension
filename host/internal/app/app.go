@@ -4,6 +4,7 @@ package app
 import (
 	"context"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/chidi0716/youtube-extension/host/internal/errs"
@@ -36,12 +37,12 @@ func New(version string, m *jobs.Manager) *App {
 // tools 每次重新尋找 yt-dlp 與 ffmpeg，讓使用者安裝後按「重新檢查」就能生效。
 func (a *App) tools() *ytdlp.Tools { return ytdlp.Locate(a.Env) }
 
-// ToolStatus 是 yt-dlp 或 ffmpeg 的狀態。
+// ToolStatus 是 yt-dlp、ffmpeg 或 deno 的狀態。
 type ToolStatus struct {
 	Found         bool   `json:"found"`
 	Path          string `json:"path,omitempty"`
 	Version       string `json:"version,omitempty"`
-	Error         string `json:"error,omitempty"`         // 找到了但無法執行時的錯誤代碼
+	Error         string `json:"error,omitempty"`         // 找不到或無法執行時的錯誤代碼（YTDLP_NOT_FOUND、FFMPEG_NOT_FOUND、DENO_NOT_FOUND）
 	Manager       string `json:"manager,omitempty"`       // homebrew、winget 等（只有 yt-dlp）
 	UpdateCommand string `json:"updateCommand,omitempty"` // 由套件管理工具安裝時的更新指令
 }
@@ -54,14 +55,23 @@ type PresetInfo struct {
 
 // StatusResult 是 status 指令的結果（plan 4.3）。
 type StatusResult struct {
-	HostVersion string       `json:"hostVersion"`
-	OS          string       `json:"os"`
-	Arch        string       `json:"arch"`
-	Ready       bool         `json:"ready"` // yt-dlp 與 ffmpeg 都可以使用
-	YtDlp       ToolStatus   `json:"ytDlp"`
-	FFmpeg      ToolStatus   `json:"ffmpeg"`
-	DefaultDir  string       `json:"defaultDir"`
-	NamePresets []PresetInfo `json:"namePresets"`
+	HostVersion string `json:"hostVersion"`
+	OS          string `json:"os"`
+	Arch        string `json:"arch"`
+	// Ready：yt-dlp 與 ffmpeg 都可以使用（可以下載）。
+	Ready bool `json:"ready"`
+	// Complete：另外 deno 也可以使用（yt-dlp 能取得 YouTube 的完整格式）。
+	Complete bool       `json:"complete"`
+	YtDlp    ToolStatus `json:"ytDlp"`
+	FFmpeg   ToolStatus `json:"ffmpeg"`
+	Deno     ToolStatus `json:"deno"`
+	// Missing 列出找不到或無法執行的元件（"yt-dlp"、"ffmpeg"、"deno"），依此順序。
+	Missing []string `json:"missing"`
+	// InstallCommand 是一次安裝全部缺少元件的指令（macOS：brew；Windows：winget），
+	// 沒有缺少或其他作業系統時為空字串（002 FR-2）。
+	InstallCommand string       `json:"installCommand"`
+	DefaultDir     string       `json:"defaultDir"`
+	NamePresets    []PresetInfo `json:"namePresets"`
 }
 
 // Status 實作 status 指令。找不到 yt-dlp 或 ffmpeg 不算錯誤，以 found=false 表示。
@@ -103,9 +113,59 @@ func (a *App) Status(ctx context.Context) (any, error) {
 			res.FFmpeg.Version = v
 		}()
 	}
+	if t.Deno != "" {
+		res.Deno.Found, res.Deno.Path = true, t.Deno
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			v, err := t.DenoVersion(ctx)
+			if err != nil {
+				res.Deno.Error = string(errs.From(err).Code)
+			}
+			res.Deno.Version = v
+		}()
+	}
 	wg.Wait()
-	res.Ready = res.YtDlp.Found && res.YtDlp.Error == "" && res.FFmpeg.Found && res.FFmpeg.Error == ""
+	res.Missing = []string{}
+	for _, c := range []struct {
+		name string
+		st   *ToolStatus
+		code errs.Code
+	}{{"yt-dlp", &res.YtDlp, errs.YtDlpNotFound}, {"ffmpeg", &res.FFmpeg, errs.FFmpegNotFound}, {"deno", &res.Deno, errs.DenoNotFound}} {
+		if !c.st.Found {
+			c.st.Error = string(c.code)
+		}
+		if c.st.Error != "" {
+			res.Missing = append(res.Missing, c.name)
+		}
+	}
+	res.Ready = res.YtDlp.Error == "" && res.FFmpeg.Error == ""
+	res.Complete = res.Ready && res.Deno.Error == ""
+	res.InstallCommand = InstallCommand(a.Env.GOOS, res.Missing)
 	return res, nil
+}
+
+// InstallCommand 回傳一次安裝 missing 中全部元件的指令（002 FR-2）。
+func InstallCommand(goos string, missing []string) string {
+	if len(missing) == 0 {
+		return ""
+	}
+	var pkgs []string
+	for _, m := range missing {
+		switch goos {
+		case "darwin":
+			pkgs = append(pkgs, m) // Homebrew 的套件名稱與元件名稱相同
+		case "windows":
+			pkgs = append(pkgs, map[string]string{"yt-dlp": "yt-dlp.yt-dlp", "ffmpeg": "Gyan.FFmpeg", "deno": "DenoLand.Deno"}[m])
+		}
+	}
+	switch goos {
+	case "darwin":
+		return "brew install " + strings.Join(pkgs, " ")
+	case "windows":
+		return "winget install " + strings.Join(pkgs, " ")
+	}
+	return ""
 }
 
 // maxInfoResult 是 getInfo 結果的大小上限，比 1MB 的訊息上限略小，保留外層欄位的空間。

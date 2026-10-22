@@ -1,7 +1,7 @@
 // fake-yt-dlp 是測試用的假 yt-dlp：測試時編譯成 yt-dlp（Windows 為 yt-dlp.exe），
 // 依環境變數模擬各種情境，並以與真正 yt-dlp 相同的格式輸出進度與最終路徑
 // （依橋接程式傳入的 --progress-template 與 --print 範本代換）。
-// 同一個執行檔以 ffmpeg 為檔名時，則模擬 ffmpeg -version。
+// 同一個執行檔以 ffmpeg 或 deno 為檔名時，則模擬 ffmpeg -version 或 deno --version。
 //
 // 環境變數：
 //
@@ -36,9 +36,15 @@ const (
 
 func main() {
 	args := os.Args[1:]
-	// 同一個執行檔複製成 ffmpeg 時，模擬 ffmpeg -version。
-	if strings.HasPrefix(strings.ToLower(filepath.Base(os.Args[0])), "ffmpeg") {
+	// 同一個執行檔複製成 ffmpeg 或 deno 時，模擬 ffmpeg -version 與 deno --version。
+	switch base := strings.ToLower(filepath.Base(os.Args[0])); {
+	case strings.HasPrefix(base, "ffmpeg"):
 		fmt.Println("ffmpeg version 7.1-fake Copyright (c) 2000-2024 the FFmpeg developers")
+		return
+	case strings.HasPrefix(base, "deno"):
+		fmt.Println("deno 2.1.4 (stable, release, x86_64-unknown-linux-gnu)")
+		fmt.Println("v8 13.0.245.12-rusty")
+		fmt.Println("typescript 5.6.2")
 		return
 	}
 	if len(args) == 2 && args[0] == "--fake-child" {

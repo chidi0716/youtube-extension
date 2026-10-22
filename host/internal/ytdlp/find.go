@@ -69,11 +69,13 @@ func (e Env) packagePatterns(tool string) []string {
 		return []string{e.join(pkgs, "yt-dlp.yt-dlp_*", "yt-dlp.exe"), e.join(pkgs, "*", "yt-dlp.exe")}
 	case "ffmpeg":
 		return []string{e.join(pkgs, "Gyan.FFmpeg_*", "*", "bin", "ffmpeg.exe"), e.join(pkgs, "*", "*", "bin", "ffmpeg.exe")}
+	case "deno":
+		return []string{e.join(pkgs, "DenoLand.Deno_*", "deno.exe"), e.join(pkgs, "*", "deno.exe")}
 	}
 	return nil
 }
 
-// Find 依序在 PATH、ExtraDirs、winget 套件資料夾尋找 tool（"yt-dlp" 或 "ffmpeg"）。
+// Find 依序在 PATH、ExtraDirs、winget 套件資料夾尋找 tool（"yt-dlp"、"ffmpeg" 或 "deno"）。
 // 找不到時回傳空字串。
 func (e Env) Find(tool string) string {
 	exe := tool
@@ -104,9 +106,9 @@ func (e Env) Find(tool string) string {
 }
 
 // ChildPath 回傳給 yt-dlp 子程序使用的 PATH：原本的 PATH 加上 ExtraDirs 與
-// 找到的 ffmpeg 所在資料夾，讓 yt-dlp 也找得到 ffprobe 與 JavaScript 執行環境
-// （例如 Homebrew 安裝的 deno）。
-func (e Env) ChildPath(ffmpeg string) string {
+// 找到的 ffmpeg、deno 所在資料夾，讓 yt-dlp 也找得到 ffprobe 與 JavaScript 執行環境。
+// tools 是執行檔的完整路徑（空字串略過）。
+func (e Env) ChildPath(tools ...string) string {
 	sep := ":"
 	if e.GOOS == "windows" {
 		sep = ";"
@@ -125,11 +127,14 @@ func (e Env) ChildPath(ffmpeg string) string {
 	for _, p := range e.ExtraDirs() {
 		add(p)
 	}
-	if ffmpeg != "" {
+	for _, tool := range tools {
+		if tool == "" {
+			continue
+		}
 		if e.GOOS == "windows" {
-			add(ffmpeg[:max(0, strings.LastIndexAny(ffmpeg, `\/`))])
+			add(tool[:max(0, strings.LastIndexAny(tool, `\/`))])
 		} else {
-			add(filepath.Dir(ffmpeg))
+			add(filepath.Dir(tool))
 		}
 	}
 	return strings.Join(parts, sep)

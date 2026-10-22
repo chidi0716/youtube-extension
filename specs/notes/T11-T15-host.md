@@ -46,7 +46,7 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 
 | 指令 | 參數 | 結果 |
 |---|---|---|
-| `status` | — | `hostVersion`、`os`、`arch`、`ready`（yt-dlp 與 ffmpeg 都可用）、`ytDlp`／`ffmpeg`：`{found, path, version, error?, manager?, updateCommand?}`、`defaultDir`、`namePresets: [{id, example}]` |
+| `status` | — | `hostVersion`、`os`、`arch`、`ready`（yt-dlp 與 ffmpeg 都可用，可以下載）、`complete`（另外 deno 也可用）、`ytDlp`／`ffmpeg`／`deno`：`{found, path, version, error?, manager?, updateCommand?}`（`error` 為找不到或無法執行時的代碼：`YTDLP_NOT_FOUND`、`FFMPEG_NOT_FOUND`、`DENO_NOT_FOUND`；`manager`、`updateCommand` 只有 yt-dlp）、`missing`（缺少的元件，依序為 `"yt-dlp"`、`"ffmpeg"`、`"deno"`）、`installCommand`（一次安裝全部缺少元件的指令，例如 `brew install yt-dlp ffmpeg deno`、`winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno`；沒有缺少時為空字串）、`defaultDir`、`namePresets: [{id, example}]` |
 | `getInfo` | `videoId` | `id`、`title`、`channel`、`duration`、`uploadDate`、`liveStatus`（not_live／is_live／is_upcoming／was_live／post_live）、`isLive`、`chapters: [{start,end,title}]`、`formats: [{id,ext,vcodec,acodec,width,height,fps,tbr,abr,vbr,filesize,filesizeApprox,note,protocol,dynamicRange,language,audioChannels}]`（已去掉分鏡圖與 DRM 格式，依 yt-dlp 的順序由差到好）、`subtitles: [{lang,name,exts}]`、`autoCaptions: [{lang,name}]`、`truncated?`。不含任何網址 |
 | `download` | 見下 | `{jobId, state:"queued"}` |
 | `cancel` | `jobId` | `{jobId, state}`（等到子程序樹結束、暫存檔刪除後才回應；已結束的工作直接回傳目前狀態） |
@@ -63,7 +63,7 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 | `mp3` | `videoId`、`bitrate`（64／128／192／256／320）、`dir` | `section`、`embed`、`namePreset` |
 | `subtitle` | `videoId`、`subLang`、`subFormat`（srt／vtt／txt）、`dir` | `subAuto`（自動字幕，預設 false）、`namePreset` |
 
-`namePreset`（預設 `title-id`）：`title-id`「標題 [ID]」、`title`「標題」、`channel-title`「頻道 - 標題 [ID]」、`date-title`「上傳日期 標題 [ID]」。裁切時檔名加上「 01m30s-03m45s」（一小時以上為「1h02m03s」）。
+`namePreset`（預設 `title-id`）：`title-id`「標題 [ID]」、`title`「標題」、`channel-title`「頻道 - 標題 [ID]」、`date-title`「上傳日期 標題 [ID]」。裁切時檔名加上「 01m30s-03m45s」（一小時以上小時補零，例如「01h02m03s」，Q37）。
 
 ## 錯誤代碼
 
@@ -75,6 +75,7 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 | `RESPONSE_TOO_LARGE` | 回應超過 1MB |
 | `YTDLP_NOT_FOUND` | 找不到或無法執行 yt-dlp |
 | `FFMPEG_NOT_FOUND` | 需要 ffmpeg 但找不到 |
+| `DENO_NOT_FOUND` | 找不到 deno（只出現在 `status` 的 `deno.error`，不阻擋 getInfo 與 download；Q39） |
 | `UNSUPPORTED_PLATFORM` | 此作業系統不支援（例如 Linux 上的 reveal／pickFolder） |
 | `YTDLP_OUTDATED` | 解析失敗、HTTP 403、不認得的選項等，通常更新 yt-dlp 可解決 |
 | `LOGIN_REQUIRED` | 私人、會員限定、年齡限制 |
@@ -111,7 +112,8 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 共通：`--ignore-config --no-playlist --newline --no-colors --progress --progress-template "download:YTE-PROGRESS {...}" --progress-template "postprocess:YTE-POST {...}" --print "after_move:YTE-FILE %(filepath)j" --windows-filenames --match-filters "!is_live & live_status!=?is_live & live_status!=?is_upcoming" -P <暫存資料夾> -o <範本> [--ffmpeg-location <ffmpeg>] ... -- https://www.youtube.com/watch?v=<id>`
 
 - `%(...)j` 會把非 ASCII 字元跳脫，Windows 主控台編碼下路徑也能完整傳回；另外設定 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`。
-- 子程序的 PATH 補上 `/opt/homebrew/bin`、`/usr/local/bin`（macOS）或 WinGet Links（Windows）與 ffmpeg 所在資料夾，讓 yt-dlp 找得到 ffprobe 與 deno。
+- deno 的找法與 yt-dlp、ffmpeg 相同（PATH、`/opt/homebrew/bin`、`/usr/local/bin`、WinGet Links 與 `Packages\DenoLand.Deno_*\deno.exe`）。
+- 子程序的 PATH 補上 `/opt/homebrew/bin`、`/usr/local/bin`（macOS）或 WinGet Links（Windows），以及 ffmpeg、deno 所在資料夾，讓 yt-dlp 找得到 ffprobe 與 deno。
 - 影片：`-f <formatId> --merge-output-format <container>`；嵌入時 `--embed-thumbnail`（WEBM 不加）`--embed-metadata --embed-chapters`；裁切時 `--download-sections *S-E --force-keyframes-at-cuts`，並以 `--no-embed-chapters` 取代 `--embed-chapters`（004 FR-13 允許，因為 `--embed-metadata` 預設也會嵌入章節）。
 - MP3：`-f bestaudio/best -x --audio-format mp3 --audio-quality <n>K`，嵌入與裁切同上。
 - 字幕：`--skip-download --write-subs`（或 `--write-auto-subs`）`--sub-langs <lang> --sub-format vtt`，SRT 加 `--convert-subs srt`；TXT 由橋接程式轉換（去掉檔頭、NOTE／STYLE、時間碼、標籤、實體字元，以及連續重複的行）。
@@ -121,7 +123,7 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 - `cd host && go vet ./... && go test ./...`：全部通過；`go test -race ./...` 也通過。另以 `GOOS=windows`、`GOOS=darwin` 執行 `go vet ./...`，確認各平台的程式可以編譯。
 - 真正的 yt-dlp（官方 release 2026.10.21，放在 `spikes/stage3/.cache/bin/`）：
   - 以 `YTE_REAL_YTDLP=... go test ./internal/ytdlp -run Real -v` 對本機測試伺服器（`httptest`）上的 20 秒測試影片執行 `DownloadArgs` 組出的完整參數：影片、影片裁切（3–8 秒，檔名 `test [test] 00m03s-00m08s.mp4`）、MP3 裁切都成功，yt-dlp 接受全部選項，進度、後處理與 `YTE-FILE` 都能解析。進度與 `YTE-FILE` 寫到 stdout，後處理進度寫到 stderr（兩者都會讀）。裁切下載由 ffmpeg 執行時只有一行完成進度，擴充功能要能處理沒有百分比的情況。
-  - `spikes/stage3/smoke-info.sh jNQXAC9IVRw`：對一部 19 秒的公開影片執行一次 `-J`（沒有被阻擋），確認欄位名稱（`format_id` 可能含「-drc」、`subtitles` 項目有 `name`、`automatic_captions` 的 `name` 可能是 null、`chapters`、`live_status`）。yt-dlp 警告沒有 JavaScript 執行環境時部分格式可能缺少，因此安裝腳本與 README 建議安裝 deno。
+  - `spikes/stage3/smoke-info.sh jNQXAC9IVRw`：對一部 19 秒的公開影片執行一次 `-J`（沒有被阻擋），確認欄位名稱（`format_id` 可能含「-drc」、`subtitles` 項目有 `name`、`automatic_captions` 的 `name` 可能是 null、`chapters`、`live_status`）。yt-dlp 警告沒有 JavaScript 執行環境時部分格式可能缺少；依 Q39 的回答，deno 列為必要元件（T15a）。
 - 端到端（`go test ./internal/e2e -v`）：編譯真正的 `yte-host` 與假 yt-dlp，以 Chrome 的來源參數啟動，經 stdin/stdout 送出 `status`、`getInfo`、非法指令與參數、`download`（影片、MP3 裁切）、`jobs`、`reveal`、`download`（慢速）＋`cancel`；另外測試強制結束橋接程式後下載仍完成、重新連線以 `missed` 補報、Firefox 看不到 Chrome 的工作、stdin 結束後立即離開、記錄檔不含家目錄。
 - 安裝腳本：`shellcheck`（0.11.0）檢查 `install/macos/*.sh` 無警告；`spikes/stage3/test-install-macos.sh` 在 Linux 上以假的 `uname`、`sysctl`、`xattr`、`id` 模擬執行安裝與解除安裝，確認設定檔 JSON、路徑、ID 正確、重複安裝可覆蓋、解除安裝後沒有留下檔案、以 root 執行會被拒絕。PowerShell 腳本以官方 PowerShell 7.4.6（Linux 版）只做語法解析（`spikes/stage3/check-ps1.sh`），三個腳本（含 pickFolder 內嵌的腳本）都沒有語法錯誤。
 - `host/dist/yte-host-darwin-arm64` 含有 Go 連結器產生的 ad-hoc 簽章（LC_CODE_SIGNATURE），Apple Silicon 可以直接執行。
@@ -129,14 +131,14 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 ## 需要專案擁有者在 macOS 上手動驗證
 
 1. `npm run build:host`，再執行 `sh host/dist/youtube-extension-host-macos/install.sh`（不加 sudo）。確認輸出中兩個「Registered」路徑存在，且 `~/Library/Application Support/youtube-extension-host/yte-host --version` 印出版本。
-2. 未安裝 yt-dlp／ffmpeg 時，安裝腳本印出 `brew install yt-dlp ffmpeg`；安裝後重新執行不再提示。
+2. 未安裝 yt-dlp、ffmpeg 或 deno 時，安裝腳本印出 `brew install yt-dlp ffmpeg deno`；三者都安裝後重新執行不再提示。
 3. 重新啟動 Chrome，在擴充功能的背景頁主控台執行：
    ```js
    const p = chrome.runtime.connectNative('com.chidi0716.youtube_extension');
    p.onMessage.addListener((m) => console.log(m));
    p.postMessage({ id: '1', cmd: 'status' });
    ```
-   應收到 `ok: true`、`ready: true`，`ytDlp.manager` 為 `homebrew`、`updateCommand` 為 `brew upgrade yt-dlp`，`defaultDir` 為 `~/Downloads`。Firefox（與 Zen）以 `browser.runtime.connectNative` 做同樣的測試。
+   應收到 `ok: true`、`ready: true`、`complete: true`、`missing: []`、`deno.version`，`ytDlp.manager` 為 `homebrew`、`updateCommand` 為 `brew upgrade yt-dlp`，`defaultDir` 為 `~/Downloads`。Firefox（與 Zen）以 `browser.runtime.connectNative` 做同樣的測試。
 4. 同一個連線送 `{"id":"2","cmd":"getInfo","args":{"videoId":"<一部短影片>"}}`，應在數秒內收到格式清單。
 5. 送 `{"id":"3","cmd":"download","args":{"videoId":"<同一部>","kind":"video","formatId":"<從 getInfo 選一個 mp4 影像>+140","container":"mp4","dir":"<下載資料夾的絕對路徑>"}}`，應收到 progress 事件與 done 事件，檔案出現在下載資料夾，`.yte-tmp-…` 已刪除；用 QuickTime 或 IINA 開啟確認有聲音、封面、章節。
 6. 長一點的影片下載途中送 `{"id":"4","cmd":"cancel","args":{"jobId":"<jobId>"}}`：回應 `state: cancelled`，下載資料夾沒有殘留，`ps ax | grep -E 'yt-dlp|ffmpeg'` 沒有殘留程序。
@@ -146,3 +148,12 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 10. `{"id":"7","cmd":"updateYtDlp"}`：Homebrew 安裝時回傳 `ran: false` 與 `brew upgrade yt-dlp`。
 11. 查看 `~/Library/Logs/youtube-extension-host/host.log`：只有指令名稱、工作狀態與錯誤代碼，路徑中的家目錄顯示為 `~`。
 12. 執行 `sh host/dist/youtube-extension-host-macos/uninstall.sh`，確認上述設定檔、`~/Library/Application Support/youtube-extension-host/` 與記錄檔資料夾都已刪除，重新檢查時顯示找不到橋接程式。
+
+## T15a（Q37、Q39 的回答）
+
+日期：2026-10-22
+
+- `status` 新增 `deno`、`complete`、`missing`、`installCommand`，找不到的元件在 `error` 標示 `YTDLP_NOT_FOUND`／`FFMPEG_NOT_FOUND`／`DENO_NOT_FOUND`（原本找不到時沒有 `error`）。`ready` 的意義不變（只看 yt-dlp 與 ffmpeg），缺少 deno 不會讓 getInfo 或 download 失敗。
+- 安裝腳本檢查 yt-dlp、ffmpeg、deno，任一缺少時提示一次安裝三者：`brew install yt-dlp ffmpeg deno`、`winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno`。README 中英文同步。
+- 時間範圍的檔名標記一小時以上改為小時補零：`01h02m03s`（未滿一小時仍為 `01m30s`）。
+- 假 yt-dlp 以 deno 為檔名時模擬 `deno --version`（`deno 2.1.4 (...)`），`testenv.FakeToolsDir` 改為列出要放入的工具。
