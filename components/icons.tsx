@@ -35,6 +35,10 @@ import link from '@material-symbols/svg-400/outlined/link.svg?raw';
 import download from '@material-symbols/svg-400/outlined/download.svg?raw';
 import graphicEq from '@material-symbols/svg-400/outlined/graphic_eq.svg?raw';
 import openInNew from '@material-symbols/svg-400/outlined/open_in_new.svg?raw';
+import expandLess from '@material-symbols/svg-400/outlined/keyboard_arrow_up.svg?raw';
+import expandMore from '@material-symbols/svg-400/outlined/keyboard_arrow_down.svg?raw';
+import folderOpen from '@material-symbols/svg-400/outlined/folder_open.svg?raw';
+import myLocation from '@material-symbols/svg-400/outlined/my_location.svg?raw';
 
 const SOURCES = {
   autoplay: autoplay,
@@ -53,6 +57,9 @@ const SOURCES = {
   download,
   drag_indicator: dragIndicator,
   error,
+  expand_less: expandLess,
+  expand_more: expandMore,
+  folder_open: folderOpen,
   graphic_eq: graphicEq,
   hd,
   help,
@@ -64,6 +71,7 @@ const SOURCES = {
   more_vert: moreVert,
   movie,
   music_note: musicNote,
+  my_location: myLocation,
   open_in_new: openInNew,
   photo_camera: photoCamera,
   picture_in_picture_alt: pictureInPictureAlt,

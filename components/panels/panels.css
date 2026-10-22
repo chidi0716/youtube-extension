@@ -467,3 +467,246 @@ a.yte-link {
   margin: 0;
   text-decoration: none;
 }
+
+/* ---------- 時間範圍（002 FR-20 至 FR-23、004 第 3 節） ---------- */
+
+.yte-clip {
+  margin-bottom: 12px;
+}
+
+.yte-clip-title {
+  margin-bottom: 4px;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.yte-clip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yte-clip-now {
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--yte-call-to-action);
+  cursor: pointer;
+}
+
+.yte-clip-now:hover {
+  background: var(--yte-hover-background);
+}
+
+.yte-clip-sync {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.yte-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--yte-hover-background);
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.yte-hint .yte-code {
+  margin-top: 4px;
+}
+
+/* ---------- 畫質清單（002 FR-10 至 FR-13） ---------- */
+
+.yte-video,
+.yte-mp3 {
+  width: 440px;
+  max-width: 100%;
+}
+
+.yte-quality-row {
+  display: grid;
+  grid-template-columns: 56px 96px 56px 1fr;
+  gap: 8px;
+}
+
+.yte-quality-row:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.yte-quality-container {
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.yte-quality-resolution {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.yte-quality-size {
+  color: var(--yte-text-secondary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.yte-more-formats {
+  margin-top: 4px;
+}
+
+/* ---------- MP3 面板（002 FR-20） ---------- */
+
+.yte-mp3-bitrate {
+  margin-bottom: 12px;
+}
+
+.yte-mp3-bitrate .yte-select {
+  align-self: flex-start;
+}
+
+.yte-mp3-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ---------- 下載工作（002 FR-3、FR-4、FR-6） ---------- */
+
+.yte-jobs {
+  margin: 12px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--yte-outline);
+  list-style: none;
+}
+
+.yte-job {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--yte-outline);
+}
+
+.yte-job-head,
+.yte-job-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.yte-job-label {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.yte-job-state,
+.yte-job-details,
+.yte-job-file {
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.yte-job-file {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.yte-job[data-state='done'] .yte-job-state {
+  color: var(--yte-call-to-action);
+}
+
+.yte-job[data-state='failed'] .yte-job-state {
+  color: var(--yte-error);
+}
+
+.yte-job-foot {
+  margin-top: 6px;
+}
+
+.yte-progress {
+  position: relative;
+  height: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--yte-range-rail);
+}
+
+.yte-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--yte-call-to-action);
+  transition: width 0.3s;
+}
+
+.yte-progress[data-indeterminate] .yte-progress-fill {
+  position: absolute;
+  width: 30%;
+  animation: yte-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes yte-indeterminate {
+  from {
+    left: -30%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yte-progress[data-indeterminate] .yte-progress-fill {
+    animation-duration: 4s;
+  }
+}
+
+.yte-job-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.yte-job-error-text {
+  flex: 1 1 200px;
+  color: var(--yte-error);
+}
+
+.yte-job-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.yte-update {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.yte-update[data-state='done'] {
+  color: var(--yte-call-to-action);
+}

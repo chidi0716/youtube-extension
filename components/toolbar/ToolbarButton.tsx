@@ -22,10 +22,32 @@ export interface ToolbarButtonProps {
   tooltipAlign: 'start' | 'center' | 'end';
   buttonRef: Ref<HTMLButtonElement>;
   onClick: () => void;
+  /** 下載進度環（002 FR-3、FR-6b）。 */
+  progress?: number | 'indeterminate' | null;
+}
+
+/** 按鈕外圍的圓形進度環：有百分比時畫出比例，沒有時為旋轉的不確定進度。 */
+function ProgressRing({ value }: { value: number | 'indeterminate' }) {
+  const r = 18;
+  const c = 2 * Math.PI * r;
+  const determinate = value !== 'indeterminate';
+  return (
+    <svg class="yte-btn-progress" viewBox="0 0 40 40" aria-hidden="true" data-indeterminate={determinate ? undefined : ''}>
+      <circle class="yte-btn-progress-track" cx="20" cy="20" r={r} />
+      <circle
+        class="yte-btn-progress-fill"
+        cx="20"
+        cy="20"
+        r={r}
+        stroke-dasharray={c}
+        stroke-dashoffset={determinate ? c * (1 - Math.max(0, Math.min(100, value)) / 100) : c * 0.75}
+      />
+    </svg>
+  );
 }
 
 export function ToolbarButton(props: ToolbarButtonProps) {
-  const { def, label, tooltip, notice, expanded, pressed, disabledReason, controls, tooltipAlign, buttonRef, onClick } = props;
+  const { def, label, tooltip, notice, expanded, pressed, disabledReason, controls, tooltipAlign, buttonRef, onClick, progress } = props;
   const isOn = def.kind === 'panel' ? !!expanded || !!pressed : def.kind === 'toggle' ? !!pressed : false;
   // 暫時訊息結束時滑鼠仍在按鈕上：讓訊息留到滑鼠移開為止，避免讀到一半消失（003 FR-15）。
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -50,6 +72,7 @@ export function ToolbarButton(props: ToolbarButtonProps) {
         class="yte-btn"
         data-button={def.id}
         data-on={isOn ? '' : undefined}
+        data-progress={progress === null || progress === undefined ? undefined : String(progress === 'indeterminate' ? 'indeterminate' : Math.round(progress))}
         aria-label={label}
         aria-description={disabledReason}
         aria-disabled={disabledReason ? 'true' : undefined}
@@ -60,6 +83,7 @@ export function ToolbarButton(props: ToolbarButtonProps) {
         onClick={onClick}
       >
         <Icon name={def.icon} />
+        {progress !== null && progress !== undefined && <ProgressRing value={progress} />}
       </button>
       {/* 提示文字只是視覺輔助，按鈕本身已有 aria-label。 */}
       <span

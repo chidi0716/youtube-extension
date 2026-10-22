@@ -20,6 +20,8 @@ import { Toolbar } from '@/components/toolbar/Toolbar';
 import controlsCss from '@/components/controls/controls.css?inline';
 import toolbarCss from '@/components/toolbar/toolbar.css?inline';
 import { createScreenshot } from '@/features/downloads/content';
+import { downloadJobs } from '@/features/downloads/host-client';
+import { buttonProgress } from '@/features/downloads/jobs';
 import { createViewingController } from '@/features/viewing';
 import { t } from '@/utils/i18n';
 import { enabled, QUALITY_LOCK_VALUES, type QualityLock } from '@/utils/settings';
@@ -118,7 +120,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         return <LoopPanel loop={viewing.loop} />;
       case 'more':
         return <MorePanel items={moreItems} onOpen={refreshMore} />;
-      // 下載（階段 4a）：縮圖、字幕不需要橋接程式；影片、MP3 在橋接程式完成前顯示未連線狀態（T22a）。
+      // 下載（階段 4a）：縮圖、字幕不需要橋接程式；影片、MP3 在畫質清單完成前顯示橋接程式的狀態（T16）。
       case 'thumbnail':
         return videoId ? <ThumbnailPanel videoId={videoId} /> : undefined;
       case 'subtitles':
@@ -129,6 +131,17 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
       default:
         return undefined;
     }
+  };
+
+  // 下載工作（002 FR-3）：按鈕上的進度環。
+  const jobs = downloadJobs();
+  const downloadProgress = (id: string) => {
+    const list = jobs.get();
+    return {
+      video: buttonProgress(list, id, 'video'),
+      mp3: buttonProgress(list, id, 'mp3'),
+      subtitles: buttonProgress(list, id, 'subtitle'),
+    };
   };
 
   function renderInto(container: HTMLElement, host: HTMLElement) {
@@ -143,6 +156,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         actions={actions}
         renderPanel={renderPanel}
         activePanels={viewing.activePanels()}
+        progress={downloadProgress(videoId)}
       />,
       container,
     );
@@ -253,6 +267,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   );
   ctx.onInvalidated(viewing.subscribe(rerender));
   ctx.onInvalidated(screenshot.state.subscribe(rerender));
+  ctx.onInvalidated(jobs.subscribe(rerender));
   ctx.onInvalidated(() => viewing.setActive(false));
   ctx.addEventListener(document, 'fullscreenchange', applyFullscreen);
   ctx.onInvalidated(() => {

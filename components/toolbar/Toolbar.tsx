@@ -34,6 +34,8 @@ export interface ToolbarProps {
   renderPanel?: (id: ButtonId) => ComponentChildren | undefined;
   /** 面板按鈕背後的功能正在進行中（例如循環播放，003 FR-52），按鈕維持開啟狀態。 */
   activePanels?: ReadonlySet<ButtonId>;
+  /** 下載進度（002 FR-3）：0–100、不確定（FR-6b）或沒有進行中的下載（null）。 */
+  progress?: Partial<Record<ButtonId, number | 'indeterminate' | null>>;
 }
 
 const COMING_SOON_MS = 1500;
@@ -46,6 +48,7 @@ export function Toolbar({
   actions = {},
   renderPanel,
   activePanels,
+  progress,
 }: ToolbarProps) {
   const [state, dispatch] = useReducer(panelReducer<ButtonId>, initialPanelState<ButtonId>());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -120,6 +123,7 @@ export function Toolbar({
           else buttonRefs.current.delete(def.id);
         }}
         onClick={() => handleClick(def)}
+        progress={progress?.[def.id] ?? null}
       />
     );
   };
