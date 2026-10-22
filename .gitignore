@@ -56,3 +56,6 @@ spikes/T06d/.cache/
 
 # T08a 實測的瀏覽器設定檔與暫存截圖
 spikes/T08a/.cache/
+
+# 階段 4a 實測的暫存檔
+spikes/stage4a/.cache/

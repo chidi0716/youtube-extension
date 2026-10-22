@@ -521,3 +521,30 @@ export const VIDEO_TITLE_SELECTORS: readonly string[] = [
   '.ytLockupMetadataViewModelTitle',
   '.shortsLockupViewModelHostMetadataTitle',
 ];
+
+// ---------------------------------------------------------------------------
+// 縮圖（002 FR-30、plan 3.8）
+// i.ytimg.com 的縮圖網址與尺寸。依 2026-10-22 直接取得的結果（spikes/stage4a/results-thumbnails.txt）：
+// 不存在的尺寸回傳 404，內容是 120×90 的預設圖。
+// ---------------------------------------------------------------------------
+
+export const THUMBNAIL_SIZES = [
+  { key: 'maxresdefault', width: 1280, height: 720 },
+  { key: 'sddefault', width: 640, height: 480 },
+  { key: 'hqdefault', width: 480, height: 360 },
+  { key: 'mqdefault', width: 320, height: 180 },
+] as const;
+
+export type ThumbnailKey = (typeof THUMBNAIL_SIZES)[number]['key'];
+
+/** YouTube 對不存在的尺寸回傳的預設圖大小。 */
+export const THUMBNAIL_PLACEHOLDER_SIZE = { width: 120, height: 90 } as const;
+
+export function isThumbnailKey(value: unknown): value is ThumbnailKey {
+  return THUMBNAIL_SIZES.some((s) => s.key === value);
+}
+
+/** 某個尺寸的縮圖網址（JPG）。影片 ID 必須先驗證過。 */
+export function thumbnailSizeUrl(videoId: string, key: ThumbnailKey): string {
+  return `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/${key}.jpg`;
+}

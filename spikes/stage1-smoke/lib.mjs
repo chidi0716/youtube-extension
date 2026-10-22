@@ -1,6 +1,6 @@
 // 本機假觀看頁測試共用的工具：啟動載入擴充功能的 Chromium、以 route 提供假頁面與測試影片。
 // 瀏覽器對 www.youtube.com 的請求全部由本機檔案回應，其他網址一律拒絕，不會連外。
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -31,10 +31,67 @@ export function fixtureFor(pathname) {
 const video = readFileSync(join(here, 'fixtures', 'test.webm'));
 const thumb = readFileSync(join(here, 'fixtures', 'thumb.jpg'));
 
-export async function launch({ lang = 'en-US', name = 'fixture', viewport, colorScheme } = {}) {
+// 階段 4a：縮圖各尺寸（fixtures/thumbs/，以 Pillow 產生的純色圖）。依實測，不存在的尺寸回傳 404 與 120×90 的預設圖
+// （spikes/stage4a/results-thumbnails.txt）；bbbbbbbbbbb 的 maxresdefault 模擬「200 但內容是預設圖」。
+const thumbImage = (name) => readFileSync(join(here, 'fixtures', 'thumbs', name));
+const THUMB_FILES = { maxresdefault: '1280x720.jpg', sddefault: '640x480.jpg', hqdefault: '480x360.jpg', mqdefault: '320x180.jpg' };
+const THUMB_MISSING = {
+  jNQXAC9IVRw: { maxresdefault: 404, sddefault: 404 },
+  bbbbbbbbbbb: { maxresdefault: 200 },
+};
+export const thumbnailRequests = [];
+function thumbnailResponse(id, key) {
+  thumbnailRequests.push(`${id}/${key}`);
+  const missing = THUMB_MISSING[id]?.[key];
+  if (missing) return { status: missing, contentType: 'image/jpeg', body: thumbImage('placeholder-120x90.jpg') };
+  return { status: 200, contentType: 'image/jpeg', body: thumbImage(THUMB_FILES[key]) };
+}
+
+// 階段 4a：字幕（/api/timedtext）。lang、kind=asr 決定內容；fail=1 回傳空白（模擬直接下載失敗）；
+// xml=1 不論 fmt 都回傳 YouTube 的 XML 格式。自動字幕依 YouTube 的捲動格式（含只有空白的行與逐字時間標籤）。
+export const captionRequests = [];
+const CAPTION_TEXT = {
+  en: ['Hello & welcome to the fixture', 'This is the second line'],
+  'zh-TW': ['你好，歡迎', '這是第二行字幕'],
+  ja: ['こんにちは', '二行目です'],
+};
+function captionResponse(url) {
+  captionRequests.push(url.search);
+  const p = url.searchParams;
+  if (p.get('fail') === '1') return { status: 200, contentType: 'text/html', body: '' };
+  if (p.get('xml') === '1') {
+    const body = '<?xml version="1.0" encoding="utf-8" ?><transcript><text start="1.5" dur="2">It&amp;#39;s XML &amp;amp; fine</text><text start="62.25" dur="2.75">Second XML line</text></transcript>';
+    return { status: 200, contentType: 'text/xml', body };
+  }
+  if (p.get('fmt') !== 'vtt') return { status: 200, contentType: 'text/xml', body: '<transcript></transcript>' };
+  if (p.get('kind') === 'asr') {
+    const body = [
+      'WEBVTT', 'Kind: captions', 'Language: en', '',
+      '00:00:00.320 --> 00:00:02.750 align:start position:0%', ' ', 'so<00:00:00.640><c> today</c><00:00:00.960><c> we</c>', '',
+      '00:00:02.750 --> 00:00:02.760 align:start position:0%', 'so today we', ' ', '',
+      '00:00:02.760 --> 00:00:05.110 align:start position:0%', 'so today we', 'are<00:00:03.100><c> testing</c>', '',
+      '00:00:05.110 --> 00:00:05.120 align:start position:0%', 'are testing', ' ', '',
+    ].join('\n');
+    return { status: 200, contentType: 'text/vtt', body };
+  }
+  const [a, b] = CAPTION_TEXT[p.get('lang')] ?? ['?', '?'];
+  const body = `WEBVTT\nKind: captions\nLanguage: ${p.get('lang')}\n\n00:00:01.000 --> 00:00:04.500\n${a.replace('&', '&amp;')}\n\n00:01:02.250 --> 00:01:05.000\n${b}\n`;
+  return { status: 200, contentType: 'text/vtt; charset=utf-8', body };
+}
+
+export async function launch({ lang = 'en-US', name = 'fixture', viewport, colorScheme, downloadDir, userAgent } = {}) {
   viewport ??= { width: 1280, height: 900 };
   const profile = join(here, '.cache', `profile-${name}-${lang}`);
   rmSync(profile, { recursive: true, force: true });
+  if (downloadDir) {
+    // 下載資料夾設在工作目錄內（瀏覽器設定檔的偏好）；測試再以 CDP 把下載行為改回瀏覽器預設，
+    // 讓擴充功能以 downloads API 指定的檔名存檔。
+    mkdirSync(join(profile, 'Default'), { recursive: true });
+    writeFileSync(
+      join(profile, 'Default', 'Preferences'),
+      JSON.stringify({ download: { default_directory: downloadDir, prompt_for_download: false, directory_upgrade: true } }),
+    );
+  }
   const context = await chromium.launchPersistentContext(profile, {
     executablePath: process.env.CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
     // HEADED=1 時以有視窗的模式執行（搭配 xvfb-run），切換分頁才會改變 document.visibilityState。
@@ -42,12 +99,15 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport, color
     locale: lang,
     viewport,
     ...(colorScheme ? { colorScheme } : {}),
+    ...(userAgent ? { userAgent } : {}),
     args: [
       `--lang=${lang}`,
       `--disable-extensions-except=${extDir}`,
       `--load-extension=${extDir}`,
       // 讓測試影片可以在沒有使用者操作時播放。
       '--autoplay-policy=no-user-gesture-required',
+      // 沒有被 route 處理的請求（例如擴充功能背景腳本的請求未被攔截時）一律無法解析網域，確保不會連外。
+      '--host-resolver-rules=MAP * ~NOTFOUND',
     ],
   });
   await context.route('**/*', (route) => {
@@ -78,8 +138,16 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport, color
     if (url.hostname === 'www.youtube.com' && script && fixtureFile(script[1]) !== null) {
       return route.fulfill({ status: 200, contentType: 'text/javascript', body: fixtureFile(script[1]) });
     }
+    if (url.hostname === 'www.youtube.com' && url.pathname === '/api/timedtext') {
+      return route.fulfill(captionResponse(url));
+    }
     if (url.hostname === 'www.youtube.com') {
       return route.fulfill({ status: 200, contentType: 'text/html', body: fixtureFor(url.pathname) });
+    }
+    // 縮圖各尺寸（階段 4a）
+    const sized = /^\/vi\/([A-Za-z0-9_-]{11})\/(maxresdefault|sddefault|hqdefault|mqdefault)\.jpg$/.exec(url.pathname);
+    if (url.hostname === 'i.ytimg.com' && sized && (THUMB_MISSING[sized[1]] || ['aaaaaaaaaaa', 'ccccccccccc'].includes(sized[1]))) {
+      return route.fulfill(thumbnailResponse(sized[1], sized[2]));
     }
     // 純音訊模式的縮圖：以測試影片的一格畫面代替。
     if (url.hostname === 'i.ytimg.com' && /^\/vi\/[A-Za-z0-9_-]{11}\/(?:hq|mq)default\.jpg$/.test(url.pathname)) {

@@ -127,6 +127,166 @@
     "message": "複製連結",
     "description": "Title of the copy link panel."
   },
+  "panelTitleMp3": {
+    "message": "下載 MP3",
+    "description": "Title of the MP3 download panel."
+  },
+  "panelTitleThumbnail": {
+    "message": "下載縮圖",
+    "description": "Title of the thumbnail panel."
+  },
+  "panelTitleSubtitles": {
+    "message": "下載字幕",
+    "description": "Title of the subtitles panel."
+  },
+  "download": {
+    "message": "下載",
+    "description": "Primary button that starts a download."
+  },
+  "downloadSaved": {
+    "message": "已存到下載資料夾",
+    "description": "Shown after a file was saved to the browser's download folder."
+  },
+  "downloadFailed": {
+    "message": "無法存檔。",
+    "description": "Error when the browser could not save a file."
+  },
+  "thumbnailNone": {
+    "message": "找不到這部影片的縮圖。",
+    "description": "Thumbnail panel: no thumbnail size exists."
+  },
+  "thumbnailMissing": {
+    "message": "這個尺寸已經不存在。",
+    "description": "Thumbnail panel: the chosen size does not exist."
+  },
+  "screenshotSaved": {
+    "message": "已儲存截圖",
+    "description": "Shown on the screenshot button after saving."
+  },
+  "screenshotFailed": {
+    "message": "無法擷取這個畫面",
+    "description": "Shown on the screenshot button when the browser blocks capturing."
+  },
+  "screenshotNoVideo": {
+    "message": "影片還沒載入",
+    "description": "Shown on the screenshot button when there is no frame to capture."
+  },
+  "subtitlesUploaded": {
+    "message": "上傳的字幕",
+    "description": "Subtitles panel: group of subtitles uploaded by the creator."
+  },
+  "subtitlesAuto": {
+    "message": "自動產生的字幕",
+    "description": "Subtitles panel: group of automatically generated subtitles."
+  },
+  "subtitlesAutoBadge": {
+    "message": "自動產生",
+    "description": "Subtitles panel: label of the icon that marks auto-generated subtitles."
+  },
+  "subtitlesNone": {
+    "message": "這部影片沒有字幕。",
+    "description": "Subtitles panel: shown when the video has no subtitles."
+  },
+  "subtitlesFormat": {
+    "message": "檔案格式",
+    "description": "Subtitles panel: label of the format dropdown."
+  },
+  "subtitlesFormatSrt": {
+    "message": "SRT",
+    "description": "Subtitle file format."
+  },
+  "subtitlesFormatVtt": {
+    "message": "VTT",
+    "description": "Subtitle file format."
+  },
+  "subtitlesFormatTxt": {
+    "message": "純文字（TXT）",
+    "description": "Subtitle file format without timestamps."
+  },
+  "subtitlesDirectFailed": {
+    "message": "無法直接從 YouTube 下載這個字幕。安裝橋接程式後，可以改用 yt-dlp 下載。",
+    "description": "Subtitles panel: error when the direct download fails."
+  },
+  "liveUnavailable": {
+    "message": "直播與尚未開始的影片無法下載。",
+    "description": "Download panels: shown for live and upcoming videos."
+  },
+  "hostMissingTitle": {
+    "message": "尚未連接下載工具",
+    "description": "Video and MP3 panels: heading when the helper program is not available."
+  },
+  "hostMissingIntro": {
+    "message": "影片與 MP3 由你電腦上的 yt-dlp 與 ffmpeg 下載，透過一支小型的橋接程式連接。需要：",
+    "description": "Video and MP3 panels: explanation before the list of components."
+  },
+  "hostComponentHelper": {
+    "message": "橋接程式",
+    "description": "Name of the native helper program component."
+  },
+  "hostComponentYtDlp": {
+    "message": "yt-dlp",
+    "description": "Name of the yt-dlp component."
+  },
+  "hostComponentFfmpeg": {
+    "message": "ffmpeg",
+    "description": "Name of the ffmpeg component."
+  },
+  "hostStatusUnreachable": {
+    "message": "無法連線",
+    "description": "Status of the helper program when it cannot be reached."
+  },
+  "hostStatusUnknown": {
+    "message": "需要橋接程式才能確認",
+    "description": "Status of yt-dlp or ffmpeg when the helper is not connected."
+  },
+  "hostStepsTitleMac": {
+    "message": "在 macOS 上安裝",
+    "description": "Heading of the macOS installation steps."
+  },
+  "hostStepsTitleWindows": {
+    "message": "在 Windows 上安裝",
+    "description": "Heading of the Windows installation steps."
+  },
+  "hostStepsTitleOther": {
+    "message": "安裝",
+    "description": "Heading of the installation steps on other systems."
+  },
+  "hostStepPackagesMac": {
+    "message": "在「終端機」以 Homebrew 安裝 yt-dlp 與 ffmpeg：",
+    "description": "macOS installation step 1."
+  },
+  "hostStepPackagesWindows": {
+    "message": "在 PowerShell 以 winget 安裝 yt-dlp 與 ffmpeg：",
+    "description": "Windows installation step 1."
+  },
+  "hostStepScriptMac": {
+    "message": "下載橋接程式，執行其中的安裝腳本：",
+    "description": "macOS installation step 2."
+  },
+  "hostStepScriptWindows": {
+    "message": "下載橋接程式，執行其中的安裝腳本：",
+    "description": "Windows installation step 2."
+  },
+  "hostStepRecheck": {
+    "message": "重新啟動瀏覽器，再按「重新檢查」。",
+    "description": "Last installation step."
+  },
+  "hostOtherOs": {
+    "message": "橋接程式提供 macOS 與 Windows 版本。",
+    "description": "Shown on systems other than macOS and Windows."
+  },
+  "hostInstallGuide": {
+    "message": "安裝說明",
+    "description": "Link to the installation section of the README."
+  },
+  "hostRecheck": {
+    "message": "重新檢查",
+    "description": "Button that checks the helper connection again."
+  },
+  "hostChecking": {
+    "message": "檢查中…",
+    "description": "Shown while checking the helper connection."
+  },
   "linkAtTime": {
     "message": "目前時間的連結",
     "description": "Link panel: option that copies a youtu.be link starting at the current time."

@@ -127,6 +127,166 @@
     "message": "Copy link",
     "description": "Title of the copy link panel."
   },
+  "panelTitleMp3": {
+    "message": "Download MP3",
+    "description": "Title of the MP3 download panel."
+  },
+  "panelTitleThumbnail": {
+    "message": "Download thumbnail",
+    "description": "Title of the thumbnail panel."
+  },
+  "panelTitleSubtitles": {
+    "message": "Download subtitles",
+    "description": "Title of the subtitles panel."
+  },
+  "download": {
+    "message": "Download",
+    "description": "Primary button that starts a download."
+  },
+  "downloadSaved": {
+    "message": "Saved to Downloads",
+    "description": "Shown after a file was saved to the browser's download folder."
+  },
+  "downloadFailed": {
+    "message": "Couldn't save the file.",
+    "description": "Error when the browser could not save a file."
+  },
+  "thumbnailNone": {
+    "message": "No thumbnails were found for this video.",
+    "description": "Thumbnail panel: no thumbnail size exists."
+  },
+  "thumbnailMissing": {
+    "message": "This size is no longer available.",
+    "description": "Thumbnail panel: the chosen size does not exist."
+  },
+  "screenshotSaved": {
+    "message": "Screenshot saved",
+    "description": "Shown on the screenshot button after saving."
+  },
+  "screenshotFailed": {
+    "message": "Couldn't capture this frame",
+    "description": "Shown on the screenshot button when the browser blocks capturing."
+  },
+  "screenshotNoVideo": {
+    "message": "The video isn't ready yet",
+    "description": "Shown on the screenshot button when there is no frame to capture."
+  },
+  "subtitlesUploaded": {
+    "message": "Uploaded subtitles",
+    "description": "Subtitles panel: group of subtitles uploaded by the creator."
+  },
+  "subtitlesAuto": {
+    "message": "Auto-generated subtitles",
+    "description": "Subtitles panel: group of automatically generated subtitles."
+  },
+  "subtitlesAutoBadge": {
+    "message": "Auto-generated",
+    "description": "Subtitles panel: label of the icon that marks auto-generated subtitles."
+  },
+  "subtitlesNone": {
+    "message": "This video has no subtitles.",
+    "description": "Subtitles panel: shown when the video has no subtitles."
+  },
+  "subtitlesFormat": {
+    "message": "File format",
+    "description": "Subtitles panel: label of the format dropdown."
+  },
+  "subtitlesFormatSrt": {
+    "message": "SRT",
+    "description": "Subtitle file format."
+  },
+  "subtitlesFormatVtt": {
+    "message": "VTT",
+    "description": "Subtitle file format."
+  },
+  "subtitlesFormatTxt": {
+    "message": "Text only (TXT)",
+    "description": "Subtitle file format without timestamps."
+  },
+  "subtitlesDirectFailed": {
+    "message": "Couldn't download these subtitles directly from YouTube. Installing the helper program lets the extension use yt-dlp instead.",
+    "description": "Subtitles panel: error when the direct download fails."
+  },
+  "liveUnavailable": {
+    "message": "Live and upcoming videos can't be downloaded.",
+    "description": "Download panels: shown for live and upcoming videos."
+  },
+  "hostMissingTitle": {
+    "message": "The download helper isn't connected",
+    "description": "Video and MP3 panels: heading when the helper program is not available."
+  },
+  "hostMissingIntro": {
+    "message": "Videos and MP3 are downloaded by yt-dlp and ffmpeg on your computer, through a small helper program. You need:",
+    "description": "Video and MP3 panels: explanation before the list of components."
+  },
+  "hostComponentHelper": {
+    "message": "Helper program",
+    "description": "Name of the native helper program component."
+  },
+  "hostComponentYtDlp": {
+    "message": "yt-dlp",
+    "description": "Name of the yt-dlp component."
+  },
+  "hostComponentFfmpeg": {
+    "message": "ffmpeg",
+    "description": "Name of the ffmpeg component."
+  },
+  "hostStatusUnreachable": {
+    "message": "Not connected",
+    "description": "Status of the helper program when it cannot be reached."
+  },
+  "hostStatusUnknown": {
+    "message": "Can't check without the helper",
+    "description": "Status of yt-dlp or ffmpeg when the helper is not connected."
+  },
+  "hostStepsTitleMac": {
+    "message": "Install on macOS",
+    "description": "Heading of the macOS installation steps."
+  },
+  "hostStepsTitleWindows": {
+    "message": "Install on Windows",
+    "description": "Heading of the Windows installation steps."
+  },
+  "hostStepsTitleOther": {
+    "message": "Installation",
+    "description": "Heading of the installation steps on other systems."
+  },
+  "hostStepPackagesMac": {
+    "message": "Install yt-dlp and ffmpeg with Homebrew in Terminal:",
+    "description": "macOS installation step 1."
+  },
+  "hostStepPackagesWindows": {
+    "message": "Install yt-dlp and ffmpeg with winget in PowerShell:",
+    "description": "Windows installation step 1."
+  },
+  "hostStepScriptMac": {
+    "message": "Download the helper and run its install script:",
+    "description": "macOS installation step 2."
+  },
+  "hostStepScriptWindows": {
+    "message": "Download the helper and run its install script:",
+    "description": "Windows installation step 2."
+  },
+  "hostStepRecheck": {
+    "message": "Restart the browser, then press “Check again”.",
+    "description": "Last installation step."
+  },
+  "hostOtherOs": {
+    "message": "The helper program is available for macOS and Windows.",
+    "description": "Shown on systems other than macOS and Windows."
+  },
+  "hostInstallGuide": {
+    "message": "Installation guide",
+    "description": "Link to the installation section of the README."
+  },
+  "hostRecheck": {
+    "message": "Check again",
+    "description": "Button that checks the helper connection again."
+  },
+  "hostChecking": {
+    "message": "Checking…",
+    "description": "Shown while checking the helper connection."
+  },
   "linkAtTime": {
     "message": "Link at current time",
     "description": "Link panel: option that copies a youtu.be link starting at the current time."
