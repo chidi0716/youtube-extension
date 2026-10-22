@@ -191,8 +191,16 @@ export async function extensionWorker(context) {
 
 /** 設定介面語言（sync:uiLanguage）：'auto'、'zh_TW' 或 'en'。 */
 export async function setUiLanguage(context, value) {
-  const sw = await extensionWorker(context);
-  await sw.evaluate((v) => chrome.storage.sync.set({ uiLanguage: v }), value);
+  // service worker 剛啟動時 chrome.storage 可能還沒準備好：稍候再試。
+  for (let i = 0; ; i++) {
+    const sw = await extensionWorker(context);
+    const ok = await sw
+      .evaluate((v) => (globalThis.chrome?.storage?.sync ? chrome.storage.sync.set({ uiLanguage: v }).then(() => true) : false), value)
+      .catch(() => false);
+    if (ok) return;
+    if (i >= 50) throw new Error('setUiLanguage: extension storage not available');
+    await new Promise((r) => setTimeout(r, 100));
+  }
 }
 
 export function reporter() {

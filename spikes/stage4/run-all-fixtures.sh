@@ -26,5 +26,6 @@ run gallery spikes/stage1-smoke/gallery-shot.mjs
 run t08a spikes/T08a/repro.mjs
 run e2e spikes/stage4/e2e-test.mjs
 run toolbar spikes/stage6/toolbar-test.mjs
+run language spikes/stage7/language-test.mjs
 run firefox spikes/stage4/firefox-smoke.mjs
 exit $status

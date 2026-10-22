@@ -7,7 +7,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { EXT_ID, WATCH, button, launch, openWatch, reporter, shot, shots } from '../stage1-smoke/lib.mjs';
+import { EXT_ID, WATCH, button, launch, openWatch, reporter, setUiLanguage, shot, shots } from '../stage1-smoke/lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cache = join(here, '.cache');
@@ -639,6 +639,60 @@ await session('hiddenTool', async ({ page }) => {
   await page.keyboard.press('Escape');
   await sleep(300);
   check('T32：取消下載後提示圓點消失', !(await inToolbar(page, `return root.querySelector('.yte-btn[data-button="more"]').hasAttribute('data-dot')`)));
+  scenario('ok');
+});
+
+// ===========================================================================
+// 007：下載中切換介面語言；通知使用所選語言（T35、T36）
+// ===========================================================================
+await session('language', async ({ page, context }) => {
+  await recordNotifications(context);
+  scenario('slow');
+  await page.evaluate(() => {
+    document.querySelector('yte-toolbar').__marker = 'same-host';
+  });
+  await openPanel(page, 'video');
+  await page.waitForSelector('yte-toolbar .yte-quality-row');
+  await page.locator('yte-toolbar .yte-quality-row[data-format="18"]').click();
+  const before = await waitJob(page, (j) => j.state === 'downloading' && /%/.test(j.details));
+  const ringBefore = await buttonProgress(page, 'video');
+  await setUiLanguage(context, 'zh_TW');
+  await sleep(800);
+  const rows = await jobRows(page);
+  const after = rows.find((j) => j.id === before?.id);
+  const state = await inToolbar(
+    page,
+    `return { panel: root.querySelector('.yte-panel-title')?.textContent, sameHost: document.querySelectorAll('yte-toolbar').length === 1 && document.querySelector('yte-toolbar').__marker === 'same-host', ring: root.querySelector('.yte-btn[data-button="video"]').dataset.progress ?? null }`,
+  );
+  check(
+    'T36：下載中切換語言，進度與面板狀態不變，文字換成新語言（007 驗收 2、NFR-1）',
+    !!before && after?.state === 'downloading' && after.stateText === '下載中' && after.buttons.includes('取消') && state.panel === '下載影片' && state.sameHost && ringBefore !== null && state.ring !== null,
+    JSON.stringify({ before: before?.stateText, after: after && { state: after.state, text: after.stateText, buttons: after.buttons }, ...state }),
+  );
+  await shot(page, 'T35-download-zh-TW-switched.png');
+  // 取消後改為一般下載，確認完成通知的語言
+  await page.locator(`yte-toolbar .yte-job[data-job="${before?.id}"] .yte-job-foot button`).click();
+  await sleep(1500);
+  scenario('ok');
+  await page.locator('yte-toolbar .yte-quality-row[data-format="136+140"]').click();
+  const done = await waitJob(page, (j) => j.state === 'done' && j.id !== before?.id);
+  await sleep(500);
+  const n = await notes(context);
+  const note = n.find((x) => x.id === `yte-job:${done?.id}`);
+  check('T36：下載完成的通知使用所選語言（007 FR-3、驗收 4）', note?.title === '下載完成', JSON.stringify(note));
+  // 錯誤訊息依錯誤代碼轉成所選語言（007 FR-7）
+  scenario('network');
+  await page.locator('yte-toolbar .yte-quality-row[data-format="18"]').click();
+  const failed = await waitJob(page, (j) => j.state === 'failed', 10_000);
+  check('T36：錯誤訊息依錯誤代碼以所選語言顯示，不顯示 yt-dlp 的原始訊息（007 FR-7）', failed?.errorText === '網路連線問題，請重試。' && !/urlopen|ERROR/.test(failed.errorText), failed?.errorText);
+  await sleep(500);
+  const failNote = (await notes(context)).find((x) => x.id === `yte-job:${failed?.id}`);
+  check('T36：失敗通知使用所選語言', failNote?.title === '下載失敗' && /網路連線問題/.test(failNote.message), JSON.stringify(failNote));
+  // 切回英文
+  await setUiLanguage(context, 'en');
+  await sleep(800);
+  const en = (await jobRows(page)).find((j) => j.id === done?.id);
+  check('T36：切回英文後工作清單文字為英文', en?.stateText === 'Done' && en.buttons.includes('Show file'), JSON.stringify(en));
   scenario('ok');
 });
 

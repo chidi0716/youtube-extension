@@ -10,5 +10,5 @@
 
 ## 最近一次檢查
 
-- 日期：2026-10-22（階段 6：T32 至 T34）
+- 日期：2026-10-23（階段 7：T35、T36）
 - 結果：0 個錯誤、2 個警告（即上表兩項：`manifest.json`、`content-scripts/youtube.js`）、0 個 notice。`background.js`（含原生訊息與通知）、`options.html` 的腳本（設定頁的工具列區與下載區以 DOM API 建立元素與圖示，沒有 innerHTML，也不含 Preact）、`content-scripts/tidy.js` 沒有警告。
