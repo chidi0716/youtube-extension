@@ -349,6 +349,10 @@
     "message": "Show MP4 only",
     "description": "Video panel: hides formats other than MP4."
   },
+  "qualityLimited": {
+    "message": "May not play in some players",
+    "description": "Video panel: note under a 2K/4K/8K MP4 that uses AV1 or VP9 video instead of H.264."
+  },
   "sizeApprox": {
     "message": "~",
     "description": "Prefix of an estimated file size (followed by the size, e.g. ~147.1 MB)."

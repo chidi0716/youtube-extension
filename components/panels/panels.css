@@ -562,6 +562,14 @@ a.yte-link {
   font-variant-numeric: tabular-nums;
 }
 
+/* AV1／VP9 合併成的 MP4：部分播放器可能無法播放（002 FR-13）。 */
+.yte-quality-note {
+  grid-column: 2 / -1;
+  margin-top: -4px;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+}
+
 .yte-more-formats {
   margin-top: 4px;
 }

@@ -58,7 +58,9 @@ describe('buildQualityList（002 FR-10 至 FR-13、plan 3.8）', () => {
 
   it('由高到低排列，同解析度 MP4 在前', () => {
     expect(rows.map((r) => `${r.container} ${r.resolution}`)).toEqual([
+      'mp4 2160p',
       'webm 2160p',
+      'mp4 1440p',
       'webm 1440p',
       'mp4 1080p60',
       'mp4 1080p',
@@ -74,10 +76,19 @@ describe('buildQualityList（002 FR-10 至 FR-13、plan 3.8）', () => {
     expect(byKey['webm 2160p']!.formatId).toBe('313+251');
   });
 
-  it('MP4 組只有 H.264；AV1、VP9 歸入其他格式（WEBM）組，同組取位元率最高', () => {
+  it('1080p 以下的 MP4 只有 H.264；WEBM 組為 VP9／AV1＋Opus，同組取位元率最高', () => {
     // 2160p 的 VP9（17000）位元率高於 AV1（12000）
-    expect(rows.filter((r) => r.height === 2160)).toHaveLength(1);
-    expect(rows.filter((r) => r.container === 'mp4').every((r) => /^(1[0-9]{2}|2[0-9]{2}|18|13[0-9])\+?/.test(r.formatId))).toBe(true);
+    expect(byKey['webm 2160p']!.formatId).toBe('313+251');
+    expect(rows.filter((r) => r.container === 'mp4' && r.height <= 1080).every((r) => !r.limited)).toBe(true);
+  });
+
+  it('2K 以上沒有 H.264 時，以 AV1（否則 VP9）＋M4A 合併成 MP4 並標記 limited（FR-13、Q43）', () => {
+    // 2160p 有 AV1（401）也有 VP9（313）：MP4 用 AV1，即使 VP9 的位元率較高
+    expect(byKey['mp4 2160p']).toMatchObject({ formatId: '401+140', limited: true, size: 367_000_000 + 3_970_000, approx: false, badge: '4K' });
+    // 1440p 只有 VP9
+    expect(byKey['mp4 1440p']).toMatchObject({ formatId: '271+140', limited: true, badge: '2K' });
+    // 1080p 有 H.264，不另外產生
+    expect(rows.filter((r) => r.container === 'mp4' && r.height === 1080).map((r) => r.formatId)).toEqual(['299+140', '137+140']);
   });
 
   it('同解析度有合併格式時，已含聲音的單一格式不重複列出', () => {
@@ -91,11 +102,11 @@ describe('buildQualityList（002 FR-10 至 FR-13、plan 3.8）', () => {
   });
 
   it('標籤', () => {
-    expect(rows.map((r) => r.badge)).toEqual(['4K', '2K', '1080', '1080', '1080', 'HD', null]);
+    expect(rows.map((r) => r.badge)).toEqual(['4K', '4K', '2K', '2K', '1080', '1080', '1080', 'HD', null]);
   });
 
   it('預設只列出 MP4（FR-13）', () => {
-    expect(visibleRows(rows, false).map((r) => r.resolution)).toEqual(['1080p60', '1080p', '720p', '360p']);
+    expect(visibleRows(rows, false).map((r) => r.resolution)).toEqual(['2160p', '1440p', '1080p60', '1080p', '720p', '360p']);
     expect(visibleRows(rows, true)).toHaveLength(rows.length);
   });
 });
@@ -137,6 +148,39 @@ describe('其他範例', () => {
       ['4K', '2160p60', false],
       ['4K', '2160p60', true],
     ]);
+  });
+
+  it('8K、HDR 也以 AV1／VP9＋M4A 合併成 MP4（各自一列）', () => {
+    const rows = buildQualityList([
+      f({ id: '140', ext: 'm4a', acodec: 'mp4a.40.2', abr: 128, filesize: 10 }),
+      f({ id: '251', ext: 'webm', acodec: 'opus', abr: 130, filesize: 10 }),
+      f({ id: '571', ext: 'mp4', vcodec: 'av01.0.16M.08', width: 7680, height: 4320, fps: 30, filesize: 100 }),
+      f({ id: '337', ext: 'webm', vcodec: 'vp9.2', width: 3840, height: 2160, fps: 60, dynamicRange: 'HDR10', filesize: 50 }),
+      f({ id: '701', ext: 'mp4', vcodec: 'av01.0.13M.10.0.110.09.16.09.0', width: 3840, height: 2160, fps: 60, dynamicRange: 'HDR10', filesize: 45 }),
+      f({ id: '315', ext: 'webm', vcodec: 'vp9', width: 3840, height: 2160, fps: 60, filesize: 40 }),
+    ]);
+    expect(visibleRows(rows, false).map((r) => [r.resolution, r.hdr, r.formatId, r.limited])).toEqual([
+      ['4320p', false, '571+140', true],
+      ['2160p60', false, '315+140', true],
+      ['2160p60', true, '701+140', true],
+    ]);
+  });
+
+  it('沒有 M4A 時不產生 AV1／VP9 的 MP4', () => {
+    const rows = buildQualityList([
+      f({ id: '251', ext: 'webm', acodec: 'opus', abr: 130 }),
+      f({ id: '313', ext: 'webm', vcodec: 'vp9', width: 3840, height: 2160, fps: 30 }),
+    ]);
+    expect(rows.map((r) => r.container)).toEqual(['webm']);
+  });
+
+  it('1080p 以下沒有 H.264 時不產生 AV1／VP9 的 MP4', () => {
+    const rows = buildQualityList([
+      f({ id: '140', ext: 'm4a', acodec: 'mp4a.40.2', abr: 128 }),
+      f({ id: '251', ext: 'webm', acodec: 'opus', abr: 130 }),
+      f({ id: '248', ext: 'webm', vcodec: 'vp9', width: 1920, height: 1080, fps: 30 }),
+    ]);
+    expect(rows.map((r) => r.container)).toEqual(['webm']);
   });
 
   it('沒有對應的聲音時不列出只有影像的格式', () => {

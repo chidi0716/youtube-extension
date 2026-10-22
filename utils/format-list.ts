@@ -2,6 +2,8 @@
 // 輸入是橋接程式 getInfo 回傳的格式清單（yt-dlp 的格式資料精簡後的欄位）。
 // - 只列出「影像加聲音」的完整結果：只有影像的格式自動搭配最佳聲音，大小為兩者相加；已經包含聲音的格式直接列出。
 // - MP4 組：H.264（avc1）影像＋M4A（mp4a）聲音。其他格式組（WEBM）：VP9／AV1 影像＋Opus 聲音（plan 3.8）。
+// - 2K 以上沒有 H.264 時，以 AV1（沒有才用 VP9）＋M4A 合併成 MP4 列在主清單，並標記部分播放器可能無法播放
+//   （002 FR-13、QUESTIONS Q43，tasks T18a）。
 // - 依解析度與幀率分組，每組取位元率最高的格式；由高到低排列。
 import type { HostFormat } from './native-protocol';
 
@@ -26,13 +28,19 @@ export interface QualityRow {
   approx: boolean;
   /** 是否為 HDR 影像。 */
   hdr: boolean;
+  /** MP4 但影像不是 H.264（AV1 或 VP9）：部分播放器可能無法播放（002 FR-13）。 */
+  limited: boolean;
 }
 
 const hasVideo = (f: HostFormat) => !!f.vcodec && f.vcodec !== 'none';
 const hasAudio = (f: HostFormat) => !!f.acodec && f.acodec !== 'none';
 const isDrc = (f: HostFormat) => /-drc$/i.test(f.id) || /\bdrc\b/i.test(f.note);
 const isH264 = (codec: string) => /^(avc1|h264)/i.test(codec);
-const isVp9OrAv1 = (codec: string) => /^(vp0?9|av01|av1)/i.test(codec);
+const isAv1 = (codec: string) => /^(av01|av1)/i.test(codec);
+const isVp9OrAv1 = (codec: string) => /^(vp0?9)/i.test(codec) || isAv1(codec);
+
+/** 2K 以上才以 AV1／VP9 合併成 MP4（002 FR-13）。 */
+export const LIMITED_MP4_MIN_HEIGHT = 1440;
 const isAac = (codec: string) => /^mp4a/i.test(codec);
 const isOpus = (codec: string) => /^opus/i.test(codec);
 
@@ -85,12 +93,36 @@ interface Candidate {
   /** 同組時比較用：合併的影像＋聲音優先於已含聲音的單一格式，其次比位元率。 */
   merged: boolean;
   rate: number;
+  limited: boolean;
+}
+
+const groupKey = (container: Container, height: number, fps: number, hdr: boolean) => `${container}-${height}-${fps > 30 ? 60 : 30}-${hdr ? 'hdr' : 'sdr'}`;
+
+/** 只有影像的格式＋聲音合併成一個候選。 */
+function mergedCandidate(f: HostFormat, a: HostFormat, container: Container, height: number, limited: boolean): Candidate {
+  const v = sizeOf(f);
+  const s = sizeOf(a);
+  const size = v.size !== null && s.size !== null ? v.size + s.size : null;
+  return {
+    container,
+    height,
+    fps: f.fps ?? 30,
+    formatId: `${f.id}+${a.id}`,
+    size,
+    approx: size !== null && (v.approx || s.approx),
+    hdr: /hdr/i.test(f.dynamicRange),
+    merged: true,
+    rate: rate(f),
+    limited,
+  };
 }
 
 /** 由 getInfo 的格式清單產生畫質清單（全部容器），由高到低排列。 */
 export function buildQualityList(formats: readonly HostFormat[]): QualityRow[] {
   const audio = { mp4: bestAudio(formats, isAac), webm: bestAudio(formats, isOpus) };
   const candidates: Candidate[] = [];
+  /** 2K 以上的 AV1／VP9 影像（沒有 H.264 時合併成 MP4 用）。 */
+  const highNonH264: { f: HostFormat; height: number }[] = [];
 
   for (const f of formats) {
     if (!usable(f) || !hasVideo(f)) continue;
@@ -103,36 +135,37 @@ export function buildQualityList(formats: readonly HostFormat[]): QualityRow[] {
       const container: Container | null = f.ext === 'mp4' && isH264(f.vcodec) ? 'mp4' : f.ext === 'webm' ? 'webm' : null;
       if (!container) continue;
       const { size, approx } = sizeOf(f);
-      candidates.push({ container, height, fps, formatId: f.id, size, approx, hdr, merged: false, rate: rate(f) });
+      candidates.push({ container, height, fps, formatId: f.id, size, approx, hdr, merged: false, rate: rate(f), limited: false });
       continue;
     }
     // 只有影像：依編碼決定組別，搭配同組的最佳聲音。
     const container: Container | null = isH264(f.vcodec) ? 'mp4' : isVp9OrAv1(f.vcodec) ? 'webm' : null;
     if (!container) continue;
+    if (container === 'webm' && height >= LIMITED_MP4_MIN_HEIGHT) highNonH264.push({ f, height });
     const a = audio[container];
     if (!a) continue;
-    const v = sizeOf(f);
-    const s = sizeOf(a);
-    const size = v.size !== null && s.size !== null ? v.size + s.size : null;
-    candidates.push({
-      container,
-      height,
-      fps,
-      formatId: `${f.id}+${a.id}`,
-      size,
-      approx: size !== null && (v.approx || s.approx),
-      hdr,
-      merged: true,
-      rate: rate(f),
-    });
+    candidates.push(mergedCandidate(f, a, container, height, false));
   }
 
   // 依容器、解析度、幀率（30／60）、HDR 分組，每組留一個。
   const groups = new Map<string, Candidate>();
   for (const c of candidates) {
-    const key = `${c.container}-${c.height}-${c.fps > 30 ? 60 : 30}-${c.hdr ? 'hdr' : 'sdr'}`;
+    const key = groupKey(c.container, c.height, c.fps, c.hdr);
     const prev = groups.get(key);
     if (!prev || Number(c.merged) - Number(prev.merged) > 0 || (c.merged === prev.merged && c.rate > prev.rate)) groups.set(key, c);
+  }
+
+  // 2K 以上沒有 H.264 的組：AV1 優先（沒有才用 VP9），同編碼取位元率最高，搭配 M4A 合併成 MP4（002 FR-13）。
+  if (audio.mp4) {
+    const best = new Map<string, { f: HostFormat; height: number }>();
+    for (const h of highNonH264) {
+      const key = groupKey('mp4', h.height, h.f.fps ?? 30, /hdr/i.test(h.f.dynamicRange));
+      if (groups.has(key)) continue;
+      const prev = best.get(key);
+      const better = !prev || Number(isAv1(h.f.vcodec)) - Number(isAv1(prev.f.vcodec)) > 0 || (isAv1(h.f.vcodec) === isAv1(prev.f.vcodec) && rate(h.f) > rate(prev.f));
+      if (better) best.set(key, h);
+    }
+    for (const [key, h] of best) groups.set(key, mergedCandidate(h.f, audio.mp4, 'mp4', h.height, true));
   }
 
   return [...groups.entries()]
@@ -147,6 +180,7 @@ export function buildQualityList(formats: readonly HostFormat[]): QualityRow[] {
       size: c.size,
       approx: c.approx,
       hdr: c.hdr,
+      limited: c.limited,
     }))
     .sort((a, b) => b.height - a.height || b.fps - a.fps || Number(a.hdr) - Number(b.hdr) || (a.container === b.container ? 0 : a.container === 'mp4' ? -1 : 1));
 }

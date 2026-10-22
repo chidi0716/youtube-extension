@@ -140,6 +140,7 @@ function QualityList({ videoId, pageTitle }: { videoId: string; pageTitle: strin
                   type="button"
                   class="yte-list-row yte-quality-row"
                   data-format={row.formatId}
+                  data-limited={row.limited ? '' : undefined}
                   disabled={!clip.clip.valid}
                   onClick={() => void download(row)}
                 >
@@ -150,6 +151,7 @@ function QualityList({ videoId, pageTitle }: { videoId: string; pageTitle: strin
                   </span>
                   <span class="yte-quality-badge">{row.badge && <span class="yte-badge">{row.badge}</span>}</span>
                   <span class="yte-quality-size">{formatSize(size, approx, t('sizeApprox'))}</span>
+                  {row.limited && <span class="yte-quality-note">{t('qualityLimited')}</span>}
                 </button>
               </li>
             );

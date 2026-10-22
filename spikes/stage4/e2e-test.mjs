@@ -111,6 +111,7 @@ const qualityRows = (page) =>
       resolution: b.querySelector('.yte-quality-resolution').textContent,
       badge: b.querySelector('.yte-quality-badge').textContent,
       size: b.querySelector('.yte-quality-size').textContent,
+      note: b.querySelector('.yte-quality-note')?.textContent ?? '',
       disabled: b.disabled,
     }))`,
   );
@@ -193,7 +194,7 @@ await session('connected', async ({ page, context, home, downloads }) => {
   let rows = await qualityRows(page);
   check(
     'T16/T19：影片面板經由橋接程式取得格式，預設只列 MP4（002 FR-10、FR-11）',
-    rows.map((r) => `${r.resolution} ${r.container}`).join('|') === '1080p60 MP4|1080p MP4|720p MP4|360p MP4',
+    rows.map((r) => `${r.resolution} ${r.container}`).join('|') === '2160p MP4|1080p60 MP4|1080p MP4|720p MP4|360p MP4',
     rows.map((r) => `${r.resolution} ${r.container} ${r.format} ${r.size} ${r.badge}`).join(' | '),
   );
   check(
@@ -202,16 +203,32 @@ await session('connected', async ({ page, context, home, downloads }) => {
     rows.map((r) => `${r.format}=${r.size}`).join(', '),
   );
   check('DRM 與故事板格式不列出（FR-11）', !rows.some((r) => r.format.includes('999') || r.format.includes('sb0')));
+  check(
+    'T18a：4K 沒有 H.264 時以 AV1＋M4A 合併成 MP4 列在主清單，標「4K」並加註可能無法播放（FR-13、Q43）',
+    rows[0]?.format === '401+140' && rows[0].badge === '4K' && rows[0].note === 'May not play in some players' && rows.slice(1).every((r) => r.note === ''),
+    JSON.stringify(rows[0]),
+  );
   await shot(page, 'T19-video-panel.png');
   await page.locator('yte-toolbar .yte-more-formats').click();
   rows = await qualityRows(page);
   check(
     '「顯示更多格式」列出 WEBM（VP9／AV1 加 Opus）（FR-11、FR-13）',
-    rows.some((r) => r.container === 'WEBM' && r.resolution.startsWith('2160p')) && rows.some((r) => r.format === '248+251'),
+    rows.some((r) => r.container === 'WEBM' && r.format === '313+251') && rows.some((r) => r.format === '248+251'),
     rows.map((r) => `${r.resolution} ${r.container} ${r.format}`).join(' | '),
   );
   await shot(page, 'T19-video-panel-more.png');
   await page.locator('yte-toolbar .yte-more-formats').click();
+  // 4K（AV1＋M4A）下載成 MP4
+  resetLog();
+  await page.locator('yte-toolbar .yte-quality-row[data-format="401+140"]').click();
+  const uhd = await waitJob(page, (j) => j.state === 'done' && /2160p/.test(j.label));
+  const uhdRun = ytRuns().find((a) => a.includes('-f'));
+  check(
+    'T18a：4K MP4 以 -f 401+140 --merge-output-format mp4 下載',
+    !!uhd && uhd.label === '2160p MP4' && argValue(uhdRun, '-f') === '401+140' && argValue(uhdRun, '--merge-output-format') === 'mp4',
+    `${uhd?.label} ${JSON.stringify(uhdRun?.slice(-12))}`,
+  );
+  rmSync(join(downloads, uhd?.file ?? 'none'), { force: true });
 
   // 整部影片下載（1080p MP4），慢慢送出進度
   scenario('ok', 250);
@@ -222,7 +239,7 @@ await session('connected', async ({ page, context, home, downloads }) => {
   const ring = await buttonProgress(page, 'video');
   check('T22：工具列的影片按鈕顯示進度環（FR-3）', ring !== null, `data-progress=${ring}`);
   await shot(page, 'T22-progress.png');
-  const done = await waitJob(page, (j) => j.state === 'done', 30_000);
+  const done = await waitJob(page, (j) => j.state === 'done' && j.label === '1080p MP4', 30_000);
   const file = `${TITLE} [jNQXAC9IVRw].mp4`;
   check('T16：下載完成，檔案存到橋接程式的預設資料夾（~/Downloads）（FR-5、FR-60）', !!done && existsSync(join(downloads, file)), listDir(downloads).join(', '));
   check('T22：完成後顯示檔名與「Show file」', done?.file === file && done.buttons.includes('Show file'), JSON.stringify(done));
