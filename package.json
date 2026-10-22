@@ -10,6 +10,7 @@
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
     "build:host": "node host/build.mjs",
+    "test:host": "cd host && go vet ./... && go test ./...",
     "sign:firefox": "wxt build -b firefox && node scripts/sign-firefox.mjs",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",

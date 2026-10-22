@@ -2,15 +2,19 @@
 //
 // 產出 host/dist/ 下的單一執行檔：
 //   yte-host-darwin-arm64、yte-host-darwin-amd64、yte-host-windows-amd64.exe
+// 並組出可以直接交給使用者的安裝資料夾（執行檔＋安裝／解除安裝腳本＋原生訊息設定檔範本）：
+//   youtube-extension-host-macos/、youtube-extension-host-windows/
 // 以 Node 撰寫，在 macOS、Windows、Linux 上都能執行；需要已安裝 Go。
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const hostDir = dirname(fileURLToPath(import.meta.url));
+const repoDir = join(hostDir, '..');
+const installDir = join(repoDir, 'install');
 const distDir = join(hostDir, 'dist');
-const { version } = JSON.parse(readFileSync(join(hostDir, '..', 'package.json'), 'utf8'));
+const { version } = JSON.parse(readFileSync(join(repoDir, 'package.json'), 'utf8'));
 
 const targets = [
   { goos: 'darwin', goarch: 'arm64' },
@@ -21,16 +25,49 @@ const targets = [
 rmSync(distDir, { recursive: true, force: true });
 mkdirSync(distDir, { recursive: true });
 
-for (const { goos, goarch } of targets) {
-  const out = join(distDir, `yte-host-${goos}-${goarch}${goos === 'windows' ? '.exe' : ''}`);
-  console.log(`building ${goos}/${goarch} -> ${out}`);
+const binaryName = ({ goos, goarch }) => `yte-host-${goos}-${goarch}${goos === 'windows' ? '.exe' : ''}`;
+
+for (const target of targets) {
+  const out = join(distDir, binaryName(target));
+  console.log(`building ${target.goos}/${target.goarch} -> ${out}`);
   execFileSync(
     'go',
     ['build', '-trimpath', '-ldflags', `-s -w -X main.version=${version}`, '-o', out, './cmd/yte-host'],
     {
       cwd: hostDir,
       stdio: 'inherit',
-      env: { ...process.env, GOOS: goos, GOARCH: goarch, CGO_ENABLED: '0' },
+      // GOTOOLCHAIN=local：只用已安裝的 Go，不自動下載其他版本。
+      env: { ...process.env, GOOS: target.goos, GOARCH: target.goarch, CGO_ENABLED: '0', GOTOOLCHAIN: 'local' },
     },
   );
+}
+
+const packages = [
+  {
+    name: 'youtube-extension-host-macos',
+    os: 'darwin',
+    scripts: [join('macos', 'install.sh'), join('macos', 'uninstall.sh')],
+  },
+  {
+    name: 'youtube-extension-host-windows',
+    os: 'windows',
+    scripts: [join('windows', 'install.ps1'), join('windows', 'uninstall.ps1')],
+  },
+];
+
+for (const pkg of packages) {
+  const dir = join(distDir, pkg.name);
+  mkdirSync(join(dir, 'manifests'), { recursive: true });
+  for (const target of targets.filter((t) => t.goos === pkg.os)) {
+    copyFileSync(join(distDir, binaryName(target)), join(dir, binaryName(target)));
+  }
+  for (const script of pkg.scripts) {
+    const dest = join(dir, script.split(/[\\/]/).pop());
+    copyFileSync(join(installDir, script), dest);
+    if (dest.endsWith('.sh')) chmodSync(dest, 0o755);
+  }
+  for (const manifest of ['chrome.json', 'firefox.json']) {
+    copyFileSync(join(installDir, 'manifests', manifest), join(dir, 'manifests', manifest));
+  }
+  console.log(`package -> ${dir}`);
 }

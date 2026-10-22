@@ -47,6 +47,79 @@ YouTube 上的工具列  →  擴充功能背景腳本  →  本機橋接程式 
 
 之後會提供 macOS 與 Windows 的安裝腳本。縮圖、截圖與所有觀看輔助功能不需要橋接程式。
 
+<a id="install-the-helper"></a>
+
+## 安裝下載功能（橋接程式）
+
+影片、MP3 下載（以及直接下載失敗時的字幕下載）需要在電腦上安裝三個程式：本專案的**橋接程式**、[yt-dlp](https://github.com/yt-dlp/yt-dlp) 與 [ffmpeg](https://ffmpeg.org)。縮圖、截圖、字幕與所有觀看輔助功能不需要它們。全部只安裝給目前的使用者，不需要系統管理員權限或 `sudo`。
+
+### 1. 建置橋接程式
+
+目前還沒有預先建置好的下載檔。安裝 [Go](https://go.dev/dl/) 1.24 以上與 Node.js 後，在本 repo 中執行：
+
+```bash
+npm run build:host
+```
+
+會產生兩個可以直接使用的資料夾：`host/dist/youtube-extension-host-macos/` 與 `host/dist/youtube-extension-host-windows/`（內含橋接程式、安裝與解除安裝腳本、原生訊息設定檔範本）。
+
+### 2a. macOS（Apple Silicon 與 Intel）
+
+1. 以 [Homebrew](https://brew.sh) 安裝 yt-dlp 與 ffmpeg。yt-dlp 也建議安裝 JavaScript 執行環境（deno），才能完整支援 YouTube：
+   ```bash
+   brew install yt-dlp ffmpeg
+   brew install deno
+   ```
+2. 執行安裝腳本（不要加 `sudo`）：
+   ```bash
+   sh host/dist/youtube-extension-host-macos/install.sh
+   ```
+   腳本會把橋接程式複製到 `~/Library/Application Support/youtube-extension-host/`、移除隔離屬性（避免被 Gatekeeper 阻擋）、為 Chrome（`~/Library/Application Support/Google/Chrome/NativeMessagingHosts/`）與 Firefox（`~/Library/Application Support/Mozilla/NativeMessagingHosts/`）註冊，並檢查 yt-dlp 與 ffmpeg。
+3. 重新啟動 Chrome 或 Firefox，打開 YouTube 影片，在「影片」或「MP3」面板按「重新檢查」。
+
+### 2b. Windows 10/11（x64）
+
+1. 以 [winget](https://learn.microsoft.com/windows/package-manager/winget/) 安裝 yt-dlp 與 ffmpeg，並建議安裝 deno：
+   ```powershell
+   winget install yt-dlp.yt-dlp Gyan.FFmpeg
+   winget install DenoLand.Deno
+   ```
+2. 在 PowerShell 中執行安裝腳本（`-ExecutionPolicy Bypass` 只允許這一次執行腳本，不會改變你的設定）：
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File host\dist\youtube-extension-host-windows\install.ps1
+   ```
+   腳本會把橋接程式複製到 `%LOCALAPPDATA%\youtube-extension-host\`、在同一個資料夾寫入原生訊息設定檔、建立登錄機碼 `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.chidi0716.youtube_extension` 與 `HKCU\Software\Mozilla\NativeMessagingHosts\com.chidi0716.youtube_extension`，並檢查 yt-dlp 與 ffmpeg。
+3. 重新啟動 Chrome 或 Firefox，打開 YouTube 影片，在「影片」或「MP3」面板按「重新檢查」。
+
+終端機不在 repo 資料夾時，請輸入腳本的完整路徑。執行 `npm run build:host` 後，也可以直接執行 repo 中的 `install/macos/install.sh` 或 `install/windows/install.ps1`。
+
+### 更新
+
+- **yt-dlp**：YouTube 經常改版，請保持 yt-dlp 為最新版本。在擴充功能設定頁按「更新 yt-dlp」；若 yt-dlp 是以 Homebrew 或 winget 安裝，按鈕會改為顯示要執行的指令（`brew upgrade yt-dlp` 或 `winget upgrade --id yt-dlp.yt-dlp`）。
+- **橋接程式**：重新建置後再執行一次安裝腳本即可取代舊版。若有下載正在進行，請先關閉瀏覽器。
+
+### 解除安裝
+
+```bash
+sh host/dist/youtube-extension-host-macos/uninstall.sh
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File host\dist\youtube-extension-host-windows\uninstall.ps1
+```
+
+會移除橋接程式、原生訊息設定檔與登錄機碼、狀態與記錄檔。已下載的檔案、yt-dlp 與 ffmpeg 不受影響。
+
+### 疑難排解
+
+- **按「重新檢查」仍顯示找不到橋接程式**：安裝後請重新啟動瀏覽器。Zen 等以 Firefox 為基礎的瀏覽器使用 Firefox 的註冊。
+- **顯示「yt-dlp 版本過舊」或缺少部分畫質**：更新 yt-dlp（見上方），並安裝 deno。
+- **macOS 顯示無法打開橋接程式**：再執行一次安裝腳本（會移除隔離屬性），或自行從原始碼建置。
+- **記錄檔**：`~/Library/Logs/youtube-extension-host/host.log`（macOS）或 `%LOCALAPPDATA%\youtube-extension-host\logs\host.log`（Windows）。只記錄指令名稱與錯誤訊息，不含 cookie 或帳號資訊。
+- 關閉 YouTube 分頁或瀏覽器後，下載仍會繼續。未完成的檔案放在下載資料夾中隱藏的 `.yte-tmp-…` 資料夾，下載完成、失敗或取消時會刪除。
+
+**橋接程式能做的事**：只有擴充功能需要的固定指令（檢查狀態、讀取影片資訊、下載、取消、列出下載、顯示檔案、選擇資料夾、更新 yt-dlp）。只有本擴充功能能啟動它（設定檔中的 `allowed_origins`／`allowed_extensions`）。它只接受 YouTube 影片 ID，不接受網址或命令列選項，不開啟任何網路連接埠；只有 yt-dlp 會連到 YouTube（以及你更新 yt-dlp 時連到 GitHub）。
+
 ## 開發
 
 ```bash
