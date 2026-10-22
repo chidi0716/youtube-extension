@@ -185,6 +185,7 @@ host/                           橋接程式（Go），見第 4 節
   - 數字、檔案大小、時間的格式以 `Intl` 依目前語言產生。
   - 背景腳本建立通知時讀取同一個設定。
 - 測試：兩份語言檔的鍵一致；所有程式中使用的鍵都存在於語言檔（掃描原始碼）；切換語言時面板狀態保留。
+- **設定頁外觀（007 FR-20 至 FR-24）**：設定 `sync:pageTheme` = `'youtube' | 'system' | 'dark' | 'light'`（預設 `youtube`）；內容腳本在深色模式功能已有的 `<html dark>` 觀察中，把目前主題寫入 `local:lastYouTubeTheme`（只在值改變時寫入）。設定頁與彈出視窗的顏色改為 CSS 變數，以 `<html data-theme="dark|light">` 切換；`system` 與尚無紀錄時以 `prefers-color-scheme` 決定。監聽 storage 變更即時更新。
 
 ### 3.8 下載相關（擴充功能端）
 
