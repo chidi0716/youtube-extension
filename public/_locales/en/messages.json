@@ -252,11 +252,11 @@
     "description": "Heading of the installation steps on other systems."
   },
   "hostStepPackagesMac": {
-    "message": "Install yt-dlp and ffmpeg with Homebrew in Terminal:",
+    "message": "Install the tools with Homebrew in Terminal:",
     "description": "macOS installation step 1."
   },
   "hostStepPackagesWindows": {
-    "message": "Install yt-dlp and ffmpeg with winget in PowerShell:",
+    "message": "Install the tools with winget in PowerShell:",
     "description": "Windows installation step 1."
   },
   "hostStepScriptMac": {
@@ -286,6 +286,274 @@
   "hostChecking": {
     "message": "Checking…",
     "description": "Shown while checking the helper connection."
+  },
+  "hostComponentDeno": {
+    "message": "deno",
+    "description": "Name of the deno component (JavaScript runtime used by yt-dlp)."
+  },
+  "hostToolsMissingTitle": {
+    "message": "Some download tools are missing",
+    "description": "Video and MP3 panels: heading when the helper is connected but yt-dlp or ffmpeg is missing."
+  },
+  "hostStatusMissing": {
+    "message": "Not installed",
+    "description": "Status of a tool that the helper could not find."
+  },
+  "hostStatusFound": {
+    "message": "Installed",
+    "description": "Status of an installed tool without a known version."
+  },
+  "hostStatusVersion": {
+    "message": "Installed ($VERSION$)",
+    "description": "Status of an installed tool with its version.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "2026.10.21"
+      }
+    }
+  },
+  "hostStepRecheckOnly": {
+    "message": "Then press “Check again”.",
+    "description": "Last installation step when the helper is already installed."
+  },
+  "hostDenoHint": {
+    "message": "deno is not installed. yt-dlp may miss some YouTube formats without it. Install it with:",
+    "description": "Hint shown when only deno is missing."
+  },
+  "clipTitle": {
+    "message": "Time range",
+    "description": "Heading of the time range block in the video and MP3 panels."
+  },
+  "clipSync": {
+    "message": "Sync with player",
+    "description": "Switch: moving a handle seeks the player, and set-to-current-time buttons appear."
+  },
+  "clipSetNow": {
+    "message": "Set to current time",
+    "description": "Button that sets the start or end to the player's current time."
+  },
+  "clipSlowHint": {
+    "message": "Cutting a part needs extra processing time.",
+    "description": "One-time note shown when the time range is not the whole video."
+  },
+  "qualityNone": {
+    "message": "No downloadable formats were found.",
+    "description": "Video panel: the format list is empty."
+  },
+  "qualityMore": {
+    "message": "Show more formats",
+    "description": "Video panel: shows WEBM and other formats."
+  },
+  "qualityFewer": {
+    "message": "Show MP4 only",
+    "description": "Video panel: hides formats other than MP4."
+  },
+  "sizeApprox": {
+    "message": "~",
+    "description": "Prefix of an estimated file size (followed by the size, e.g. ~147.1 MB)."
+  },
+  "mp3Bitrate": {
+    "message": "MP3 bitrate",
+    "description": "MP3 panel: label of the bitrate dropdown."
+  },
+  "jobsLabel": {
+    "message": "Downloads",
+    "description": "Accessible label of the download list in a panel."
+  },
+  "jobQueued": {
+    "message": "Starting…",
+    "description": "Download state."
+  },
+  "jobDownloading": {
+    "message": "Downloading",
+    "description": "Download state."
+  },
+  "jobProcessing": {
+    "message": "Processing",
+    "description": "Download state: merging, converting or cutting."
+  },
+  "jobDone": {
+    "message": "Done",
+    "description": "Download state."
+  },
+  "jobFailed": {
+    "message": "Failed",
+    "description": "Download state."
+  },
+  "jobCancelled": {
+    "message": "Cancelled",
+    "description": "Download state."
+  },
+  "jobEta": {
+    "message": "$ETA$ left",
+    "description": "Remaining time of a download.",
+    "placeholders": {
+      "eta": {
+        "content": "$1",
+        "example": "01:23"
+      }
+    }
+  },
+  "jobCancel": {
+    "message": "Cancel",
+    "description": "Button that cancels a download."
+  },
+  "jobReveal": {
+    "message": "Show file",
+    "description": "Button that shows the downloaded file in Finder or File Explorer."
+  },
+  "errMissingTools": {
+    "message": "The helper, yt-dlp or ffmpeg is missing. See the installation guide.",
+    "description": "Download error: missing components."
+  },
+  "errOutdated": {
+    "message": "YouTube has changed. Please update yt-dlp.",
+    "description": "Download error: yt-dlp is outdated or YouTube asked for verification."
+  },
+  "errLoginRequired": {
+    "message": "This video needs you to sign in. That isn't supported yet.",
+    "description": "Download error: login required."
+  },
+  "errVideoUnavailable": {
+    "message": "This video is unavailable.",
+    "description": "Download error: removed, private or blocked video."
+  },
+  "errFormatUnavailable": {
+    "message": "This quality is no longer available. Try another one.",
+    "description": "Download error: the chosen format does not exist."
+  },
+  "errNoSubtitles": {
+    "message": "There are no subtitles in this language.",
+    "description": "Download error: no subtitles."
+  },
+  "errNetwork": {
+    "message": "There was a network problem. Please try again.",
+    "description": "Download error: network or timeout."
+  },
+  "errCannotWrite": {
+    "message": "Couldn't write to the download folder.",
+    "description": "Download error: disk full or no permission."
+  },
+  "errTooManyJobs": {
+    "message": "Too many downloads at the same time (up to 8).",
+    "description": "Download error: too many jobs."
+  },
+  "errDownloadFailed": {
+    "message": "The download failed.",
+    "description": "Download error: anything else."
+  },
+  "updateYtDlp": {
+    "message": "Update yt-dlp",
+    "description": "Button that updates yt-dlp."
+  },
+  "updateRunning": {
+    "message": "Updating…",
+    "description": "Shown while yt-dlp is being updated."
+  },
+  "updateDone": {
+    "message": "yt-dlp was updated to $VERSION$.",
+    "description": "Shown after updating yt-dlp.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "2026.11.01"
+      }
+    }
+  },
+  "updateUpToDate": {
+    "message": "yt-dlp is already up to date.",
+    "description": "Shown when yt-dlp needs no update."
+  },
+  "updateRunCommand": {
+    "message": "yt-dlp was installed with a package manager. Update it by running:",
+    "description": "Shown with the command to update yt-dlp."
+  },
+  "updateFailed": {
+    "message": "Couldn't update yt-dlp.",
+    "description": "Error when updating yt-dlp fails."
+  },
+  "subtitlesViaHost": {
+    "message": "Downloading with yt-dlp instead, to your download folder.",
+    "description": "Subtitles panel: the direct download failed and the helper is used."
+  },
+  "notifyDoneTitle": {
+    "message": "Download complete",
+    "description": "Notification title. The message is the file name; clicking shows the file."
+  },
+  "notifyFailedTitle": {
+    "message": "Download failed",
+    "description": "Notification title for a failed download."
+  },
+  "optionsDownloadsDesc": {
+    "message": "Videos, MP3 and subtitles downloaded with yt-dlp are saved to the folder below. Thumbnails, screenshots and subtitles that the extension downloads directly go to the browser's own download location.",
+    "description": "Settings page: explanation of the downloads section."
+  },
+  "optionsConnection": {
+    "message": "Connection",
+    "description": "Settings page: heading of the helper connection status."
+  },
+  "optionsFolder": {
+    "message": "Download folder",
+    "description": "Settings page: download folder."
+  },
+  "optionsFolderDefault": {
+    "message": "System Downloads folder ($PATH$)",
+    "description": "Settings page: the default download folder.",
+    "placeholders": {
+      "path": {
+        "content": "$1",
+        "example": "/Users/me/Downloads"
+      }
+    }
+  },
+  "optionsFolderDefaultUnknown": {
+    "message": "System Downloads folder",
+    "description": "Settings page: the default download folder when the helper is not connected."
+  },
+  "optionsFolderChoose": {
+    "message": "Choose folder…",
+    "description": "Settings page: opens the system folder picker."
+  },
+  "optionsFolderReset": {
+    "message": "Use default",
+    "description": "Settings page: goes back to the system Downloads folder."
+  },
+  "optionsFolderUnsupported": {
+    "message": "Choosing a folder isn't supported on this system.",
+    "description": "Settings page: pickFolder is not available."
+  },
+  "optionsFiles": {
+    "message": "Downloaded files",
+    "description": "Settings page: heading of the file name and embed options."
+  },
+  "optionsNamePreset": {
+    "message": "File name",
+    "description": "Settings page: file name format."
+  },
+  "namePresetTitleId": {
+    "message": "Title [ID]",
+    "description": "File name format."
+  },
+  "namePresetTitle": {
+    "message": "Title",
+    "description": "File name format."
+  },
+  "namePresetChannelTitle": {
+    "message": "Channel - Title [ID]",
+    "description": "File name format."
+  },
+  "namePresetDateTitle": {
+    "message": "Upload date Title [ID]",
+    "description": "File name format."
+  },
+  "optionsEmbed": {
+    "message": "Embed cover, chapters and video info",
+    "description": "Settings page: embed switch."
+  },
+  "optionsEmbedDesc": {
+    "message": "Adds the thumbnail, title, channel, upload date, link and chapters to downloaded videos and MP3. Formats that can't hold a cover (such as WEBM) are still downloaded.",
+    "description": "Settings page: embed switch description."
   },
   "linkAtTime": {
     "message": "Link at current time",

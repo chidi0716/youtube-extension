@@ -61,3 +61,20 @@ export const tidyHideShorts = storage.defineItem<boolean>('sync:tidyHideShorts',
 
 /** 顯示完整影片標題（005 FR-70、FR-71）。 */
 export const tidyFullTitles = storage.defineItem<boolean>('sync:tidyFullTitles', { fallback: false });
+
+// 經由橋接程式的下載（002 FR-60、004 FR-11，tasks T20、T23）。
+
+/** 下載資料夾的絕對路徑；null 表示使用橋接程式回報的系統「下載」資料夾。每台電腦不同，所以存在 local。 */
+export const downloadDir = storage.defineItem<string | null>('local:downloadDir', { fallback: null });
+
+/** 檔名格式（橋接程式的 namePreset 白名單，002 FR-60）。 */
+export const namePreset = storage.defineItem<string>('sync:namePreset', { fallback: 'title-id' });
+
+/** 嵌入封面、章節與影片資訊（004 FR-11，預設開啟）。 */
+export const embedInfo = storage.defineItem<boolean>('sync:embedInfo', { fallback: true });
+
+/** MP3 位元率（002 FR-20：預設 192 kbps，記住上次選擇）。 */
+export const mp3Bitrate = storage.defineItem<number>('sync:mp3Bitrate', { fallback: 192 });
+
+/** 是否已顯示過「裁切需要額外處理時間」的說明（004 FR-23：第一次使用裁切時顯示）。 */
+export const clipHintSeen = storage.defineItem<boolean>('local:clipHintSeen', { fallback: false });

@@ -79,11 +79,30 @@ function captionResponse(url) {
   return { status: 200, contentType: 'text/vtt; charset=utf-8', body };
 }
 
-export async function launch({ lang = 'en-US', name = 'fixture', viewport, colorScheme, downloadDir, userAgent } = {}) {
+/**
+ * 啟動載入擴充功能的 Chromium。階段 4 另外可以指定：
+ * - profile：設定檔資料夾（預設在 .cache/ 下依 name、lang 命名）；keepProfile 為 true 時沿用（模擬重新啟動瀏覽器）；
+ * - nativeHost：橋接程式執行檔的路徑，寫入設定檔資料夾中的 NativeMessagingHosts/（Chromium 以 --user-data-dir 時從這裡讀取）；
+ * - env：瀏覽器的環境變數（橋接程式會繼承，例如 HOME、PATH）。
+ */
+export async function launch({ lang = 'en-US', name = 'fixture', viewport, colorScheme, downloadDir, userAgent, profile, keepProfile = false, nativeHost, env } = {}) {
   viewport ??= { width: 1280, height: 900 };
-  const profile = join(here, '.cache', `profile-${name}-${lang}`);
-  rmSync(profile, { recursive: true, force: true });
-  if (downloadDir) {
+  profile ??= join(here, '.cache', `profile-${name}-${lang}`);
+  if (!keepProfile) rmSync(profile, { recursive: true, force: true });
+  if (nativeHost) {
+    mkdirSync(join(profile, 'NativeMessagingHosts'), { recursive: true });
+    writeFileSync(
+      join(profile, 'NativeMessagingHosts', 'com.chidi0716.youtube_extension.json'),
+      JSON.stringify({
+        name: 'com.chidi0716.youtube_extension',
+        description: 'youtube-extension helper (test)',
+        path: nativeHost,
+        type: 'stdio',
+        allowed_origins: [`chrome-extension://${EXT_ID}/`],
+      }),
+    );
+  }
+  if (downloadDir && !keepProfile) {
     // 下載資料夾設在工作目錄內（瀏覽器設定檔的偏好）；測試再以 CDP 把下載行為改回瀏覽器預設，
     // 讓擴充功能以 downloads API 指定的檔名存檔。
     mkdirSync(join(profile, 'Default'), { recursive: true });
@@ -100,6 +119,7 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport, color
     viewport,
     ...(colorScheme ? { colorScheme } : {}),
     ...(userAgent ? { userAgent } : {}),
+    ...(env ? { env } : {}),
     args: [
       `--lang=${lang}`,
       `--disable-extensions-except=${extDir}`,

@@ -1,29 +1,53 @@
-// 橋接程式的連線狀態（002 FR-2）。階段 4a：橋接程式與背景腳本的連線（T16）還沒完成，所以一律以
-// 「無法連線」處理；T16 完成後改為向背景腳本查詢 status 指令的結果。
+// 橋接程式的連線狀態（002 FR-2，tasks T16、T22）：由背景腳本以 status 指令查詢。
+// 必要元件為橋接程式、yt-dlp、ffmpeg、deno；ready（yt-dlp 與 ffmpeg 可用）時可以下載，只缺 deno 時顯示建議安裝的提示。
+import type { HostStatusResult } from '@/utils/native-protocol';
 import type { HostOs } from './logic';
 
-export type HostComponent = 'host' | 'ytDlp' | 'ffmpeg';
+export type HostComponent = 'host' | 'ytDlp' | 'ffmpeg' | 'deno';
+export const HOST_COMPONENTS: readonly HostComponent[] = ['host', 'ytDlp', 'ffmpeg', 'deno'];
 
-export interface HostStatus {
-  /** unreachable：找不到橋接程式（yt-dlp、ffmpeg 也就無法確認）。 */
-  state: 'unreachable' | 'ready';
-  /** 缺少（或無法確認）的元件。 */
-  missing: HostComponent[];
-}
+export type HostState =
+  | { state: 'unreachable' }
+  /** 橋接程式可以連線；status.ready 為 false 時缺少 yt-dlp 或 ffmpeg。 */
+  | { state: 'connected'; status: HostStatusResult };
 
-/** README 的安裝章節（章節會在 T15 撰寫，這裡先以錨點連結）。 */
+/** README 的安裝章節（QUESTIONS Q33）。 */
 export const INSTALL_GUIDE_URL = 'https://github.com/chidi0716/youtube-extension#install-the-helper';
 
-/** 安裝說明中的指令（plan 4.8）；指令本身不翻譯。 */
+/** 安裝說明中的指令（002 FR-2、README 的安裝章節）；指令本身不翻譯。 */
 export const INSTALL_COMMANDS: Record<Exclude<HostOs, 'other'>, { packages: string; script: string }> = {
-  mac: { packages: 'brew install yt-dlp ffmpeg', script: './install.sh' },
-  windows: { packages: 'winget install yt-dlp.yt-dlp Gyan.FFmpeg', script: 'powershell -ExecutionPolicy Bypass -File .\\install.ps1' },
+  mac: { packages: 'brew install yt-dlp ffmpeg deno', script: 'sh host/dist/youtube-extension-host-macos/install.sh' },
+  windows: {
+    packages: 'winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno',
+    script: 'powershell -ExecutionPolicy Bypass -File host\\dist\\youtube-extension-host-windows\\install.ps1',
+  },
 };
 
-/** 檢查連線狀態。顯示「檢查中」至少這麼久，讓使用者看得出按鈕有作用。 */
-const MIN_CHECK_MS = 400;
+/** 可以下載（yt-dlp 與 ffmpeg 都可用）。 */
+export const canDownload = (s: HostState): s is Extract<HostState, { state: 'connected' }> => s.state === 'connected' && s.status.ready;
 
-export async function checkHostStatus(): Promise<HostStatus> {
-  await new Promise((resolve) => setTimeout(resolve, MIN_CHECK_MS));
-  return { state: 'unreachable', missing: ['host', 'ytDlp', 'ffmpeg'] };
+/** 各元件是否可用；null 表示無法確認（找不到橋接程式，或舊版橋接程式沒有回報 deno）。 */
+export function componentState(s: HostState, c: HostComponent): boolean | null {
+  if (c === 'host') return s.state === 'connected';
+  if (s.state !== 'connected') return null;
+  if (c === 'ytDlp') return s.status.ytDlp.found && !s.status.ytDlp.error;
+  if (c === 'ffmpeg') return s.status.ffmpeg.found && !s.status.ffmpeg.error;
+  return s.status.deno ? s.status.deno.found && !s.status.deno.error : null;
 }
+
+/** 元件的版本（可用時）。 */
+export function componentVersion(s: HostState, c: HostComponent): string | null {
+  if (s.state !== 'connected') return null;
+  if (c === 'host') return s.status.hostVersion || null;
+  const tool = c === 'ytDlp' ? s.status.ytDlp : c === 'ffmpeg' ? s.status.ffmpeg : s.status.deno;
+  return tool?.found ? tool.version : null;
+}
+
+/** 安裝缺少元件的指令：橋接程式回報的指令優先，否則依作業系統一次安裝三者（002 FR-2）。 */
+export function installCommand(s: HostState, os: HostOs): string | null {
+  if (s.state === 'connected' && s.status.installCommand) return s.status.installCommand;
+  return os === 'other' ? null : INSTALL_COMMANDS[os].packages;
+}
+
+/** 只缺 deno（可以下載，但建議安裝，T15a）。 */
+export const missingOnlyDeno = (s: HostState) => canDownload(s) && componentState(s, 'deno') === false;

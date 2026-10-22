@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isContentMessage } from './messages';
+import { isBackgroundMessage, isContentMessage } from './messages';
 
 describe('isContentMessage', () => {
   it('接受已定義的訊息', () => {
@@ -47,5 +47,65 @@ describe('下載相關的訊息（階段 4a）', () => {
     }
     expect(isContentMessage({ ...caption, format: 'exe' })).toBe(false);
     expect(isContentMessage({ ...caption, languageCode: '../en' })).toBe(false);
+  });
+});
+
+describe('經由橋接程式的訊息（階段 4）', () => {
+  const ID = 'jNQXAC9IVRw';
+  const video = { kind: 'video', videoId: ID, title: 'T', label: '1080p MP4', formatId: '137+140', container: 'mp4', section: null };
+  const mp3 = { kind: 'mp3', videoId: ID, title: 'T', label: 'MP3 192 kbps', bitrate: 192, section: { start: 60, end: 90 } };
+  const sub = { kind: 'subtitle', videoId: ID, title: 'T', label: 'English SRT', subLang: 'en', subFormat: 'srt', subAuto: false };
+
+  it('接受合法的指令', () => {
+    for (const m of [
+      { type: 'hostStatus', refresh: false },
+      { type: 'getInfo', videoId: ID },
+      { type: 'startDownload', request: video },
+      { type: 'startDownload', request: mp3 },
+      { type: 'startDownload', request: sub },
+      { type: 'startDownload', request: { ...sub, subLang: 'zh-TW', subFormat: 'txt', subAuto: true } },
+      { type: 'cancelJob', jobId: 'j1a2b3c4' },
+      { type: 'revealJob', jobId: 'abc_DEF-123' },
+      { type: 'getJobs' },
+      { type: 'pickFolder' },
+      { type: 'updateYtDlp' },
+    ]) {
+      expect(isContentMessage(m), JSON.stringify(m)).toBe(true);
+    }
+  });
+
+  it('拒絕不合法的參數', () => {
+    for (const m of [
+      { type: 'hostStatus' },
+      { type: 'getInfo', videoId: 'x' },
+      { type: 'cancelJob', jobId: '../x' },
+      { type: 'revealJob', jobId: '' },
+      { type: 'startDownload', request: { ...video, videoId: 'bad' } },
+      { type: 'startDownload', request: { ...video, formatId: '-x' } },
+      { type: 'startDownload', request: { ...video, formatId: '137+140+251' } },
+      { type: 'startDownload', request: { ...video, formatId: 'bv*' } },
+      { type: 'startDownload', request: { ...video, container: 'mkv' } },
+      { type: 'startDownload', request: { ...video, section: { start: 10, end: 5 } } },
+      { type: 'startDownload', request: { ...video, section: { start: 1.5, end: 5 } } },
+      { type: 'startDownload', request: { ...video, section: { start: 0, end: 5, extra: 1 } } },
+      { type: 'startDownload', request: { ...video, section: '0-5' } },
+      { type: 'startDownload', request: { ...mp3, bitrate: 999 } },
+      { type: 'startDownload', request: { ...sub, subLang: 'all' } },
+      { type: 'startDownload', request: { ...sub, subLang: '-en' } },
+      { type: 'startDownload', request: { ...sub, subFormat: 'ass' } },
+      { type: 'startDownload', request: { ...sub, subAuto: 'yes' } },
+      { type: 'startDownload', request: { ...sub, kind: 'exec' } },
+      { type: 'startDownload', request: { ...sub, title: 'x'.repeat(1000) } },
+      { type: 'startDownload', request: null },
+    ]) {
+      expect(isContentMessage(m), JSON.stringify(m).slice(0, 120)).toBe(false);
+    }
+  });
+
+  it('isBackgroundMessage 只接受 jobsChanged', () => {
+    expect(isBackgroundMessage({ type: 'jobsChanged', jobs: [] })).toBe(true);
+    expect(isBackgroundMessage({ type: 'jobsChanged' })).toBe(false);
+    expect(isBackgroundMessage({ type: 'other', jobs: [] })).toBe(false);
+    expect(isBackgroundMessage(null)).toBe(false);
   });
 });

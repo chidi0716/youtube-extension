@@ -356,17 +356,17 @@ for (const [task, ua, os] of [
       await openPanel(page, 'video');
       const s = await setupState(page);
       check(
-        `${os}：影片面板列出需要的元件（橋接程式無法連線、yt-dlp 與 ffmpeg 無法確認）（FR-2）`,
+        `${os}：影片面板列出需要的元件（橋接程式無法連線、yt-dlp、ffmpeg 與 deno 無法確認）（FR-2、T15a）`,
         s?.title === "The download helper isn't connected" &&
-          s.components.join('|') === "host:Not connected|ytDlp:Can't check without the helper|ffmpeg:Can't check without the helper",
+          s.components.join('|') === "host:Not connected|ytDlp:Can't check without the helper|ffmpeg:Can't check without the helper|deno:Can't check without the helper",
         JSON.stringify(s?.components),
       );
       check(
         `${os}：依作業系統顯示對應的安裝步驟（FR-2）`,
         s.os === os &&
           (os === 'mac'
-            ? s.osTitle === 'Install on macOS' && s.commands[0] === 'brew install yt-dlp ffmpeg' && s.commands[1] === './install.sh'
-            : s.osTitle === 'Install on Windows' && s.commands[0] === 'winget install yt-dlp.yt-dlp Gyan.FFmpeg' && /install\.ps1$/.test(s.commands[1])),
+            ? s.osTitle === 'Install on macOS' && s.commands[0] === 'brew install yt-dlp ffmpeg deno' && s.commands[1] === 'sh host/dist/youtube-extension-host-macos/install.sh'
+            : s.osTitle === 'Install on Windows' && s.commands[0] === 'winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno' && /install\.ps1$/.test(s.commands[1])),
         `${s.osTitle}: ${s.commands.join(' / ')}`,
       );
       check(

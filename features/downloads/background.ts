@@ -83,7 +83,10 @@ function releaseWhenDone(id: number, url: string) {
   browser.downloads.onChanged.addListener(onChanged);
 }
 
-async function handle(message: Exclude<ContentMessage, { type: 'openOptions' }>): Promise<MessageResponse<Record<string, unknown>>> {
+type DirectMessage = Extract<ContentMessage, { type: 'getThumbnails' | 'downloadThumbnail' | 'saveScreenshot' | 'downloadCaption' }>;
+const DIRECT_TYPES: readonly string[] = ['getThumbnails', 'downloadThumbnail', 'saveScreenshot', 'downloadCaption'];
+
+async function handle(message: DirectMessage): Promise<MessageResponse<Record<string, unknown>>> {
   switch (message.type) {
     case 'getThumbnails':
       return { ok: true, thumbnails: await getThumbnails(message.videoId) };
@@ -158,8 +161,8 @@ async function handle(message: Exclude<ContentMessage, { type: 'openOptions' }>)
 
 /** 處理下載相關的訊息；結果以 sendResponse 回覆（Chrome 與 Firefox 都支援 return true 的寫法）。 */
 export function handleDownloadMessage(message: ContentMessage, sendResponse: (response: unknown) => void): boolean {
-  if (message.type === 'openOptions') return false;
-  handle(message).then(sendResponse, (err: unknown) => {
+  if (!DIRECT_TYPES.includes(message.type)) return false;
+  handle(message as DirectMessage).then(sendResponse, (err: unknown) => {
     console.info(`${LOG_PREFIX} download message failed`, err);
     sendResponse({ ok: false, error: 'DOWNLOAD_FAILED' });
   });

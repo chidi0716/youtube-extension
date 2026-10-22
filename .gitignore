@@ -63,3 +63,6 @@ spikes/stage4a/.cache/
 # 階段 3（橋接程式）：go test 的暫存資料夾、冒煙測試下載的 yt-dlp 與暫存檔
 host/.testtmp/
 spikes/stage3/.cache/
+
+# 階段 4：建置的橋接程式、假 yt-dlp、瀏覽器設定檔與暫存檔
+spikes/stage4/.cache/
