@@ -55,6 +55,15 @@ export function createViewingController(): ViewingController {
     quality: createQualityLock(),
   };
   const features: ViewingFeature[] = [dark, pip, cinema, floating, loop, ...Object.values(more)];
+  // 劇院模式開啟期間浮動播放器暫停作用（003 FR-45）。劇院模式以 Esc、點變暗區域或停用工具列關閉時也跟著恢復。
+  cinema.state.subscribe(() => floating.setSuspended(cinema.state.get().active));
+  const toggleCinema = () => {
+    // 開啟前先讓浮動中的播放器回到原位，再進入劇院模式。
+    if (!cinema.state.get().active) floating.setSuspended(true);
+    cinema.toggle();
+    // 播放器容器找不到等原因沒有開成功時，恢復浮動播放器。
+    floating.setSuspended(cinema.state.get().active);
+  };
   const stores: Pick<Store<unknown>, 'subscribe'>[] = [dark.state, pip.state, cinema.state, floating.state, loop.status];
   let active = false;
 
@@ -91,7 +100,7 @@ export function createViewingController(): ViewingController {
       return {
         darkMode: toToggle(dark.state, dark.toggle),
         pip: toToggle(pip.state, pip.toggle),
-        cinema: toToggle(cinema.state, cinema.toggle),
+        cinema: toToggle(cinema.state, toggleCinema),
         floating: toToggle(floating.state, floating.toggle),
       };
     },

@@ -145,221 +145,99 @@ export function isDarkTheme(doc: Document = document): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// 即時切換主題（003 FR-11、plan 3.7、T06b）。依 2026-10-21 在 YouTube 首頁的實測，
-// 見 specs/notes/T06b-dark-mode-instant.md：
-// - YouTube 依載入時的主題輸出不同的主樣式表：其中 `:root` 的顏色變數預設值就是載入時的主題，
-//   另有 `[dark]`、`[light]` 兩組覆寫。所以以深色載入的頁面只移除 `dark` 不會變淺色，
-//   必須在 <html> 加上 `light`；以淺色載入的頁面加上 `dark` 即可。
-// - 除了 <html>，YouTube 還會在下列元素上依主題設定布林屬性（深色時存在、淺色時不存在），
-//   這些元素的部分顏色依屬性決定。YouTube 換頁時可能依載入時的主題把屬性改回去。
+// YouTube「外觀」選單（003 FR-10 至 FR-15、plan 3.7、T06d）。依 2026-10-21 在 YouTube 首頁（未登入）
+// 的實測，見 specs/notes/T06d-dark-mode-menu.md：
+// - 頂端列右側的選單按鈕（未登入：設定按鈕；已登入：頭像按鈕）是 ytd-topbar-menu-button-renderer，
+//   打開的選單放在 ytd-popup-container 的 tp-yt-iron-dropdown 中；
+// - 「外觀」項目是專用的元件 ytd-toggle-theme-compact-link-renderer；
+// - 點「外觀」後，子選單（#submenu）中的每個選項是 ytd-compact-link-renderer。選項沒有不依文字的
+//   DOM 屬性，但元件的 data（只有頁面的 main world 讀得到）中有動作代號：
+//   serviceEndpoint.signalServiceEndpoint.actions[].signalAction.signal 為
+//   TOGGLE_DARK_THEME_ON（深色主題）或 TOGGLE_DARK_THEME_OFF（淺色主題），與介面語言無關。
+//   頁面橋接腳本依此在選項上加上 THEME_OPTION_ATTRIBUTE，內容腳本再點擊。
 // ---------------------------------------------------------------------------
 
-/** YouTube 樣式表中把顏色變數設為淺色值的屬性（YouTube 載入時不會自己加上）。 */
-export const LIGHT_THEME_ATTRIBUTE = 'light';
+export const APPEARANCE_MENU = {
+  /** 已登入時的頭像按鈕（本環境無法登入，未實測）。 */
+  avatarButton: 'ytd-masthead #end button#avatar-btn',
+  /** 頂端列右側的選單按鈕元件；最右邊的一個是頭像（已登入）或設定（未登入）。 */
+  menuButtonRenderer: 'ytd-masthead #end #buttons ytd-topbar-menu-button-renderer',
+  /** 打開的彈出選單（操作期間以暫時的 class 讓它不可見）。 */
+  popup: 'ytd-popup-container tp-yt-iron-dropdown',
+  /** 選單中的「外觀」項目。 */
+  appearanceItem: 'ytd-popup-container ytd-toggle-theme-compact-link-renderer',
+  /** 「外觀」子選單中的選項。 */
+  themeOption: 'ytd-popup-container #submenu ytd-compact-link-renderer',
+  /** 選項中實際處理點擊的連結。 */
+  themeOptionLink: 'a#endpoint',
+} as const;
 
-/** 依主題設定布林屬性的 YouTube 元素：深色時屬性存在，淺色時不存在。 */
-export const THEMED_ELEMENTS: ReadonlyArray<{ readonly selector: string; readonly attributes: readonly string[] }> = [
-  { selector: 'ytd-masthead', attributes: ['dark', 'page-dark-theme'] },
-  { selector: 'ytd-watch-flexy', attributes: ['is-dark-theme'] },
-  { selector: 'ytd-playlist-panel-renderer', attributes: ['is-dark-theme'] },
-  { selector: 'ytd-feed-nudge-renderer', attributes: ['is-dark-mode'] },
-];
+/** 頁面橋接腳本在外觀選項上加的屬性，值為 dark 或 light。 */
+export const THEME_OPTION_ATTRIBUTE = 'data-yte-theme-option';
 
-export interface ThemeAttributeChange {
-  /** null 表示 <html>。 */
-  selector: string | null;
-  attribute: string;
-  present: boolean;
-}
+/** 外觀選項的動作代號與對應的主題。 */
+export const THEME_OPTION_SIGNALS: Readonly<Record<string, 'dark' | 'light'>> = {
+  TOGGLE_DARK_THEME_ON: 'dark',
+  TOGGLE_DARK_THEME_OFF: 'light',
+};
 
-/** 切換為深色或淺色主題時，每個主題屬性應有的狀態。 */
-export function themeAttributeChanges(theme: 'dark' | 'light'): ThemeAttributeChange[] {
-  const dark = theme === 'dark';
-  return [
-    { selector: null, attribute: DARK_THEME_ATTRIBUTE, present: dark },
-    { selector: null, attribute: LIGHT_THEME_ATTRIBUTE, present: !dark },
-    ...THEMED_ELEMENTS.flatMap(({ selector, attributes }) =>
-      attributes.map((attribute) => ({ selector, attribute, present: dark })),
-    ),
-  ];
-}
+const asRecord = (v: unknown): Record<string, unknown> | null =>
+  v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
 
-/** 所有主題屬性的名稱（給 MutationObserver 的 attributeFilter）。 */
-export const THEME_ATTRIBUTE_NAMES: readonly string[] = [
-  ...new Set(themeAttributeChanges('dark').map((c) => c.attribute)),
-];
-
-/** 把頁面上的主題屬性設成指定主題應有的狀態；只改動不同的屬性。回傳改動的數量。 */
-export function applyThemeAttributes(theme: 'dark' | 'light', doc: Document = document): number {
-  let changed = 0;
-  for (const { selector, attribute, present } of themeAttributeChanges(theme)) {
-    const targets = selector === null ? [doc.documentElement] : doc.querySelectorAll(selector);
-    for (const el of targets) {
-      if (el.hasAttribute(attribute) === present) continue;
-      el.toggleAttribute(attribute, present);
-      changed++;
-    }
-  }
-  return changed;
-}
-
-/**
- * YouTube 依載入時的主題，以比 [dark]／[light] 更優先的 `:root:root` 固定少數顏色變數
- * （實測 4–6 個，例如「訂閱」按鈕的文字色）。只切換屬性時這些變數不會變，需要另外覆寫。
- */
-export const PINNED_THEME_SELECTOR = ':root:root';
-
-/** 樣式規則屬於哪一組主題變數：固定值、深色、淺色；都不是時回傳 null。 */
-export function themeRuleKind(selectorText: string): 'pinned' | 'dark' | 'light' | null {
-  const parts = selectorText.split(',').map((s) => s.trim());
-  if (parts.includes(PINNED_THEME_SELECTOR)) return 'pinned';
-  if (parts.includes(`[${DARK_THEME_ATTRIBUTE}]`)) return 'dark';
-  if (parts.includes(`[${LIGHT_THEME_ATTRIBUTE}]`)) return 'light';
-  return null;
-}
-
-export interface ThemeVariables {
-  /** 被 `:root:root` 固定的變數名稱。 */
-  pinned: Set<string>;
-  /** YouTube 樣式表中 [dark]、[light] 規則定義的變數值。 */
-  dark: Map<string, string>;
-  light: Map<string, string>;
-}
-
-/** 讀取頁面樣式表中的主題變數。讀不到的樣式表（例如跨來源）略過。 */
-export function collectThemeVariables(doc: Document = document): ThemeVariables {
-  const vars: ThemeVariables = { pinned: new Set(), dark: new Map(), light: new Map() };
-  const walk = (rules: CSSRuleList) => {
-    for (const rule of Array.from(rules)) {
-      // 以欄位判斷規則種類（不用 instanceof，Firefox 內容腳本中的頁面物件也適用）。
-      const { selectorText, style } = rule as Partial<CSSStyleRule>;
-      const kind = typeof selectorText === 'string' && style ? themeRuleKind(selectorText) : null;
-      if (kind && style) {
-        for (let i = 0; i < style.length; i++) {
-          const name = style.item(i);
-          if (!name.startsWith('--')) continue;
-          if (kind === 'pinned') vars.pinned.add(name);
-          else vars[kind].set(name, style.getPropertyValue(name).trim());
-        }
-      }
-      // @media、@layer、@supports 等群組規則與巢狀規則
-      const nested = (rule as Partial<CSSGroupingRule>).cssRules;
-      if (nested) walk(nested);
-    }
-  };
-  for (const sheet of Array.from(doc.styleSheets)) {
-    try {
-      walk(sheet.cssRules);
-    } catch {
-      // 無法讀取的樣式表（SecurityError）
-    }
-  }
-  return vars;
-}
-
-/**
- * 頁面實際顯示的背景色（CSS 色彩字串）：優先取整頁容器 ytd-app，透明時改看 <html>、<body>。
- * 用來確認即時切換是否生效（003 FR-16）。都透明時回傳 null。
- */
-export function pageBackgroundColor(doc: Document = document): string | null {
-  const view = doc.defaultView;
-  if (!view) return null;
-  for (const el of [doc.querySelector('ytd-app'), doc.documentElement, doc.body]) {
-    if (!el) continue;
-    const color = view.getComputedStyle(el).backgroundColor;
-    if (color && color !== 'transparent' && !/^rgba\(.*,\s*0\)$/.test(color)) return color;
+/** 從外觀選項元件的 data 取出它代表的主題；不是深色或淺色選項（例如「使用裝置主題」）時回傳 null。 */
+export function themeOptionOf(data: unknown): 'dark' | 'light' | null {
+  const endpoint = asRecord(asRecord(asRecord(data)?.serviceEndpoint)?.signalServiceEndpoint);
+  const actions = Array.isArray(endpoint?.actions) ? endpoint.actions : [];
+  for (const action of actions) {
+    const signal = asRecord(asRecord(action)?.signalAction)?.signal;
+    if (typeof signal === 'string' && Object.hasOwn(THEME_OPTION_SIGNALS, signal)) return THEME_OPTION_SIGNALS[signal]!;
   }
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// 主題偏好（003 FR-10 至 FR-13，plan 3.7）：YouTube 把「外觀」設定存在 PREF cookie。
-// 格式依實測與公開資料確認，見 specs/notes/T06a-dark-mode.md：
-// - cookie 值是以 & 分隔的 key=value，例如 "f5=30000&f6=400&hl=en&tz=UTC"；
-// - f6 是十六進位的旗標；0x400 為深色主題、0x80000 為淺色主題，兩者都沒有時依 YouTube 預設
-//   （帳號設為「使用裝置主題」時也是如此）；其他位元與其他欄位屬於別的偏好，必須原樣保留。
-// - cookie 屬性：網域 .youtube.com、路徑 /、Secure、SameSite=Lax，YouTube 設定的期限為 400 天。
-// ---------------------------------------------------------------------------
+/**
+ * main world 用：在目前外觀子選單的選項上標記它代表的主題（先清除舊的標記）。
+ * 只加上資料屬性，不點擊、不修改其他東西。回傳找到哪些選項。
+ */
+export function markThemeOptions(doc: Document = document): { dark: boolean; light: boolean } {
+  const found = { dark: false, light: false };
+  for (const el of doc.querySelectorAll(`[${THEME_OPTION_ATTRIBUTE}]`)) el.removeAttribute(THEME_OPTION_ATTRIBUTE);
+  for (const el of doc.querySelectorAll(APPEARANCE_MENU.themeOption)) {
+    const theme = themeOptionOf((el as Element & { data?: unknown }).data);
+    if (!theme) continue;
+    el.setAttribute(THEME_OPTION_ATTRIBUTE, theme);
+    found[theme] = true;
+  }
+  return found;
+}
 
-export const PREF_COOKIE = 'PREF';
-export const PREF_THEME_FIELD = 'f6';
-export const THEME_DARK_FLAG = 0x400;
-export const THEME_LIGHT_FLAG = 0x80000;
-const PREF_COOKIE_ATTRIBUTES = 'domain=.youtube.com; path=/; max-age=34560000; secure; samesite=lax';
+/** 打開帳號／設定選單的按鈕：已登入時的頭像按鈕，否則頂端列最右邊的選單按鈕。 */
+export function findAccountMenuButton(doc: Document = document): HTMLElement | null {
+  const avatar = doc.querySelector<HTMLElement>(APPEARANCE_MENU.avatarButton);
+  if (avatar) return avatar;
+  const renderers = doc.querySelectorAll(APPEARANCE_MENU.menuButtonRenderer);
+  return renderers.length > 0 ? renderers[renderers.length - 1]!.querySelector<HTMLElement>('button') : null;
+}
 
-/** YouTube「外觀」設定：深色、淺色，或沒有明確設定（依 YouTube 預設或裝置主題）。 */
-export type ThemePreference = 'dark' | 'light' | 'device';
-
-/** 從 document.cookie 字串取出 PREF 的值；沒有時回傳 null。 */
-export function readPrefCookie(cookieString: string): string | null {
-  for (const part of cookieString.split(';')) {
-    const trimmed = part.trim();
-    if (trimmed.startsWith(`${PREF_COOKIE}=`)) return trimmed.slice(PREF_COOKIE.length + 1);
+/** 已打開、顯示中的彈出選單。 */
+export function findOpenPopup(doc: Document = document): HTMLElement | null {
+  for (const el of doc.querySelectorAll<HTMLElement>(APPEARANCE_MENU.popup)) {
+    if (el.getAttribute('aria-hidden') !== 'true' && el.style.display !== 'none' && el.getClientRects().length > 0) return el;
   }
   return null;
 }
 
-/** 解析 PREF 值為依序排列的欄位；值保持原始文字（不做 URL 解碼），以便原樣寫回。 */
-export function parsePref(value: string | null): Array<[key: string, value: string]> {
-  if (!value) return [];
-  return value
-    .split('&')
-    .filter((part) => part.length > 0)
-    .map((part) => {
-      const eq = part.indexOf('=');
-      return eq === -1 ? [part, ''] : [part.slice(0, eq), part.slice(eq + 1)];
-    });
+/** 顯示中的「外觀」項目。 */
+export function findAppearanceItem(doc: Document = document): HTMLElement | null {
+  const el = doc.querySelector<HTMLElement>(APPEARANCE_MENU.appearanceItem);
+  return el && el.getClientRects().length > 0 ? el : null;
 }
 
-export function serializePref(fields: ReadonlyArray<readonly [string, string]>): string {
-  return fields.map(([k, v]) => `${k}=${v}`).join('&');
-}
-
-/** 解析 f6 旗標；欄位不存在時為 0，格式不對時回傳 null（不能安全地修改）。 */
-function themeFlags(fields: ReadonlyArray<readonly [string, string]>): number | null {
-  const raw = fields.find(([k]) => k === PREF_THEME_FIELD)?.[1];
-  if (raw === undefined || raw === '') return 0;
-  return /^[0-9a-fA-F]{1,8}$/.test(raw) ? Number.parseInt(raw, 16) : null;
-}
-
-/** 目前 PREF 中的主題偏好；f6 格式不對時視為沒有明確設定。 */
-export function readThemePreference(prefValue: string | null): ThemePreference {
-  const flags = themeFlags(parsePref(prefValue));
-  if (flags === null) return 'device';
-  if (flags & THEME_DARK_FLAG) return 'dark';
-  if (flags & THEME_LIGHT_FLAG) return 'light';
-  return 'device';
-}
-
-/**
- * 回傳把主題改成深色或淺色後的 PREF 值：只改 f6 的兩個主題位元，其他位元與欄位（含順序）原樣保留；
- * 原本沒有 f6 時加在最後。f6 格式不對時回傳 null，不修改。
- */
-export function withThemePreference(prefValue: string | null, theme: 'dark' | 'light'): string | null {
-  const fields = parsePref(prefValue);
-  const flags = themeFlags(fields);
-  if (flags === null) return null;
-  // >>> 0：以無號 32 位元處理，最高位元被設定時也不會變成負數。
-  const next = ((flags & ~(THEME_DARK_FLAG | THEME_LIGHT_FLAG)) | (theme === 'dark' ? THEME_DARK_FLAG : THEME_LIGHT_FLAG)) >>> 0;
-  const hex = next.toString(16);
-  const index = fields.findIndex(([k]) => k === PREF_THEME_FIELD);
-  if (index === -1) fields.push([PREF_THEME_FIELD, hex]);
-  else fields[index] = [PREF_THEME_FIELD, hex];
-  return serializePref(fields);
-}
-
-/** 寫入 PREF cookie 用的 document.cookie 字串（屬性與 YouTube 自己設定的相同）。 */
-export function prefCookieString(prefValue: string): string {
-  return `${PREF_COOKIE}=${prefValue}; ${PREF_COOKIE_ATTRIBUTES}`;
-}
-
-/** 重新載入時保留目前影片與播放時間點的網址（YouTube 的 t 參數，單位秒）。 */
-export function urlWithTime(href: string, seconds: number | null): string {
-  const url = new URL(href);
-  if (url.pathname !== '/watch' || seconds === null || !Number.isFinite(seconds)) return url.href;
-  if (seconds >= 1) url.searchParams.set('t', `${Math.floor(seconds)}s`);
-  else url.searchParams.delete('t');
-  return url.href;
+/** 已被橋接腳本標記、顯示中的深色或淺色選項（點擊的目標）。 */
+export function findThemeOption(theme: 'dark' | 'light', doc: Document = document): HTMLElement | null {
+  const option = doc.querySelector<HTMLElement>(`${APPEARANCE_MENU.themeOption}[${THEME_OPTION_ATTRIBUTE}="${theme}"]`);
+  if (!option || option.getClientRects().length === 0) return null;
+  return option.querySelector<HTMLElement>(APPEARANCE_MENU.themeOptionLink) ?? option;
 }
 
 // ---------------------------------------------------------------------------

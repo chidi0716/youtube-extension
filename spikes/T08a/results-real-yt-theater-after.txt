@@ -1,0 +1,3 @@
+before yt-theater {"t":17082,"floating":false,"rect":"16,68,967,725","cinema":false,"toolbar":"visible","scrollY":0}
+after yt-theater {"t":17188,"floating":false,"rect":"16,68,967,725","cinema":false,"toolbar":"covered by html","scrollY":0}
+after yt-theater {"t":17623,"floating":false,"rect":"0,56,1400,831","cinema":false,"toolbar":"visible","scrollY":0}

@@ -31,171 +31,104 @@ async function section(task, fn, options = {}) {
 // ---------------------------------------------------------------------------
 // T06 深色模式、子母畫面
 // ---------------------------------------------------------------------------
-// 深色模式（T06b）：按下按鈕時同時改寫 YouTube 的 PREF 偏好，並立即切換 YouTube 決定主題用的屬性，
-// 不重新載入。假觀看頁依 PREF 決定載入時的主題，並模擬 YouTube 依載入時主題輸出的樣式表
-// （:root 預設值、[dark]／[light] 覆寫、:root:root 固定的變數）與站內換頁時改回去的行為。
+// 深色模式（T06d）：由擴充功能操作 YouTube 自己的「外觀」選單。假觀看頁模擬 YouTube 的帳號／設定選單與
+// 外觀子選單（選項的順序與文字刻意與 YouTube 不同，只有 data 中的動作代號相同）。
 const prefOf = (page) =>
   page.context().cookies('https://www.youtube.com/').then((cs) => cs.find((c) => c.name === 'PREF')?.value ?? null);
 const isDarkPage = (page) => page.evaluate(() => document.documentElement.hasAttribute('dark'));
-const videoTime = (page) => page.evaluate(() => document.querySelector('video').currentTime);
+const menuLog = (page) => page.evaluate(() => window.__fixtureMenuLog.join(' > '));
+const menuState = (page) =>
+  page.evaluate(() => ({
+    open: document.getElementById('fixture-dropdown').style.display !== 'none',
+    busyClass: document.documentElement.classList.contains('yte-theme-menu-busy'),
+  }));
+const tooltipOf = (page, id) =>
+  page.evaluate((id) => {
+    const tip = document.querySelector('yte-toolbar').shadowRoot.querySelector(`.yte-btn[data-button="${id}"]`).closest('.yte-btn-wrap').querySelector('.yte-tooltip');
+    return { text: tip.textContent, notice: tip.hasAttribute('data-notice') };
+  }, id);
 
-/** 頁面上幾個代表性區塊的顏色，用來與「以該主題載入」時比較。 */
-const themeColors = (page) =>
+/** 開始記錄每個畫面中選單是否看得見（實際不透明度 > 0 且顯示中）；存在 sessionStorage，重新載入後也讀得到。 */
+const watchMenuVisibility = (page) =>
   page.evaluate(() => {
-    const css = (sel, prop) => {
-      const el = document.querySelector(sel);
-      return el ? getComputedStyle(el)[prop] : null;
-    };
-    return {
-      page: css('html', 'backgroundColor'),
-      title: css('h1', 'color'),
-      masthead: css('#masthead-container', 'backgroundColor'),
-      search: css('#fixture-search', 'color'),
-      description: css('#fixture-description', 'backgroundColor'),
-      subscribeBackground: css('#fixture-subscribe', 'backgroundColor'),
-      subscribeText: css('#fixture-subscribe', 'color'),
-      commentsBorder: css('#comments', 'borderTopColor'),
-    };
-  });
-
-const referenceColors = {};
-/** 以指定主題載入假觀看頁時的顏色（YouTube 原生的效果）。 */
-async function reference(theme) {
-  if (referenceColors[theme]) return referenceColors[theme];
-  const context = await launch({ name: `T06-reference-${theme}` });
-  await context.addCookies([
-    { name: 'PREF', value: theme === 'dark' ? 'f6=400' : 'f6=80000', domain: '.youtube.com', path: '/', secure: true, sameSite: 'Lax' },
-  ]);
-  const page = context.pages()[0] ?? (await context.newPage());
-  await openWatch(page);
-  referenceColors[theme] = await themeColors(page);
-  await context.close();
-  return referenceColors[theme];
-}
-
-// 顏色比對：RGB 各差不到 16、不透明度差不到 0.1 視為相同。被 :root:root 固定的變數改用 YouTube 樣式表中
-// [light] 的值覆寫，與以淺色載入時的固定值可能有些微差異（實測 #fff 對 #f1f1f1）。兩個主題之間的差異遠大於此。
-const rgba = (c) => {
-  const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(c ?? '');
-  return m ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])] : null;
-};
-const closeColor = (a, b) => {
-  const [x, y] = [rgba(a), rgba(b)];
-  return a === b || (!!x && !!y && x.slice(0, 3).every((v, i) => Math.abs(v - y[i]) < 16) && Math.abs(x[3] - y[3]) <= 0.1);
-};
-const colorsMatch = (expected, actual) => Object.keys(expected).every((k) => closeColor(expected[k], actual[k]));
-const colorDiff = (expected, actual) =>
-  Object.keys(expected)
-    .filter((k) => expected[k] !== actual[k])
-    .map((k) => `${k}=${actual[k]}${closeColor(expected[k], actual[k]) ? '≈' : '≠'}${expected[k]}`)
-    .join('; ');
-
-/** 按深色模式按鈕：記錄之後每個畫面的背景色，並確認沒有重新載入。 */
-async function pressDark(page) {
-  await page.evaluate(() => {
-    window.__noReload = true;
-    window.__frames = [];
+    sessionStorage.setItem('__menuFrames', JSON.stringify({ open: 0, visible: 0 }));
+    const counts = { open: 0, visible: 0 };
     const start = performance.now();
     const loop = () => {
-      window.__frames.push(getComputedStyle(document.documentElement).backgroundColor);
-      if (performance.now() - start < 1200) requestAnimationFrame(loop);
+      const d = document.getElementById('fixture-dropdown');
+      if (d.style.display !== 'none') {
+        counts.open++;
+        let o = 1;
+        for (let e = d; e; e = e.parentElement) o *= Number(getComputedStyle(e).opacity);
+        if (o > 0) counts.visible++;
+      }
+      sessionStorage.setItem('__menuFrames', JSON.stringify(counts));
+      if (performance.now() - start < 4000) requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
+    window.__noReload = true;
   });
+const menuFrames = (page) => page.evaluate(() => JSON.parse(sessionStorage.getItem('__menuFrames') ?? '{}'));
+
+/** 按深色模式按鈕，等選單操作完成。 */
+async function pressDark(page) {
+  await watchMenuVisibility(page);
   await button(page, 'darkMode').click();
-  await page.waitForTimeout(1300);
-  return page.evaluate(() => ({
-    reloaded: window.__noReload !== true,
-    frames: window.__frames?.length ?? 0,
-    // 背景色在連續畫面之間改變的次數：1 次表示直接換成新主題，沒有閃回舊主題
-    changes: (window.__frames ?? []).filter((c, i, a) => i > 0 && c !== a[i - 1]).length,
-  }));
+  await page.waitForTimeout(2500);
+  return { reloaded: !(await page.evaluate(() => window.__noReload === true)), frames: await menuFrames(page) };
 }
 
 await section(
   'T06',
   async (page) => {
-    const dark = await reference('dark');
-    const light = await reference('light');
     // 起始：YouTube 外觀為淺色（f6 含淺色旗標），另有其他偏好欄位。
     let p = await pressed(page, 'darkMode');
     check('起始為淺色時按鈕為關閉（FR-12）', !(await isDarkPage(page)) && p.pressed === 'false');
-
     await page.evaluate(() => {
       const v = document.querySelector('video');
       v.muted = true;
       return v.play();
     });
-    await page.waitForTimeout(1000);
-    const t0 = await videoTime(page);
+    await page.waitForTimeout(800);
+
     let r = await pressDark(page);
-    const t1 = await videoTime(page);
-    const playing = !(await page.evaluate(() => document.querySelector('video').paused));
+    let log = await menuLog(page);
     p = await pressed(page, 'darkMode');
     check(
-      '按按鈕後即時變成深色：不重新載入、影片持續播放（FR-10、FR-11）',
-      !r.reloaded && (await isDarkPage(page)) && p.pressed === 'true' && playing && t1 > t0,
-      `reloaded=${r.reloaded} time=${t0.toFixed(1)}→${t1.toFixed(1)}`,
+      '按按鈕：操作 YouTube 的外觀選單（選單按鈕 → 外觀 → 依動作代號選深色），整頁變成深色（FR-10、FR-11）',
+      (await isDarkPage(page)) && p.pressed === 'true' && log === 'open > appearance > select:TOGGLE_DARK_THEME_ON > close',
+      log,
     );
-    check('畫面直接換成新主題，沒有閃回舊主題或白畫面', r.changes === 1, `frames=${r.frames} changes=${r.changes}`);
-    let colors = await themeColors(page);
-    check('整頁顏色與以深色載入時相同（含頂端列、說明、被固定的「訂閱」文字色）', colorsMatch(dark, colors), colorDiff(dark, colors));
-    check('只改主題旗標，其他偏好原樣保留', (await prefOf(page)) === 'f5=30000&f6=408&hl=en&tz=UTC', await prefOf(page));
-    await shot(page, 'T06b-dark-from-light.png');
-
-    await page.waitForTimeout(10_000);
-    colors = await themeColors(page);
+    check('主題偏好由 YouTube（假頁面）寫入，擴充功能沒有自行修改', (await prefOf(page)) === 'f5=30000&f6=408&hl=en&tz=UTC', await prefOf(page));
     check(
-      '10 秒後沒有被改回去',
-      (await isDarkPage(page)) && colorsMatch(dark, colors) && (await prefOf(page)) === 'f5=30000&f6=408&hl=en&tz=UTC',
-      colorDiff(dark, colors),
+      '操作期間 YouTube 的選單沒有被看見，完成後選單關閉、暫時的 class 移除（FR-11）',
+      r.frames.open > 0 && r.frames.visible === 0 && !(await menuState(page)).open && !(await menuState(page)).busyClass,
+      `${JSON.stringify(r.frames)} ${JSON.stringify(await menuState(page))}`,
     );
+    check('影片持續播放，頁面沒有被擴充功能重新載入', !r.reloaded && !(await page.evaluate(() => document.querySelector('video').paused)));
+    await shot(page, 'T06d-dark-from-light.png');
 
-    // 站內換頁：假頁面模擬 YouTube 依載入時的主題把頂端列屬性與 PREF 改回去
-    await spaNavigate(page);
-    await page.waitForTimeout(2600);
-    colors = await themeColors(page);
-    check(
-      '站內換頁後仍是深色；被改回去的屬性與偏好都恢復，保留 YouTube 新加的欄位',
-      (await isDarkPage(page)) && colorsMatch(dark, colors) && (await prefOf(page)) === 'f5=30000&f6=408&hl=en&tz=UTC&f7=100',
-      `${await prefOf(page)} ${colorDiff(dark, colors)}`,
-    );
-
-    await page.reload();
-    await openWatch(page, page.url());
-    colors = await themeColors(page);
-    check('重新整理後仍是深色（FR-10）', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true' && colorsMatch(dark, colors));
-
-    // 以深色載入的頁面切回淺色：需要 <html light> 與覆寫被固定的變數
+    // 再按一次回到淺色
+    await page.evaluate(() => (window.__fixtureMenuLog = []));
     r = await pressDark(page);
-    colors = await themeColors(page);
+    log = await menuLog(page);
     check(
-      '再按一次即時回到淺色：不重新載入，整頁顏色與以淺色載入時相同',
-      !r.reloaded && r.changes === 1 && !(await isDarkPage(page)) && colorsMatch(light, colors) && (await prefOf(page)) === 'f5=30000&f6=80008&hl=en&tz=UTC&f7=100',
-      `${await prefOf(page)} ${colorDiff(light, colors)}`,
+      '再按一次：選淺色，回到淺色',
+      !(await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'false' && log === 'open > appearance > select:TOGGLE_DARK_THEME_OFF > close' && r.frames.visible === 0,
+      `${log} ${JSON.stringify(r.frames)}`,
     );
+
     await page.reload();
     await openWatch(page, page.url());
-    colors = await themeColors(page);
-    check('重新整理後仍是淺色', !(await isDarkPage(page)) && colorsMatch(light, colors), colorDiff(light, colors));
+    check('重新整理後維持 YouTube 的主題', !(await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'false');
 
-    // 使用者從 YouTube 選單切換主題（不重新載入）
+    // 使用者從 YouTube 選單切換主題
     await page.locator('#fixture-theme-toggle').click();
     await page.waitForTimeout(300);
     check('從 YouTube 選單切換主題時按鈕同步（FR-12）', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true');
     await page.locator('#fixture-theme-toggle').click();
     await page.waitForTimeout(300);
     check('再從選單切回淺色，按鈕同步', !(await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'false');
-
-    // 按鈕切換後，再從 YouTube 選單切換：交還給 YouTube，不再維持按鈕切換的主題
-    await pressDark(page);
-    await page.locator('#fixture-theme-toggle').click();
-    await page.waitForTimeout(2500);
-    check(
-      '按鈕切換後再從 YouTube 選單切換，以 YouTube 的選擇為準',
-      !(await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'false' && /(?:^|&)f6=80008(?:&|$)/.test((await prefOf(page)) ?? ''),
-      await prefOf(page),
-    );
 
     // 工具列關閉時不改變主題（FR-14）
     await page.locator('#fixture-theme-toggle').click();
@@ -210,78 +143,107 @@ await section(
 await section(
   'T06',
   async (page) => {
-    const dark = await reference('dark');
-    const light = await reference('light');
-    // 起始：外觀為深色（專案擁有者回報的情境）
+    // 模擬未登入時的 YouTube：選擇後由 YouTube 自己重新載入頁面
     check('起始為深色時按鈕為開啟', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true');
-    let r = await pressDark(page);
-    let colors = await themeColors(page);
-    check(
-      'YouTube 外觀為深色時按按鈕，即時變成淺色（Q14、Q16 回報的情境）',
-      !r.reloaded && r.changes === 1 && !(await isDarkPage(page)) && colorsMatch(light, colors) && (await prefOf(page)) === 'f6=80000' && (await pressed(page, 'darkMode')).pressed === 'false',
-      `${await prefOf(page)} ${colorDiff(light, colors)}`,
-    );
-    await shot(page, 'T06b-light-from-dark.png');
-    r = await pressDark(page);
-    colors = await themeColors(page);
-    check(
-      '再按一次即時回到深色',
-      !r.reloaded && (await isDarkPage(page)) && colorsMatch(dark, colors) && (await prefOf(page)) === 'f6=400',
-      `${await prefOf(page)} ${colorDiff(dark, colors)}`,
-    );
-  },
-  { pref: 'f6=400' },
-);
-
-await section(
-  'T06',
-  async (page) => {
-    const light = await reference('light');
-    // 起始：沒有明確的主題偏好（使用裝置主題），裝置為深色
-    check('使用裝置主題時，按鈕依目前實際顯示的主題（FR-13）', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true', String(await prefOf(page)));
-    const r = await pressDark(page);
-    const colors = await themeColors(page);
-    check(
-      '按下後即時改為明確的淺色主題，不再跟隨裝置（FR-13）',
-      !r.reloaded && !(await isDarkPage(page)) && colorsMatch(light, colors) && (await prefOf(page)) === 'hl=en&f6=80000',
-      `${await prefOf(page)} ${colorDiff(light, colors)}`,
-    );
-    await page.reload();
-    await openWatch(page, page.url());
-    check('重新整理後仍是淺色', !(await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'false');
-  },
-  { pref: 'hl=en', colorScheme: 'dark' },
-);
-
-await section(
-  'T06',
-  async (page) => {
-    // 假頁面不輸出 [dark]／[light] 覆寫：只切換屬性無法改變顏色，應退回重新載入（FR-16）
-    const logs = [];
-    page.on('console', (m) => logs.push(m.text()));
-    await page.evaluate(() => {
-      const v = document.querySelector('video');
-      v.muted = true;
-      return v.play();
-    });
-    await page.waitForTimeout(2500);
-    const reloaded = page.waitForEvent('load', { timeout: 10_000 }).then(
+    await watchMenuVisibility(page);
+    const loaded = page.waitForEvent('load', { timeout: 10_000 }).then(
       () => true,
       () => false,
     );
     await button(page, 'darkMode').click();
-    const didReload = await reloaded;
+    const reloaded = await loaded;
     await openWatch(page, page.url());
-    const url = new URL(page.url());
+    const frames = await menuFrames(page);
     check(
-      '即時切換沒有生效時，退回改偏好後重新載入，並保留影片與時間點（FR-16）',
-      didReload && (await isDarkPage(page)) && (await prefOf(page)) === 'f6=400' && url.searchParams.get('v') === 'jNQXAC9IVRw' && /^\d+s$/.test(url.searchParams.get('t') ?? ''),
-      `reloaded=${didReload} url=${url.search}`,
+      'YouTube 選擇後自己重新載入頁面時：重新載入前選單沒有被看見，載入後為淺色',
+      reloaded && frames.open > 0 && frames.visible === 0 && !(await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'false',
+      `reloaded=${reloaded} ${JSON.stringify(frames)} pref=${await prefOf(page)}`,
     );
-    check('在 console 記錄退回的原因（FR-16）', logs.some((l) => l.includes('instant switch did not take effect')), logs.filter((l) => l.includes('youtube-extension')).join(' | '));
+    await shot(page, 'T06d-light-from-dark.png');
   },
-  { pref: 'f6=80000', url: `${WATCH}&fixture_static_theme=1` },
+  { pref: 'f6=400', url: `${WATCH}&fixture_menu_reload=1` },
 );
+
+await section(
+  'T06',
+  async (page) => {
+    // 起始：沒有明確的主題偏好（使用裝置主題），裝置為深色
+    check('使用裝置主題時，按鈕依目前實際顯示的主題（FR-13）', (await isDarkPage(page)) && (await pressed(page, 'darkMode')).pressed === 'true', String(await prefOf(page)));
+    await pressDark(page);
+    check(
+      '按下後選擇明確的淺色主題（FR-13）',
+      !(await isDarkPage(page)) && (await menuLog(page)).includes('select:TOGGLE_DARK_THEME_OFF') && (await prefOf(page)) === 'hl=en&f6=80000',
+      `${await menuLog(page)} ${await prefOf(page)}`,
+    );
+  },
+  { pref: 'hl=en', colorScheme: 'dark' },
+);
+
+const HINT_EN =
+  "Couldn't find YouTube's Appearance option. If you use an extension that changes the theme (for example, an ambient light extension), set its theme to follow YouTube.";
+const noticeShown = (page) =>
+  page.evaluate(
+    () => !!document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="darkMode"]').closest('.yte-btn-wrap').querySelector('.yte-tooltip[data-notice]'),
+  );
+
+for (const [flag, what, step] of [
+  ['fixture_no_appearance=1', '選單中沒有「外觀」項目', 'step 2/3 failed: the Appearance item was not found'],
+  ['fixture_no_menu_button=1', '頂端列沒有選單按鈕', 'step 1/3 failed: the account/settings menu button was not found'],
+]) {
+  await section(
+    'T06',
+    async (page) => {
+      // 找不到選單或選項（例如 YouTube 改版，或其他擴充功能接管了主題）：不做任何修改，
+      // 按鈕提示說明可能原因（約 6 秒，或滑鼠移開為止），console 記錄失敗的步驟（FR-15、T06e）
+      const logs = [];
+      page.on('console', (m) => logs.push(m.text()));
+      const prefBefore = await prefOf(page);
+      await watchMenuVisibility(page);
+      await button(page, 'darkMode').click();
+      // 等操作結束、提示出現
+      await page
+        .waitForFunction(
+          () => document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="darkMode"]').closest('.yte-btn-wrap').querySelector('.yte-tooltip[data-notice]'),
+          null,
+          { timeout: 7000, polling: 50 },
+        )
+        .catch(() => {});
+      const shownAt = Date.now();
+      const tip = await tooltipOf(page, 'darkMode');
+      const state = await menuState(page);
+      const frames = await menuFrames(page);
+      check(
+        `${what}：不做任何修改，選單關閉且沒有被看見（FR-15）`,
+        !(await isDarkPage(page)) && (await prefOf(page)) === prefBefore && !state.open && !state.busyClass && frames.visible === 0,
+        `pref=${await prefOf(page)} ${JSON.stringify(state)} ${JSON.stringify(frames)} log=${await menuLog(page)}`,
+      );
+      check(
+        `${what}：按鈕提示說明可能原因（含其他擴充功能接管主題），console 記錄失敗的步驟（FR-15）`,
+        tip.notice && tip.text === HINT_EN && logs.some((l) => l.includes(step)),
+        `${JSON.stringify(tip)} ${logs.filter((l) => l.includes('youtube-extension')).join(' | ')}`,
+      );
+      if (flag === 'fixture_no_appearance=1') {
+        await shot(page, 'T06e-unavailable-hint.png', { x: 0, y: 0, width: 900, height: 740 });
+        // 滑鼠移開按鈕：提示約 6 秒後消失
+        await page.mouse.move(5, 890);
+        await page.waitForTimeout(Math.max(0, shownAt + 5000 - Date.now()));
+        const at5 = await noticeShown(page);
+        await page.waitForTimeout(Math.max(0, shownAt + 7000 - Date.now()));
+        const at7 = await noticeShown(page);
+        check('提示顯示約 6 秒（5 秒時仍在，7 秒時已消失）', at5 && !at7, `5s=${at5} 7s=${at7}`);
+      } else {
+        // 滑鼠一直停在按鈕上：6 秒後提示仍在，移開後才消失
+        await page.waitForTimeout(Math.max(0, shownAt + 7000 - Date.now()));
+        const heldText = (await tooltipOf(page, 'darkMode')).text;
+        const held = await noticeShown(page);
+        await page.mouse.move(5, 890);
+        await page.waitForTimeout(300);
+        check('滑鼠停在按鈕上時，提示留到滑鼠移開為止', held && heldText === HINT_EN && !(await noticeShown(page)), `held=${held} after=${await noticeShown(page)}`);
+      }
+    },
+    { pref: 'f6=80000', url: `${WATCH}&${flag}` },
+  );
+}
 
 await section('T06', async (page) => {
   let p;
@@ -580,6 +542,93 @@ await section('T08', async (page) => {
 });
 
 // ---------------------------------------------------------------------------
+// T08a 劇院模式與浮動播放器（003 FR-45、FR-46，QUESTIONS Q22）
+// ---------------------------------------------------------------------------
+/** 播放器容器的狀態：是否浮動、位置與尺寸、捲動位置。 */
+const playerBox = (page) =>
+  page.evaluate(() => {
+    const c = document.querySelector('ytd-watch-flexy #player-container');
+    const r = c.getBoundingClientRect();
+    return {
+      floating: c.classList.contains('yte-floating'),
+      rect: [r.left, r.top, r.width, r.height].map(Math.round).join(','),
+      cinema: document.documentElement.classList.contains('yte-cinema'),
+      scrollY: Math.round(scrollY),
+    };
+  });
+/** 一段時間內每 100ms 記錄一次播放器容器的狀態，回傳出現過的不同狀態。 */
+async function watchPlayerBox(page, ms) {
+  const seen = [];
+  for (let t = 0; t < ms; t += 100) {
+    const b = JSON.stringify(await playerBox(page));
+    if (seen[seen.length - 1] !== b) seen.push(b);
+    await page.waitForTimeout(100);
+  }
+  return seen.map((s) => JSON.parse(s));
+}
+const scrollToY = async (page, y) => {
+  await page.evaluate((y) => window.scrollTo(0, y), y);
+  await page.waitForTimeout(400);
+};
+
+await section('T08a', async (page) => {
+  await button(page, 'floating').click();
+  await page.waitForTimeout(300);
+  const original = await playerBox(page);
+
+  // 1. 開浮動播放器（不捲動）後開劇院模式：播放器維持原位與大小，不浮出（回報的情境）
+  await button(page, 'cinema').click();
+  const states = await watchPlayerBox(page, 1500);
+  const toolbarVisible = await page.evaluate(() => {
+    const r = document.querySelector('yte-toolbar').getBoundingClientRect();
+    return !!document.elementFromPoint(r.left + 20, r.top + r.height / 2)?.closest('yte-toolbar');
+  });
+  check(
+    '先開浮動播放器再開劇院模式：播放器維持原位、大小正常，工具列可見（FR-45、Q22）',
+    states.length === 1 && !states[0].floating && states[0].rect === original.rect && states[0].cinema && toolbarVisible,
+    JSON.stringify(states),
+  );
+  await scrollToY(page, 1200);
+  check('劇院模式期間捲動不會浮出（FR-45）', !(await playerBox(page)).floating && (await pressed(page, 'floating')).pressed === 'true');
+  await scrollToY(page, 0);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await scrollToY(page, 1200);
+  check('關閉劇院模式後往下捲，浮動播放器正常浮出（FR-45）', (await playerBox(page)).floating && !(await playerBox(page)).cinema);
+
+  // 2. 播放器正在浮動時開劇院模式：先回到原位再進入劇院模式（以鍵盤操作按鈕，不改變捲動位置）
+  await button(page, 'cinema').evaluate((b) => b.click());
+  await page.waitForTimeout(200);
+  let box = await playerBox(page);
+  check('播放器正在浮動時開劇院模式：先回到原位（FR-45）', !box.floating && box.cinema && box.scrollY === 1200, JSON.stringify(box));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  box = await playerBox(page);
+  check('關閉劇院模式後，仍在捲動位置時恢復浮動（FR-45）', box.floating && !box.cinema, JSON.stringify(box));
+  await scrollToY(page, 0);
+
+  // 3. YouTube 自己的劇院模式切換（版面變化）不會讓播放器浮出（FR-46）
+  await page.locator('#fixture-theater').click();
+  const theaterStates = await watchPlayerBox(page, 1000);
+  check(
+    '切換 YouTube 自己的劇院模式：播放器移到加寬位置，不浮出（FR-46）',
+    theaterStates.every((s) => !s.floating) && theaterStates[theaterStates.length - 1].rect === '0,56,1280,560',
+    JSON.stringify(theaterStates),
+  );
+  await scrollToY(page, 1200);
+  box = await playerBox(page);
+  check('YouTube 劇院模式中往下捲：浮動播放器正常浮出（依新的原位置判斷）', box.floating && box.rect === '944,704,320,180', JSON.stringify(box));
+  await scrollToY(page, 0);
+  box = await playerBox(page);
+  check('捲回來後回到加寬的位置', !box.floating && box.rect === '0,56,1280,560', JSON.stringify(box));
+  await page.locator('#fixture-theater').click();
+  await page.waitForTimeout(400);
+  box = await playerBox(page);
+  check('關閉 YouTube 劇院模式：回到原本的位置，不浮出（FR-46）', !box.floating && box.rect === original.rect, JSON.stringify(box));
+  await button(page, 'floating').click();
+});
+
+// ---------------------------------------------------------------------------
 // T09 循環播放
 // ---------------------------------------------------------------------------
 await section('T09', async (page) => {
@@ -804,6 +853,170 @@ await section('T10', async (page, context) => {
   await sw('hideComments').click();
   check('關閉隱藏留言後留言區恢復', await page.evaluate(() => getComputedStyle(document.querySelector('#comments')).display !== 'none'));
 });
+
+// ---------------------------------------------------------------------------
+// T10a 觀看輔助功能兩兩組合（003 FR-90、constitution 第 7b 點）
+// ---------------------------------------------------------------------------
+// 每組功能以兩種順序開啟。開啟後檢查：播放器位置與尺寸、是否被遮住、工具列是否可見，以及各功能自己的效果；
+// 有浮動播放器時再捲動檢查浮出的位置與尺寸；最後全部關閉，確認回到原狀。
+const COMBO_FEATURES = {
+  cinema: {
+    label: '劇院模式',
+    on: async (page) => button(page, 'cinema').click(),
+    off: async (page) => {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(150);
+      if ((await pressed(page, 'cinema')).pressed === 'true') await button(page, 'cinema').click();
+    },
+    active: (s) => s.cinema && s.dimmed <= 0.1,
+  },
+  floating: {
+    label: '浮動播放器',
+    on: async (page) => button(page, 'floating').click(),
+    off: async (page) => button(page, 'floating').click(),
+    active: (s) => s.floatingOn,
+  },
+  loop: {
+    label: '循環播放',
+    on: async (page) => {
+      await button(page, 'loop').click();
+      await page.locator('yte-toolbar .yte-panel #yte-loop-times').fill('99');
+      await page.locator('yte-toolbar .yte-panel .yte-button-primary').click();
+      await page.keyboard.press('Escape'); // 收起面板（循環繼續進行；劇院模式中也只收起面板）
+    },
+    off: async (page) => {
+      await button(page, 'loop').click();
+      await page.locator('yte-toolbar .yte-panel .yte-button-secondary').click();
+      await page.keyboard.press('Escape');
+    },
+    active: (s) => s.loopOn,
+  },
+  audioOnly: {
+    label: '純音訊模式',
+    on: async (page) => {
+      await button(page, 'more').click();
+      await page.locator('yte-toolbar .yte-more-item[data-item="audioOnly"] [role="switch"]').click();
+      await page.keyboard.press('Escape');
+    },
+    off: async (page) => {
+      await button(page, 'more').click();
+      await page.locator('yte-toolbar .yte-more-item[data-item="audioOnly"] [role="switch"]').click();
+      await page.keyboard.press('Escape');
+    },
+    active: (s) => s.audioOnly,
+  },
+  pip: {
+    label: '子母畫面',
+    on: async (page) => button(page, 'pip').click(),
+    off: async (page) => page.evaluate(() => document.exitPictureInPicture()),
+    active: (s) => s.pip,
+  },
+};
+
+/** 目前的版面與各功能狀態。 */
+const comboState = (page) =>
+  page.evaluate(() => {
+    const c = document.querySelector('ytd-watch-flexy #player-container');
+    const r = c.getBoundingClientRect();
+    const player = document.querySelector('#movie_player').getBoundingClientRect();
+    const hit = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      return el?.closest('yte-toolbar') ? 'toolbar' : el?.closest('#movie_player') ? 'player' : el ? el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') : 'none';
+    };
+    const shadow = document.querySelector('yte-toolbar')?.shadowRoot;
+    const tb = shadow?.querySelector('.yte-btn[data-button="cinema"]')?.getBoundingClientRect();
+    const opacity = (el) => {
+      let o = 1;
+      for (let e = el; e; e = e.parentElement) o *= Number(getComputedStyle(e).opacity);
+      return Math.round(o * 100) / 100;
+    };
+    const video = document.querySelector('video');
+    return {
+      scrollY: Math.round(scrollY),
+      floating: c.classList.contains('yte-floating'),
+      rect: [r.left, r.top, r.width, r.height].map(Math.round).join(','),
+      playerHit: hit(player.left + player.width / 2, player.top + player.height / 2),
+      playerOpacity: opacity(document.querySelector('#movie_player')),
+      toolbarHit: tb ? hit(tb.left + tb.width / 2, tb.top + tb.height / 2) : 'missing',
+      cinema: document.documentElement.classList.contains('yte-cinema'),
+      dimmed: opacity(document.querySelector('#secondary a')),
+      floatingOn: shadow?.querySelector('.yte-btn[data-button="floating"]')?.getAttribute('aria-pressed') === 'true',
+      loopOn: shadow?.querySelector('.yte-btn[data-button="loop"]')?.hasAttribute('data-on') ?? false,
+      audioOnly: getComputedStyle(video).opacity === '0' && getComputedStyle(document.querySelector('.html5-video-container')).backgroundImage.includes('hqdefault'),
+      pip: document.pictureInPictureElement === video,
+      floatingControls: !!document.querySelector('yte-floating-controls'),
+    };
+  });
+
+async function comboPair(page, original, first, second) {
+  const [a, b] = [COMBO_FEATURES[first], COMBO_FEATURES[second]];
+  const name = `${a.label}→${b.label}`;
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(200);
+  await a.on(page);
+  await page.waitForTimeout(400);
+  await b.on(page);
+  await page.waitForTimeout(400);
+  // 點面板中的按鈕時 Playwright 會先把面板捲到畫面內（例如循環播放），檢查前捲回頂端
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400);
+  let s = await comboState(page);
+  const problems = [];
+  if (!a.active(s)) problems.push(`${a.label} 沒有作用`);
+  if (!b.active(s)) problems.push(`${b.label} 沒有作用`);
+  if (s.floating || s.rect !== original.rect) problems.push(`播放器位置或尺寸改變 ${s.rect} floating=${s.floating}`);
+  if (s.playerHit !== 'player') problems.push(`播放器被遮住（${s.playerHit}）`);
+  if (s.playerOpacity !== 1) problems.push(`播放器變暗 ${s.playerOpacity}`);
+  if (s.toolbarHit !== 'toolbar') problems.push(`工具列不可見（${s.toolbarHit}）`);
+  check(`${name}：兩個功能都作用，播放器原位、大小正常、沒被遮住，工具列可見（FR-90）`, problems.length === 0, problems.join('；') || s.rect);
+
+  // 有浮動播放器時往下捲：劇院模式中不浮出（FR-45），否則浮到右下角、大小正確、沒被遮住
+  if (first === 'floating' || second === 'floating') {
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.waitForTimeout(500);
+    s = await comboState(page);
+    const expectFloat = !s.cinema;
+    const ok = expectFloat
+      ? s.floating && s.rect === '944,704,320,180' && s.playerHit === 'player' && s.floatingControls && s.playerOpacity === 1
+      : !s.floating;
+    check(`${name}：往下捲時${expectFloat ? '浮到右下角，大小正確、沒被遮住' : '不浮出（劇院模式期間，FR-45）'}`, ok, JSON.stringify(s));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+  }
+
+  // 依相反順序關閉，回到原狀
+  await b.off(page);
+  await page.waitForTimeout(300);
+  await a.off(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(500);
+  s = await comboState(page);
+  const clean = !s.cinema && !s.floatingOn && !s.loopOn && !s.audioOnly && !s.pip && !s.floating && s.rect === original.rect && s.toolbarHit === 'toolbar';
+  check(`${name}：全部關閉後回到原狀`, clean, JSON.stringify(s));
+}
+
+for (const [x, y] of [
+  ['cinema', 'floating'],
+  ['cinema', 'loop'],
+  ['floating', 'audioOnly'],
+  ['floating', 'pip'],
+  ['cinema', 'audioOnly'],
+  ['cinema', 'pip'],
+  ['floating', 'loop'],
+  ['audioOnly', 'pip'],
+]) {
+  await section('T10a', async (page) => {
+    await page.evaluate(() => {
+      const v = document.querySelector('video');
+      v.muted = true;
+      return v.play();
+    });
+    await page.waitForTimeout(300);
+    const original = await comboState(page);
+    await comboPair(page, original, x, y);
+    await comboPair(page, original, y, x);
+  });
+}
 
 // ---------------------------------------------------------------------------
 // 「啟用」關閉時停用所有觀看輔助功能（QUESTIONS Q11 的目前做法）

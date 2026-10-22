@@ -151,6 +151,10 @@
     "message": "Switch YouTube between the dark and light theme.",
     "description": "Help panel: one-sentence description of the Dark mode button."
   },
+  "darkModeUnavailable": {
+    "message": "Can't switch. Please use YouTube's Appearance setting.",
+    "description": "Dark mode button: shown briefly when YouTube's Appearance menu could not be found or used (spec 003 FR-15)."
+  },
   "helpCinema": {
     "message": "Dim everything on the page except the player.",
     "description": "Help panel: one-sentence description of the Cinema mode button."
@@ -412,5 +416,9 @@
   "volumeHint": {
     "message": "Volume",
     "description": "Accessible label of the volume indicator shown over the player."
+  },
+  "darkModeUnavailableHint": {
+    "message": "Couldn't find YouTube's Appearance option. If you use an extension that changes the theme (for example, an ambient light extension), set its theme to follow YouTube.",
+    "description": "Dark mode button: shown for about 6 seconds when YouTube's Appearance menu or option could not be found or used, e.g. because another extension controls the theme (spec 003 FR-15)."
   }
 }

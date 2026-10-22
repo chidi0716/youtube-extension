@@ -249,8 +249,12 @@
   // 中出現 tp-yt-paper-dialog > yt-confirm-dialog-renderer，按「是」（#confirm-button）後關閉並繼續播放。
   // 對話框的元素名稱依公開觀察，未在真實頁面看到。第一次建立，之後以 display 切換（模擬重複使用）。
   // -------------------------------------------------------------------------
-  const popup = document.createElement('ytd-popup-container');
-  document.querySelector('ytd-app').append(popup);
+  // 真實頁面只有一個 ytd-popup-container（外觀選單也在其中），已存在時共用。
+  let popup = document.querySelector('ytd-popup-container');
+  if (!popup) {
+    popup = document.createElement('ytd-popup-container');
+    document.querySelector('ytd-app').append(popup);
+  }
   let dialog = null;
   const showDialog = (text, onConfirm) => {
     if (!dialog) {

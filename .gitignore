@@ -50,3 +50,9 @@ spikes/T07a/.cache/
 
 # 階段 2b、2c 實測的暫存檔與開發用小工具
 spikes/stage2c/.cache/
+
+# T06d 實測打包的測試程式
+spikes/T06d/.cache/
+
+# T08a 實測的瀏覽器設定檔與暫存截圖
+spikes/T08a/.cache/

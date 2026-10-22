@@ -60,3 +60,8 @@ export const player = {
 };
 
 type BridgeQuality = Extract<BridgeRequest, { type: 'setQuality' }>['quality'];
+
+/** YouTube 外觀選單（003 深色模式，T06d）：在外觀子選單的深色／淺色選項上加上標記。 */
+export const appearanceMenu = {
+  markThemeOptions: () => callPageBridge('markThemeOptions', {}, 1000),
+};

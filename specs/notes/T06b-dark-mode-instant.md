@@ -2,6 +2,8 @@
 
 日期：2026-10-21　負責：實作方
 
+> 本筆記的做法已被 T06d 取代（已登入時無法改變帳號的外觀設定，QUESTIONS Q20），改為操作 YouTube 自己的外觀選單，見 [`T06d-dark-mode-menu.md`](./T06d-dark-mode-menu.md)。以下實測內容保留作為紀錄。
+
 ## 結論
 
 1. **YouTube 自己的外觀選單（未登入）其實會重新載入頁面**，不是即時切換：選「Dark theme」後 YouTube 寫入 `PREF`，約 2 ms 後就觸發 `beforeunload` 開始重新載入（`results-menu-timing.txt`）。重新載入後與切換前相比，`<html>` 只差 `dark` 一個屬性；頂端列 `ytd-masthead` 多了 `dark`、`page-dark-theme`（`results-menu-attrs.txt`）。登入帳號的選單是否即時切換，本環境無法驗證。

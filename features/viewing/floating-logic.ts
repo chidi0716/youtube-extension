@@ -79,6 +79,8 @@ export interface FloatingState {
   dismissed: boolean;
   /** 全螢幕時不浮動。 */
   fullscreen: boolean;
+  /** 劇院模式開啟期間暫停作用（FR-45）。 */
+  suspended: boolean;
 }
 
 export type FloatingEvent =
@@ -86,11 +88,13 @@ export type FloatingEvent =
   | { type: 'visibility'; outOfView: boolean }
   | { type: 'dismiss' }
   | { type: 'fullscreen'; fullscreen: boolean }
+  /** 劇院模式開啟／關閉（FR-45）。 */
+  | { type: 'suspend'; suspended: boolean }
   /** 換到另一部影片：清除暫時關閉。 */
   | { type: 'navigate' };
 
 export function initialFloatingState(enabled = false): FloatingState {
-  return { enabled, outOfView: false, dismissed: false, fullscreen: false };
+  return { enabled, outOfView: false, dismissed: false, fullscreen: false, suspended: false };
 }
 
 export function floatingReducer(state: FloatingState, event: FloatingEvent): FloatingState {
@@ -104,11 +108,25 @@ export function floatingReducer(state: FloatingState, event: FloatingEvent): Flo
       return isFloating(state) ? { ...state, dismissed: true } : state;
     case 'fullscreen':
       return { ...state, fullscreen: event.fullscreen };
+    case 'suspend':
+      return { ...state, suspended: event.suspended };
     case 'navigate':
       return { ...state, dismissed: false };
   }
 }
 
 export function isFloating(state: FloatingState): boolean {
-  return state.enabled && state.outOfView && !state.dismissed && !state.fullscreen;
+  return state.enabled && state.outOfView && !state.dismissed && !state.fullscreen && !state.suspended;
+}
+
+/**
+ * 播放器原位置（留在版面中的父元素）是否已完全離開畫面（FR-40、FR-46）。只在使用者捲動與使用者操作時計算。
+ * 原位置沒有大小（例如 YouTube 正在重排版面、元素暫時隱藏）時無法判斷，回傳 null，狀態維持不變。
+ */
+export function placeholderOutOfView(
+  rect: { top: number; bottom: number; width: number; height: number },
+  viewport: { height: number; topInset: number },
+): boolean | null {
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  return rect.bottom <= viewport.topInset || rect.top >= viewport.height;
 }

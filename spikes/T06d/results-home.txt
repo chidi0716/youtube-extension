@@ -1,0 +1,33 @@
+
+=== light -> dark (en)
+  frames=10 openFrames=5 visibleFrames=0 reloaded=true elapsed≈8058ms
+  frame log (first 12 with menu open): 59:open:- 75:open:- 83:open:- 96:open:- 194:open:- 256:beforeunload
+PASS  light -> dark (en): 切換成功  (dark=true pref=hl=en&f6=400&tz=UTC)
+PASS  light -> dark (en): 操作期間 YouTube 的選單沒有被看見
+  YouTube reloaded the page: true
+PASS  light -> dark (en): YouTube 外觀選單的勾選改為新主題  (TOGGLE_DARK_THEME_ON)
+
+=== dark -> light (en)
+  frames=15 openFrames=6 visibleFrames=0 reloaded=true elapsed≈8058ms
+  frame log (first 12 with menu open): 71:open:- 83:open:- 89:open:- 106:open:- 122:open:- 229:open:- 297:beforeunload
+PASS  dark -> light (en): 切換成功  (dark=false pref=hl=en&tz=UTC&f6=80000)
+PASS  dark -> light (en): 操作期間 YouTube 的選單沒有被看見
+  YouTube reloaded the page: true
+PASS  dark -> light (en): YouTube 外觀選單的勾選改為新主題  (TOGGLE_DARK_THEME_OFF)
+
+=== light -> dark (zh-TW)
+  frames=10 openFrames=5 visibleFrames=0 reloaded=true elapsed≈8045ms
+  frame log (first 12 with menu open): 50:open:- 63:open:- 79:open:- 96:open:- 180:open:- 240:beforeunload
+PASS  light -> dark (zh-TW): 切換成功  (dark=true pref=hl=zh-TW&f6=400&tz=UTC)
+PASS  light -> dark (zh-TW): 操作期間 YouTube 的選單沒有被看見
+  YouTube reloaded the page: true
+PASS  light -> dark (zh-TW): YouTube 外觀選單的勾選改為新主題  (TOGGLE_DARK_THEME_ON)
+
+=== option not found (bridge disabled)
+  console: [youtube-extension] dark mode: could not use YouTube's appearance menu (NO_THEME_OPTION); nothing changed
+   {"frames":{"open":326,"visible":0,"total":533},"dark":false,"busyClass":false,"menuOpen":false,"notice":"darkModeUnavailable"} pref hl=en&f6=80000&tz=UTC -> hl=en&f6=80000&tz=UTC
+PASS  找不到選項：主題與偏好不變
+PASS  找不到選項：選單曾打開但沒有被看見，結束後已關閉、暫時的 class 已移除  ({"open":326,"visible":0,"total":533})
+PASS  找不到選項：在 console 記錄原因  ([youtube-extension] dark mode: could not use YouTube's appearance menu (NO_THEME_OPTION); nothing changed)
+
+all passed

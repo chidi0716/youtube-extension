@@ -15,6 +15,8 @@ export interface ToggleFeature {
   toggle: () => void;
   /** 不能使用時的原因：按鈕停用，提示文字顯示原因（003 FR-32）。 */
   disabledReason?: string;
+  /** 短暫顯示在提示文字中的訊息（003 FR-15）。 */
+  notice?: string;
 }
 
 export interface ToolbarProps {
@@ -96,6 +98,7 @@ export function Toolbar({
   const renderButton = (def: ButtonDef, index: number, group: readonly ButtonDef[], side: 'left' | 'right') => {
     const label = t(def.label);
     const disabledReason = toggles[def.id]?.disabledReason;
+    const toggleNotice = toggles[def.id]?.notice;
     const align =
       side === 'left' && index === 0 ? 'start' : side === 'right' && index === group.length - 1 ? 'end' : 'center';
     return (
@@ -103,8 +106,10 @@ export function Toolbar({
         key={def.id}
         def={def}
         label={label}
-        tooltip={notice === def.id ? t('comingSoon') : disabledReason ? `${label}: ${disabledReason}` : label}
-        notice={notice === def.id}
+        tooltip={
+          toggleNotice ?? (notice === def.id ? t('comingSoon') : disabledReason ? `${label}: ${disabledReason}` : label)
+        }
+        notice={notice === def.id || !!toggleNotice}
         expanded={state.openId === def.id}
         pressed={def.kind === 'panel' ? activePanels?.has(def.id) : toggles[def.id]?.active}
         disabledReason={disabledReason}

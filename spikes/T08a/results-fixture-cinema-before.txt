@@ -1,0 +1,2 @@
+before cinema {"t":1018,"floating":false,"rect":"24,80,848,477","cinema":false,"toolbar":"visible","scrollY":0}
+after cinema {"t":1091,"floating":false,"rect":"24,80,848,477","cinema":true,"toolbar":"visible","scrollY":0}

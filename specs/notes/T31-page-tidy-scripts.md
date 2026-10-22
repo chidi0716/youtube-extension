@@ -10,7 +10,7 @@
   - `getAudioTracks`：`getAvailableAudioTracks()` 與 `getAudioTrack()`，整理成 `{ id, name, isDefault, isAutoDubbed, isOriginal }`；
   - `setAudioTrack`：參數 `trackId` 必須符合 `^[A-Za-z0-9._:-]{1,64}$`，而且必須是目前清單中存在的語音軌，否則不做任何事；切換後播放位置被移動超過 2 秒時跳回原本的位置（FR-13）。
 - 時機：`<video>` 的 `loadedmetadata`、`playing`（在 `document` 捕獲階段監聽），以及換頁。每部影片只判斷一次：清單載入後，目前是自動配音才切到原始語音；之後這部影片不再介入，所以使用者手動選的語音軌會被尊重（FR-12）；換到下一部影片時重新判斷。
-- 原始語音的判斷（`pickOriginalTrack`）：明確標示為原始語音（`xtags` 含 `acont=original`）→ 影片的預設語音軌 → 唯一不是自動配音的語音軌；任一步有多個候選時不做任何事。人工配音不處理（QUESTIONS Q22）。
+- 原始語音的判斷（`pickOriginalTrack`）：明確標示為原始語音（`xtags` 含 `acont=original`）→ 影片的預設語音軌 → 唯一不是自動配音的語音軌；任一步有多個候選時不做任何事。人工配音不處理（QUESTIONS Q26）。
 
 ### 在真實 YouTube 上確認到的事
 
@@ -26,7 +26,7 @@
 ## 自動關閉「影片已暫停，要繼續觀看嗎？」（FR-30、FR-31）
 
 - 只以一個 `MutationObserver` 觀察 YouTube 的彈出視窗容器 `ytd-popup-container`（已確認在 `ytd-app` 底下）；容器在首次載入時較晚出現，所以在 `DOMContentLoaded` 與換頁時尋找。
-- 容器中出現可見的 `yt-confirm-dialog-renderer` 時，若 (1) 使用者在這個頁面 30 秒內沒有點擊或按鍵、(2) 影片在 10 秒內被暫停、(3) 影片目前是暫停的，就按下 `#confirm-button` 中的按鈕；影片仍暫停時直接播放。不依賴對話框的文字（QUESTIONS Q23）。
+- 容器中出現可見的 `yt-confirm-dialog-renderer` 時，若 (1) 使用者在這個頁面 30 秒內沒有點擊或按鍵、(2) 影片在 10 秒內被暫停、(3) 影片目前是暫停的，就按下 `#confirm-button` 中的按鈕；影片仍暫停時直接播放。不依賴對話框的文字（QUESTIONS Q27）。
 - 本環境無法讓 YouTube 顯示這個對話框，元素名稱依公開觀察，未確認。
 
 ## Shorts 改用一般播放器（FR-50 至 FR-52）

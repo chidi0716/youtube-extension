@@ -1,4 +1,5 @@
 import type { Ref } from 'preact';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Icon } from '../icons';
 import type { ButtonDef } from './buttons';
 
@@ -26,8 +27,23 @@ export interface ToolbarButtonProps {
 export function ToolbarButton(props: ToolbarButtonProps) {
   const { def, label, tooltip, notice, expanded, pressed, disabledReason, controls, tooltipAlign, buttonRef, onClick } = props;
   const isOn = def.kind === 'panel' ? !!expanded || !!pressed : def.kind === 'toggle' ? !!pressed : false;
+  // 暫時訊息結束時滑鼠仍在按鈕上：讓訊息留到滑鼠移開為止，避免讀到一半消失（003 FR-15）。
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const lastNotice = useRef<string | null>(null);
+  const [held, setHeld] = useState<string | null>(null);
+  useEffect(() => {
+    if (notice) {
+      lastNotice.current = tooltip;
+      setHeld(null);
+      return;
+    }
+    if (lastNotice.current && wrapRef.current?.matches(':hover')) setHeld(lastNotice.current);
+    lastNotice.current = null;
+  }, [notice, tooltip]);
+  const shownTooltip = held ?? tooltip;
+  const showNotice = !!notice || held !== null;
   return (
-    <div class="yte-btn-wrap" data-tooltip-align={tooltipAlign}>
+    <div ref={wrapRef} class="yte-btn-wrap" data-tooltip-align={tooltipAlign} onMouseLeave={() => setHeld(null)}>
       <button
         ref={buttonRef}
         type="button"
@@ -49,10 +65,10 @@ export function ToolbarButton(props: ToolbarButtonProps) {
       <span
         class="yte-tooltip"
         aria-hidden="true"
-        data-notice={notice ? '' : undefined}
-        data-hidden={expanded && !notice ? '' : undefined}
+        data-notice={showNotice ? '' : undefined}
+        data-hidden={expanded && !showNotice ? '' : undefined}
       >
-        {tooltip}
+        {shownTooltip}
       </span>
     </div>
   );

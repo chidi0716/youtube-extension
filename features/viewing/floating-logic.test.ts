@@ -8,6 +8,7 @@ import {
   isCorner,
   isFloating,
   nearestCorner,
+  placeholderOutOfView,
   type FloatingEvent,
   type Viewport,
 } from './floating-logic';
@@ -116,5 +117,36 @@ describe('floatingReducer（FR-40、FR-42）', () => {
   it('換頁時清除暫時關閉', () => {
     const s = run([{ type: 'visibility', outOfView: true }, { type: 'dismiss' }, { type: 'navigate' }]);
     expect(isFloating(s)).toBe(true);
+  });
+
+  it('劇院模式開啟期間不浮動；浮動中開啟劇院模式先回到原位（FR-45）', () => {
+    const suspended = run([{ type: 'suspend', suspended: true }, { type: 'visibility', outOfView: true }]);
+    expect(isFloating(suspended)).toBe(false);
+    expect(suspended.enabled).toBe(true); // 按鈕的開關狀態不受影響
+    const floatingThenCinema = run([{ type: 'visibility', outOfView: true }, { type: 'suspend', suspended: true }]);
+    expect(isFloating(floatingThenCinema)).toBe(false);
+  });
+
+  it('關閉劇院模式後恢復正常判斷（FR-45）', () => {
+    const s = run([{ type: 'suspend', suspended: true }, { type: 'visibility', outOfView: true }, { type: 'suspend', suspended: false }]);
+    expect(isFloating(s)).toBe(true);
+  });
+});
+
+describe('placeholderOutOfView（FR-40、FR-46）', () => {
+  const vp = { height: 900, topInset: 56 };
+  const rect = (top: number, height = 480) => ({ top, bottom: top + height, width: 850, height });
+
+  it('原位置完全捲出畫面上方（含被標題列蓋住）或下方時才算離開', () => {
+    expect(placeholderOutOfView(rect(80), vp)).toBe(false);
+    expect(placeholderOutOfView(rect(-400), vp)).toBe(false); // 還有一部分在畫面中
+    expect(placeholderOutOfView(rect(-424), vp)).toBe(true); // 下緣剛好到標題列
+    expect(placeholderOutOfView(rect(-1200), vp)).toBe(true);
+    expect(placeholderOutOfView(rect(900), vp)).toBe(true);
+  });
+
+  it('原位置沒有大小（版面重排中、暫時隱藏）時無法判斷，不改變狀態', () => {
+    expect(placeholderOutOfView(rect(0, 0), vp)).toBeNull();
+    expect(placeholderOutOfView({ top: 0, bottom: 0, width: 0, height: 0 }, vp)).toBeNull();
   });
 });

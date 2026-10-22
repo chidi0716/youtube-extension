@@ -1,0 +1,5 @@
+before yt-theater {"t":17746,"floating":false,"rect":"16,68,904,509","cinema":false,"toolbar":"visible","scrollY":0}
+after yt-theater {"t":17818,"floating":false,"rect":"16,68,904,509","cinema":false,"toolbar":"covered by html","scrollY":0}
+after yt-theater {"t":18094,"floating":false,"rect":"0,56,1400,788","cinema":false,"toolbar":"covered by html","scrollY":0}
+after yt-theater {"t":18299,"floating":true,"rect":"1034,787,350,197","cinema":false,"toolbar":"covered by html","scrollY":0}
+after yt-theater {"t":18524,"floating":true,"rect":"1034,787,350,197","cinema":false,"toolbar":"visible","scrollY":0}

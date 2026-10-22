@@ -3,11 +3,13 @@
 // - 兩邊以 document 上的 CustomEvent 溝通，detail 一律是 JSON 字串
 //   （字串可以安全跨越 Firefox 的 Xray 邊界）。
 // - 只接受固定的幾種請求，其他一律忽略。頁面上的其他程式也能發出同名事件，
-//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉、讀取/設定畫質與語音軌。
+//   所以每種操作都必須是無害的：讀取影片資料、讀取/設定音量、跳轉、讀取/設定畫質與語音軌，
+//   以及在 YouTube 外觀子選單的選項上加上標記屬性（markThemeOptions，不點擊、不帶參數）。
 import {
   AUDIO_TRACK_ID_PATTERN,
   AUTO_QUALITY,
   isQualityCode,
+  markThemeOptions,
   readAudioTracks,
   readAvailableQualities,
   readCurrentTime,
@@ -35,6 +37,7 @@ export type BridgeRequest =
   | { id: string; type: 'setVolume'; volume: number }
   | { id: string; type: 'seekTo'; seconds: number }
   | { id: string; type: 'getCurrentTime' }
+  | { id: string; type: 'markThemeOptions' }
   // 鎖定畫質（004 第 1 節、plan 3.5）：setQuality 只接受 YouTube 畫質代號白名單與 auto。
   | { id: string; type: 'getAvailableQualities' }
   | { id: string; type: 'getQuality' }
@@ -57,6 +60,7 @@ export interface BridgeResults {
   getAudioTracks: { tracks: AudioTrackInfo[]; current: string | null };
   /** 是否已切換（清單中沒有這個 ID 時為 false）。 */
   setAudioTrack: boolean;
+  markThemeOptions: { dark: boolean; light: boolean };
 }
 
 /** 頁面橋接腳本會用到的播放器方法。 */
@@ -99,6 +103,7 @@ export function parseBridgeRequest(raw: unknown): BridgeRequest | null {
     case 'getAvailableQualities':
     case 'getQuality':
     case 'getAudioTracks':
+    case 'markThemeOptions':
       return { id, type: obj.type };
     case 'setAudioTrack':
       return typeof obj.trackId === 'string' && AUDIO_TRACK_ID_PATTERN.test(obj.trackId)
@@ -128,8 +133,18 @@ export function parseBridgeResponse(raw: unknown): BridgeResponse | null {
   return { id: obj.id, ok: false, error: obj.error === 'NO_PLAYER' ? 'NO_PLAYER' : 'FAILED' };
 }
 
-/** main world 端：對播放器執行請求並產生回應。player 為 null 表示找不到播放器。 */
-export function handleBridgeRequest(req: BridgeRequest, player: BridgePlayer | null): BridgeResponse {
+/**
+ * main world 端：執行請求並產生回應。player 為 null 表示找不到播放器（播放器相關的請求回覆 NO_PLAYER）。
+ * doc 是外觀選單所在的文件（markThemeOptions 用，不需要播放器）。
+ */
+export function handleBridgeRequest(req: BridgeRequest, player: BridgePlayer | null, doc?: Document): BridgeResponse {
+  if (req.type === 'markThemeOptions') {
+    try {
+      return { id: req.id, ok: true, result: doc ? markThemeOptions(doc) : { dark: false, light: false } };
+    } catch {
+      return { id: req.id, ok: false, error: 'FAILED' };
+    }
+  }
   if (!player) return { id: req.id, ok: false, error: 'NO_PLAYER' };
   try {
     switch (req.type) {

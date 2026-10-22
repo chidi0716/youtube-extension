@@ -1,0 +1,1012 @@
+
+######## en-US
+--- masthead #end / #buttons
+div id="end" class="style-scope ytd-masthead"  «  »
+  div id="masthead-skeleton-icons" slot="masthead-skeleton"  [hidden]
+    div class="masthead-skeleton-icon"  [hidden]
+    div class="masthead-skeleton-icon"  [hidden]
+    div class="masthead-skeleton-icon"  [hidden]
+  div id="buttons" class="style-scope ytd-masthead"
+    ytd-topbar-menu-button-renderer class="style-scope ytd-masthead style-default" use-keyboard-focused masthead-container is-icon-button has-no-text  « »
+      ps-dom-if class="style-scope ytd-topbar-menu-button-renderer"  [hidden]
+        template   [hidden]
+      div id="button" class="style-scope ytd-topbar-menu-button-renderer"
+        a class="yt-simple-endpoint style-scope ytd-topbar-menu-button-render" tabindex="-1"
+          yt-icon-button id="button" class="style-scope ytd-topbar-menu-button-renderer style-default"
+            button id="button" class="style-scope yt-icon-button" aria-label="Settings"
+            yt-interaction id="interaction" class="circular style-scope yt-icon-button"
+    ytd-button-renderer class="style-scope ytd-masthead" button-renderer button-next
+      yt-button-shape 
+        a href="https://accounts.google.com/ServiceLogin?service=youtube&uil" rel="nofollow" class="ytSpecButtonShapeNextHost ytSpecButtonShapeNextOutline ytSpe" force-new-state="true" aria-label="Sign in" aria-current="false"  «   »
+          div aria-hidden="true" class="ytSpecButtonShapeNextIcon ytSpecButtonShapeNextElevatedConte"
+            span class="ytIconWrapperHost"
+          div class="ytSpecButtonShapeNextButtonTextContent ytSpecButtonShapeNext"
+            span class="ytAttributedStringHost ytAttributedStringWhiteSpaceNoWrap" role="text"  «Sign in»
+          yt-touch-feedback-shape aria-hidden="true" class="ytSpecTouchFeedbackShapeHost ytSpecTouchFeedbackShapeTouchRe"
+            div class="ytSpecTouchFeedbackShapeStroke"
+            div class="ytSpecTouchFeedbackShapeFill"
+      tp-yt-paper-tooltip offset="8" disable-upgrade  [hidden]
+--- dropdowns [{"visible":true,"parent":"ytd-popup-container","attrs":"horizontal-align vertical-align aria-disabled class prevent-autonav focused style"}]
+--- settings menu
+tp-yt-iron-dropdown horizontal-align="auto" vertical-align="top" aria-disabled="false" class="style-scope ytd-popup-container" prevent-autonav="true" focused
+  div id="contentWrapper" class="style-scope tp-yt-iron-dropdown"  « »
+    ytd-multi-page-menu-renderer slot="dropdown-content" class="style-scope ytd-popup-container" menu-style="multi-page-menu-style-type-system" tabindex="-1"  «   »
+      div id="spinner" class="style-scope ytd-multi-page-menu-renderer" hidden  « »  [hidden]
+        tp-yt-paper-spinner class="style-scope ytd-multi-page-menu-renderer" aria-label="loading" aria-hidden="true"  [hidden]
+          div id="spinnerContainer" class="active cooldown style-scope tp-yt-paper-spinner"  «    »  [hidden]
+            div class="spinner-layer layer-1 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-2 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-3 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-4 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+      div id="header" class="style-scope ytd-multi-page-menu-renderer"
+      div id="container" class="menu-container style-scope ytd-multi-page-menu-renderer"  «  »
+        div id="sections" class="style-scope ytd-multi-page-menu-renderer"
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="https://myaccount.google.com/u/0/yourdata/youtube?hl=en"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Your data in YouTube»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-toggle-theme-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" aria-disabled="false" role="link" tabindex="0"  «  »
+                div class="content-icon style-scope ytd-toggle-theme-compact-link-rende"  « »
+                  yt-icon id="primary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"
+                    span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                      div 
+                        svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"
+                div id="label" class="style-scope ytd-toggle-theme-compact-link-renderer"  «Appearance: Light»
+                yt-icon id="secondary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"
+                  span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div 
+                      svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Display language:»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «English»
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div 
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Restricted Mode: Off»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div 
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Location:»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «United States»
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div 
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Keyboard shortcuts»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="/account"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Settings»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Help»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Send feedback»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+        div id="footer" class="style-scope ytd-multi-page-menu-renderer"
+      div id="submenu" class="menu-container style-scope ytd-multi-page-menu-renderer" hidden  [hidden]
+--- theme-like tags in popup ["ytd-toggle-theme-compact-link-renderer"]
+--- after clicking the appearance item
+tp-yt-iron-dropdown horizontal-align="auto" vertical-align="top" aria-disabled="false" class="style-scope ytd-popup-container" prevent-autonav="true"
+  div id="contentWrapper" class="style-scope tp-yt-iron-dropdown"  « »
+    ytd-multi-page-menu-renderer slot="dropdown-content" class="style-scope ytd-popup-container" menu-style="multi-page-menu-style-type-system" tabindex="-1"  «   »
+      div id="spinner" class="style-scope ytd-multi-page-menu-renderer" hidden  « »  [hidden]
+        tp-yt-paper-spinner class="style-scope ytd-multi-page-menu-renderer" aria-label="loading" aria-hidden="true"  [hidden]
+          div id="spinnerContainer" class="active cooldown style-scope tp-yt-paper-spinner"  «    »  [hidden]
+            div class="spinner-layer layer-1 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-2 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-3 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-4 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+      div id="header" class="style-scope ytd-multi-page-menu-renderer" hidden  [hidden]
+      div id="container" class="menu-container style-scope ytd-multi-page-menu-renderer" hidden  «  »  [hidden]
+        div id="sections" class="style-scope ytd-multi-page-menu-renderer"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »  [hidden]
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="https://myaccount.google.com/u/0/yourdata/youtube?hl=en"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Your data in YouTube»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-toggle-theme-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" aria-disabled="false" role="link" tabindex="0"  «  »  [hidden]
+                div class="content-icon style-scope ytd-toggle-theme-compact-link-rende"  « »  [hidden]
+                  yt-icon id="primary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"  [hidden]
+                    span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                      div   [hidden]
+                        svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                div id="label" class="style-scope ytd-toggle-theme-compact-link-renderer"  «Appearance: Light»  [hidden]
+                yt-icon id="secondary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"  [hidden]
+                  span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                    div   [hidden]
+                      svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Display language:»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «English»  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"  [hidden]
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                        div   [hidden]
+                          svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Restricted Mode: Off»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"  [hidden]
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                        div   [hidden]
+                          svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Location:»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «United States»  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"  [hidden]
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                        div   [hidden]
+                          svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Keyboard shortcuts»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »  [hidden]
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="/account"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Settings»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »  [hidden]
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Help»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Send feedback»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+        div id="footer" class="style-scope ytd-multi-page-menu-renderer"  [hidden]
+      div id="submenu" class="menu-container style-scope ytd-multi-page-menu-renderer"
+        ytd-multi-page-menu-renderer class="style-scope ytd-multi-page-menu-renderer" menu-style  «   »
+          div id="spinner" class="style-scope ytd-multi-page-menu-renderer" hidden  « »  [hidden]
+            tp-yt-paper-spinner class="style-scope ytd-multi-page-menu-renderer" aria-hidden="true" aria-label="loading"  [hidden]
+              div id="spinnerContainer" class="  style-scope tp-yt-paper-spinner"  «    »  [hidden]
+                div class="spinner-layer layer-1 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                div class="spinner-layer layer-2 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                div class="spinner-layer layer-3 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                div class="spinner-layer layer-4 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+          div id="header" class="style-scope ytd-multi-page-menu-renderer"
+            ytd-simple-menu-header-renderer class="style-scope ytd-multi-page-menu-renderer"  «  »
+              ytd-button-renderer id="back-button" class="style-scope ytd-simple-menu-header-renderer" button-renderer button-next
+                yt-button-shape 
+                  button class="ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecBu" title aria-label="Back" aria-disabled="false"  «    »
+                    div aria-hidden="true" class="ytSpecButtonShapeNextIcon ytSpecButtonShapeNextElevatedConte"
+                      span class="ytIconWrapperHost"
+                        span class="yt-icon-shape ytSpecIconShapeHost"
+                          div 
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"
+                    yt-touch-feedback-shape aria-hidden="true" class="ytSpecTouchFeedbackShapeHost ytSpecTouchFeedbackShapeTouchRe"
+                      div class="ytSpecTouchFeedbackShapeStroke"
+                      div class="ytSpecTouchFeedbackShapeFill"
+                tp-yt-paper-tooltip offset="8" disable-upgrade  [hidden]
+              h2 class="style-scope ytd-simple-menu-header-renderer"  « »
+                yt-formatted-string class="style-scope ytd-simple-menu-header-renderer"  «Appearance»
+              div id="buttons" class="style-scope ytd-simple-menu-header-renderer"  [hidden]
+          div id="container" class="menu-container style-scope ytd-multi-page-menu-renderer"  «  »
+            div id="sections" class="style-scope ytd-multi-page-menu-renderer"
+              yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+                div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+                  h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                    yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+                  ytd-message-renderer class="style-scope yt-multi-page-menu-section-renderer"  «    »
+                    div id="icon" class="style-scope ytd-message-renderer"  [hidden]
+                    div id="thumbnail" class="style-scope ytd-message-renderer"  [hidden]
+                    yt-formatted-string id="message" split-lines class="style-scope ytd-message-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-formatted-string id="submessage" split-lines class="style-scope ytd-message-renderer"  «Setting applies to this browser only»
+                    div id="message-button" class="style-scope ytd-message-renderer"  [hidden]
+                  ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style="compact-link-style-type-selection-menu"
+                    a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                      tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                        div id="content-icon" class="style-scope ytd-compact-link-renderer" hidden  «  »  [hidden]
+                          yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                            img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                          yt-icon class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                        div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                          yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Dark theme»
+                          yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                            yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                        yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                        yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                          yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                  ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style="compact-link-style-type-selection-menu"
+                    a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                      tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                        div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                          yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                            img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                          yt-icon class="style-scope ytd-compact-link-renderer"
+                            span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                          yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «Light theme»
+                          yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                            yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                        yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                        yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                          yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="footer" class="style-scope ytd-multi-page-menu-renderer"
+          div id="submenu" class="menu-container style-scope ytd-multi-page-menu-renderer" hidden  [hidden]
+
+######## zh-TW
+--- masthead #end / #buttons
+div id="end" class="style-scope ytd-masthead"  «  »
+  div id="masthead-skeleton-icons" slot="masthead-skeleton"  [hidden]
+    div class="masthead-skeleton-icon"  [hidden]
+    div class="masthead-skeleton-icon"  [hidden]
+    div class="masthead-skeleton-icon"  [hidden]
+  div id="buttons" class="style-scope ytd-masthead"
+    ytd-topbar-menu-button-renderer class="style-scope ytd-masthead style-default" use-keyboard-focused masthead-container is-icon-button has-no-text  « »
+      ps-dom-if class="style-scope ytd-topbar-menu-button-renderer"  [hidden]
+        template   [hidden]
+      div id="button" class="style-scope ytd-topbar-menu-button-renderer"
+        a class="yt-simple-endpoint style-scope ytd-topbar-menu-button-render" tabindex="-1"
+          yt-icon-button id="button" class="style-scope ytd-topbar-menu-button-renderer style-default"
+            button id="button" class="style-scope yt-icon-button" aria-label="設定"
+            yt-interaction id="interaction" class="circular style-scope yt-icon-button"
+    ytd-button-renderer class="style-scope ytd-masthead" button-renderer button-next
+      yt-button-shape 
+        a href="https://accounts.google.com/ServiceLogin?service=youtube&uil" rel="nofollow" class="ytSpecButtonShapeNextHost ytSpecButtonShapeNextOutline ytSpe" force-new-state="true" aria-label="登入" aria-current="false"  «   »
+          div aria-hidden="true" class="ytSpecButtonShapeNextIcon ytSpecButtonShapeNextElevatedConte"
+            span class="ytIconWrapperHost"
+          div class="ytSpecButtonShapeNextButtonTextContent ytSpecButtonShapeNext"
+            span class="ytAttributedStringHost ytAttributedStringWhiteSpaceNoWrap" role="text"  «登入»
+          yt-touch-feedback-shape aria-hidden="true" class="ytSpecTouchFeedbackShapeHost ytSpecTouchFeedbackShapeTouchRe"
+            div class="ytSpecTouchFeedbackShapeStroke"
+            div class="ytSpecTouchFeedbackShapeFill"
+      tp-yt-paper-tooltip offset="8" disable-upgrade  [hidden]
+--- dropdowns [{"visible":true,"parent":"ytd-popup-container","attrs":"horizontal-align vertical-align aria-disabled class prevent-autonav focused style"}]
+--- settings menu
+tp-yt-iron-dropdown horizontal-align="auto" vertical-align="top" aria-disabled="false" class="style-scope ytd-popup-container" prevent-autonav="true" focused
+  div id="contentWrapper" class="style-scope tp-yt-iron-dropdown"  « »
+    ytd-multi-page-menu-renderer slot="dropdown-content" class="style-scope ytd-popup-container" menu-style="multi-page-menu-style-type-system" tabindex="-1"  «   »
+      div id="spinner" class="style-scope ytd-multi-page-menu-renderer" hidden  « »  [hidden]
+        tp-yt-paper-spinner class="style-scope ytd-multi-page-menu-renderer" aria-label="loading" aria-hidden="true"  [hidden]
+          div id="spinnerContainer" class="active cooldown style-scope tp-yt-paper-spinner"  «    »  [hidden]
+            div class="spinner-layer layer-1 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-2 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-3 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-4 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+      div id="header" class="style-scope ytd-multi-page-menu-renderer"
+      div id="container" class="menu-container style-scope ytd-multi-page-menu-renderer"  «  »
+        div id="sections" class="style-scope ytd-multi-page-menu-renderer"
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="https://myaccount.google.com/u/0/yourdata/youtube?hl=zh-TW"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «你在 YouTube 中的資料»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-toggle-theme-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" aria-disabled="false" role="link" tabindex="0"  «  »
+                div class="content-icon style-scope ytd-toggle-theme-compact-link-rende"  « »
+                  yt-icon id="primary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"
+                    span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                      div 
+                        svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"
+                div id="label" class="style-scope ytd-toggle-theme-compact-link-renderer"  «外觀：淺色主題»
+                yt-icon id="secondary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"
+                  span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div 
+                      svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «顯示語言：»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «中文（台灣）»
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div 
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «嚴格篩選模式：停用»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div 
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «位置：»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «美國»
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div 
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «鍵盤快速鍵»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="/account"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «設定»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «說明»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «提供意見»
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+        div id="footer" class="style-scope ytd-multi-page-menu-renderer"
+      div id="submenu" class="menu-container style-scope ytd-multi-page-menu-renderer" hidden  [hidden]
+--- theme-like tags in popup ["ytd-toggle-theme-compact-link-renderer"]
+--- after clicking the appearance item
+tp-yt-iron-dropdown horizontal-align="auto" vertical-align="top" aria-disabled="false" class="style-scope ytd-popup-container" prevent-autonav="true"
+  div id="contentWrapper" class="style-scope tp-yt-iron-dropdown"  « »
+    ytd-multi-page-menu-renderer slot="dropdown-content" class="style-scope ytd-popup-container" menu-style="multi-page-menu-style-type-system" tabindex="-1"  «   »
+      div id="spinner" class="style-scope ytd-multi-page-menu-renderer" hidden  « »  [hidden]
+        tp-yt-paper-spinner class="style-scope ytd-multi-page-menu-renderer" aria-label="loading" aria-hidden="true"  [hidden]
+          div id="spinnerContainer" class="active cooldown style-scope tp-yt-paper-spinner"  «    »  [hidden]
+            div class="spinner-layer layer-1 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-2 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-3 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+            div class="spinner-layer layer-4 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+              div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+              div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+      div id="header" class="style-scope ytd-multi-page-menu-renderer" hidden  [hidden]
+      div id="container" class="menu-container style-scope ytd-multi-page-menu-renderer" hidden  «  »  [hidden]
+        div id="sections" class="style-scope ytd-multi-page-menu-renderer"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »  [hidden]
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="https://myaccount.google.com/u/0/yourdata/youtube?hl=zh-TW"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «你在 YouTube 中的資料»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-toggle-theme-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" aria-disabled="false" role="link" tabindex="0"  «  »  [hidden]
+                div class="content-icon style-scope ytd-toggle-theme-compact-link-rende"  « »  [hidden]
+                  yt-icon id="primary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"  [hidden]
+                    span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                      div   [hidden]
+                        svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                div id="label" class="style-scope ytd-toggle-theme-compact-link-renderer"  «外觀：淺色主題»  [hidden]
+                yt-icon id="secondary-icon" class="style-scope ytd-toggle-theme-compact-link-renderer"  [hidden]
+                  span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                    div   [hidden]
+                      svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «顯示語言：»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «中文（台灣）»  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"  [hidden]
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                        div   [hidden]
+                          svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «嚴格篩選模式：停用»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"  [hidden]
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                        div   [hidden]
+                          svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" has-secondary hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «位置：»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer"  «美國»  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer"  [hidden]
+                      span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                        div   [hidden]
+                          svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «鍵盤快速鍵»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »  [hidden]
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link" href="/account"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «設定»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+          yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »  [hidden]
+            div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+              h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                  yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="items" class="style-scope yt-multi-page-menu-section-renderer"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «說明»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+              ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style  [hidden]
+                a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »  [hidden]
+                  tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »  [hidden]
+                    div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                        img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                      yt-icon class="style-scope ytd-compact-link-renderer"  [hidden]
+                        span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"  [hidden]
+                          div   [hidden]
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"  [hidden]
+                    div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »  [hidden]
+                      yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «提供意見»  [hidden]
+                      yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty  [hidden]
+                        yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                    yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+        div id="footer" class="style-scope ytd-multi-page-menu-renderer"  [hidden]
+      div id="submenu" class="menu-container style-scope ytd-multi-page-menu-renderer"
+        ytd-multi-page-menu-renderer class="style-scope ytd-multi-page-menu-renderer" menu-style  «   »
+          div id="spinner" class="style-scope ytd-multi-page-menu-renderer" hidden  « »  [hidden]
+            tp-yt-paper-spinner class="style-scope ytd-multi-page-menu-renderer" aria-hidden="true" aria-label="loading"  [hidden]
+              div id="spinnerContainer" class="  style-scope tp-yt-paper-spinner"  «    »  [hidden]
+                div class="spinner-layer layer-1 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                div class="spinner-layer layer-2 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                div class="spinner-layer layer-3 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                div class="spinner-layer layer-4 style-scope tp-yt-paper-spinner"  «  »  [hidden]
+                  div class="circle-clipper left style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+                  div class="circle-clipper right style-scope tp-yt-paper-spinner"  « »  [hidden]
+                    div class="circle style-scope tp-yt-paper-spinner"  [hidden]
+          div id="header" class="style-scope ytd-multi-page-menu-renderer"
+            ytd-simple-menu-header-renderer class="style-scope ytd-multi-page-menu-renderer"  «  »
+              ytd-button-renderer id="back-button" class="style-scope ytd-simple-menu-header-renderer" button-renderer button-next
+                yt-button-shape 
+                  button class="ytSpecButtonShapeNextHost ytSpecButtonShapeNextText ytSpecBu" title aria-label="返回" aria-disabled="false"  «    »
+                    div aria-hidden="true" class="ytSpecButtonShapeNextIcon ytSpecButtonShapeNextElevatedConte"
+                      span class="ytIconWrapperHost"
+                        span class="yt-icon-shape ytSpecIconShapeHost"
+                          div 
+                            svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true"
+                    yt-touch-feedback-shape aria-hidden="true" class="ytSpecTouchFeedbackShapeHost ytSpecTouchFeedbackShapeTouchRe"
+                      div class="ytSpecTouchFeedbackShapeStroke"
+                      div class="ytSpecTouchFeedbackShapeFill"
+                tp-yt-paper-tooltip offset="8" disable-upgrade  [hidden]
+              h2 class="style-scope ytd-simple-menu-header-renderer"  « »
+                yt-formatted-string class="style-scope ytd-simple-menu-header-renderer"  «外觀»
+              div id="buttons" class="style-scope ytd-simple-menu-header-renderer"  [hidden]
+          div id="container" class="menu-container style-scope ytd-multi-page-menu-renderer"  «  »
+            div id="sections" class="style-scope ytd-multi-page-menu-renderer"
+              yt-multi-page-menu-section-renderer class="style-scope ytd-multi-page-menu-renderer"  « »
+                div id="section-title" class="style-scope yt-multi-page-menu-section-renderer" hidden  « »  [hidden]
+                  h2 class="style-scope yt-multi-page-menu-section-renderer"  « »  [hidden]
+                    yt-formatted-string class="style-scope yt-multi-page-menu-section-renderer" is-empty  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                div id="items" class="style-scope yt-multi-page-menu-section-renderer"
+                  ytd-message-renderer class="style-scope yt-multi-page-menu-section-renderer"  «    »
+                    div id="icon" class="style-scope ytd-message-renderer"  [hidden]
+                    div id="thumbnail" class="style-scope ytd-message-renderer"  [hidden]
+                    yt-formatted-string id="message" split-lines class="style-scope ytd-message-renderer" is-empty hidden  [hidden]
+                      yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                    yt-formatted-string id="submessage" split-lines class="style-scope ytd-message-renderer"  «設定僅適用於這個瀏覽器»
+                    div id="message-button" class="style-scope ytd-message-renderer"  [hidden]
+                  ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style="compact-link-style-type-selection-menu"
+                    a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                      tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                        div id="content-icon" class="style-scope ytd-compact-link-renderer" hidden  «  »  [hidden]
+                          yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                            img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                          yt-icon class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                        div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                          yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «深色主題»
+                          yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                            yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                        yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                        yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                          yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                  ytd-compact-link-renderer class="style-scope yt-multi-page-menu-section-renderer" hide-secondary-string compact-link-style="compact-link-style-type-selection-menu"
+                    a id="endpoint" class="yt-simple-endpoint style-scope ytd-compact-link-renderer" role="link"  « »
+                      tp-yt-paper-item role="none" tabindex="-1" class="style-scope ytd-compact-link-renderer" style-target="host" aria-disabled="false"  «     »
+                        div id="content-icon" class="style-scope ytd-compact-link-renderer"  «  »
+                          yt-img-shadow height="40" width="40" class="style-scope ytd-compact-link-renderer no-transition" hidden  [hidden]
+                            img id="img" draggable="false" class="style-scope yt-img-shadow" alt height="40" width="40"  [hidden]
+                          yt-icon class="style-scope ytd-compact-link-renderer"
+                            span class="yt-icon-shape style-scope yt-icon ytSpecIconShapeHost"
+                        div id="primary-text-container" class="style-scope ytd-compact-link-renderer"  «  »
+                          yt-formatted-string id="label" class="style-scope ytd-compact-link-renderer"  «淺色主題»
+                          yt-formatted-string id="subtitle" class="style-scope ytd-compact-link-renderer" is-empty
+                            yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+                        yt-icon id="right-icon" class="style-scope ytd-compact-link-renderer" disable-upgrade hidden  [hidden]
+                        yt-formatted-string id="secondary-text" class="style-scope ytd-compact-link-renderer" is-empty hidden  [hidden]
+                          yt-attributed-string class="style-scope yt-formatted-string"  [hidden]
+            div id="footer" class="style-scope ytd-multi-page-menu-renderer"
+          div id="submenu" class="menu-container style-scope ytd-multi-page-menu-renderer" hidden  [hidden]

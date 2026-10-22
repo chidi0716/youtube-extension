@@ -19,7 +19,7 @@ export default defineContentScript({
       const req = parseBridgeRequest((event as CustomEvent<unknown>).detail);
       if (!req) return;
       const player = findPlayer() as (HTMLElement & BridgePlayer) | null;
-      const res = handleBridgeRequest(req, player);
+      const res = handleBridgeRequest(req, player, document);
       document.dispatchEvent(new CustomEvent(BRIDGE_RESPONSE_EVENT, { detail: JSON.stringify(res) }));
     });
   },

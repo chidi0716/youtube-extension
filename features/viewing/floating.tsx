@@ -1,5 +1,7 @@
-// 浮動播放器（003 FR-40 至 FR-44，plan 3.7）：播放器捲出畫面時縮小並固定在角落，
+// 浮動播放器（003 FR-40 至 FR-46，plan 3.7）：播放器捲出畫面時縮小並固定在角落，
 // 可拖到其他角落並貼齊、記住位置；✕ 暫時回到原位置。只用 CSS 與擴充功能內建的程式。
+// 是否浮出只在使用者捲動（scroll 事件）與使用者操作時判斷，不因其他功能或 YouTube 的版面變化
+// 而浮出（FR-46）；劇院模式開啟期間暫停作用（FR-45）。
 import { render } from 'preact';
 import { Icon } from '@/components/icons';
 import { t } from '@/utils/i18n';
@@ -14,6 +16,7 @@ import {
   isCorner,
   isFloating,
   nearestCorner,
+  placeholderOutOfView,
   type Corner,
   type FloatingEvent,
   type FloatingState,
@@ -30,6 +33,8 @@ const CONTROLS_TAG = 'yte-floating-controls';
 export interface FloatingFeature extends ViewingFeature {
   state: ReturnType<typeof createStore<ToggleState>>;
   toggle(): void;
+  /** 劇院模式開啟時暫停（浮動中會先回到原位），關閉時恢復判斷（FR-45）。 */
+  setSuspended(suspended: boolean): void;
 }
 
 const CONTROLS_CSS = `
@@ -76,8 +81,9 @@ export function createFloating(): FloatingFeature {
   let corner: Corner = 'bottom-right';
   let running = false;
   let container: HTMLElement | null = null;
-  let observer: IntersectionObserver | null = null;
-  let observed: Element | null = null;
+  /** 播放器原本所在的位置（浮動中的容器的父元素，仍留在版面中）。 */
+  let placeholder: Element | null = null;
+  let scrollFrame = 0;
   let controls: HTMLElement | null = null;
   let rect: Rect | null = null;
   let floating = false;
@@ -199,13 +205,34 @@ export function createFloating(): FloatingFeature {
     apply();
   }
 
-  const disconnect = () => {
-    observer?.disconnect();
-    observer = null;
-    observed = null;
+  /** 依播放器原位置目前是否在畫面外更新狀態；無法判斷時不變（FR-46）。 */
+  const checkVisibility = () => {
+    // YouTube 切換劇院模式時會把播放器容器移到別的父元素：沒在浮動時跟著改用目前的父元素。
+    const current = container?.parentElement ?? null;
+    if (current && current !== placeholder && !floating) placeholder = current;
+    if (!placeholder) return;
+    const r = placeholder.getBoundingClientRect();
+    const outOfView = placeholderOutOfView(r, viewport());
+    if (outOfView !== null && outOfView !== fs.outOfView) dispatch({ type: 'visibility', outOfView });
   };
 
-  /** 觀察播放器原本所在的位置（浮動中的容器的父元素，仍留在版面中）。 */
+  // 只在使用者捲動時判斷，每個畫面最多一次（被動監聽，閒置時不執行任何東西）。
+  const onScroll = () => {
+    if (scrollFrame) return;
+    scrollFrame = requestAnimationFrame(() => {
+      scrollFrame = 0;
+      checkVisibility();
+    });
+  };
+
+  const disconnect = () => {
+    window.removeEventListener('scroll', onScroll);
+    cancelAnimationFrame(scrollFrame);
+    scrollFrame = 0;
+    placeholder = null;
+  };
+
+  /** 找到播放器原本所在的位置並開始依捲動判斷。 */
   const attach = () => {
     if (!running || !fs.enabled || !isWatchPage(location.href)) {
       if (floating) unfloat();
@@ -222,14 +249,13 @@ export function createFloating(): FloatingFeature {
       disconnect();
       return;
     }
-    if (target === observed) return;
-    disconnect();
-    observed = target;
-    observer = new IntersectionObserver((entries) => {
-      const entry = entries[entries.length - 1];
-      if (entry) dispatch({ type: 'visibility', outOfView: !entry.isIntersecting });
-    });
-    observer.observe(target);
+    if (target !== placeholder) {
+      disconnect();
+      placeholder = target;
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
+    // 開啟、換頁是使用者的操作：立即依目前的捲動位置判斷一次。
+    checkVisibility();
   };
 
   const onFullscreen = () => dispatch({ type: 'fullscreen', fullscreen: !!document.fullscreenElement });
@@ -275,6 +301,13 @@ export function createFloating(): FloatingFeature {
       const next = !fs.enabled;
       void floatingPlayer.setValue(next);
       setEnabled(next);
+    },
+    setSuspended(suspended) {
+      if (fs.suspended === suspended) return;
+      // 開啟劇院模式時若正在浮動，dispatch 會先讓播放器回到原位（FR-45）。
+      dispatch({ type: 'suspend', suspended });
+      // 關閉劇院模式後恢復正常判斷：依目前的捲動位置判斷一次。
+      if (!suspended) checkVisibility();
     },
   };
 }
