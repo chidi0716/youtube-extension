@@ -214,11 +214,8 @@ async function startDownload(request: DownloadRequest): Promise<string> {
     namePreset: status.namePresets.some((p) => p.id === preset) ? preset : 'title-id',
     embed: (await embedInfo.getValue()) !== false,
   };
-  const result = await client.request('download', downloadArgs(request, settings)).catch((err: unknown) => {
-    // 設定的下載資料夾已被刪除或移動：以「無法寫入下載資料夾」顯示，並提供開啟設定頁（002 FR-6a）。
-    if (err instanceof HostRequestError && err.code === 'INVALID_ARGS' && /\bdir\b/.test(err.message)) throw new HostRequestError('PERMISSION_DENIED', err.message);
-    throw err;
-  });
+  // 設定的下載資料夾不存在或無法寫入時，橋接程式回應 PERMISSION_DENIED（T15b）。
+  const result = await client.request('download', downloadArgs(request, settings));
   const jobId = typeof result.jobId === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(result.jobId) ? result.jobId : null;
   if (!jobId) throw new HostRequestError('UNKNOWN', 'download returned no jobId');
   // 事件可能比 download 的回應早到：已經有紀錄時保留進度，只補上請求內容。

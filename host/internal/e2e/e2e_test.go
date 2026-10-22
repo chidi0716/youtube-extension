@@ -244,6 +244,10 @@ func TestEndToEnd(t *testing.T) {
 	if r := b.request("download", map[string]any{"videoId": "jNQXAC9IVRw", "kind": "mp3", "bitrate": 192, "dir": dl + "/../.."}, nil); errCode(r) != "INVALID_ARGS" {
 		t.Errorf("dir with ..: %v", r)
 	}
+	// 下載資料夾不存在：PERMISSION_DENIED（T15b）
+	if r := b.request("download", map[string]any{"videoId": "jNQXAC9IVRw", "kind": "mp3", "bitrate": 192, "dir": dl + "/missing-folder"}, nil); errCode(r) != "PERMISSION_DENIED" {
+		t.Errorf("missing dir: %v", r)
+	}
 	b.sendRaw(`{"id":"broken"`)
 	if m := <-b.msgs; m["ok"] != false || m["id"] != nil {
 		t.Errorf("malformed request: %v", m)

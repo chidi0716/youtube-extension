@@ -96,7 +96,7 @@ func TestHandle(t *testing.T) {
 		{`{"id":"x","cmd":"cancel","args":{}}`, "x", errs.InvalidArgs},
 		{`{"id":"x","cmd":"cancel","args":{"jobId":"../../x"}}`, "x", errs.InvalidArgs},
 		{`{"id":"x","cmd":"reveal","args":{"jobId":"0123456789abcdef","path":"/etc/passwd"}}`, "x", errs.InvalidArgs},
-		{`{"id":"x","cmd":"download","args":{"videoId":"dQw4w9WgXcQ","kind":"mp3","bitrate":192,"dir":"/definitely/not/here"}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"download","args":{"videoId":"dQw4w9WgXcQ","kind":"mp3","bitrate":192,"dir":"/definitely/not/here"}}`, "x", errs.PermissionDenied},
 		{`{"id":"x","cmd":"download","args":{"videoId":"dQw4w9WgXcQ","kind":"mp3","bitrate":192,"dir":"../.."}}`, "x", errs.InvalidArgs},
 	}
 	for _, c := range bad {

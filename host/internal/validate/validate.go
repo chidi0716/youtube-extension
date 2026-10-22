@@ -316,7 +316,8 @@ func windowsIsAbs(p string) bool {
 func isLetter(c byte) bool { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') }
 
 // Dir 檢查下載資料夾：格式正確、存在、是資料夾、可以寫入（FR-73）。
-// 回傳整理過的路徑（filepath.Clean）。
+// 回傳整理過的路徑（filepath.Clean）。格式錯誤為 INVALID_ARGS；不存在、不是資料夾或無法寫入為
+// PERMISSION_DENIED，擴充功能顯示「無法寫入下載資料夾」並附開啟設定頁（002 FR-6a、QUESTIONS Q46）。
 func Dir(dir string) (string, error) {
 	if err := DirSyntax(dir); err != nil {
 		return "", err
@@ -324,10 +325,10 @@ func Dir(dir string) (string, error) {
 	clean := filepath.Clean(dir)
 	st, err := os.Stat(clean)
 	if err != nil {
-		return "", invalid("dir", "does not exist")
+		return "", errs.New(errs.PermissionDenied, "dir: folder does not exist")
 	}
 	if !st.IsDir() {
-		return "", invalid("dir", "is not a folder")
+		return "", errs.New(errs.PermissionDenied, "dir: not a folder")
 	}
 	f, err := os.CreateTemp(clean, ".yte-write-test-*")
 	if err != nil {

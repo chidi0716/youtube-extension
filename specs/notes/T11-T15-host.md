@@ -71,7 +71,7 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 |---|---|
 | `INVALID_REQUEST` | 訊息不是合法的請求（JSON 錯誤、缺少或不合法的 id／cmd、多餘欄位、過大） |
 | `UNKNOWN_COMMAND` | 不在白名單的指令 |
-| `INVALID_ARGS` | 參數沒有通過驗證（含下載資料夾不存在） |
+| `INVALID_ARGS` | 參數沒有通過驗證（下載資料夾的格式錯誤，例如不是絕對路徑或含 `..`） |
 | `RESPONSE_TOO_LARGE` | 回應超過 1MB |
 | `YTDLP_NOT_FOUND` | 找不到或無法執行 yt-dlp |
 | `FFMPEG_NOT_FOUND` | 需要 ffmpeg 但找不到 |
@@ -86,7 +86,7 @@ spikes/stage3/                冒煙測試與安裝腳本的模擬測試（.cach
 | `NO_SUBTITLES` | 指定語言沒有字幕 |
 | `NETWORK` | 網路錯誤 |
 | `DISK_FULL` | 磁碟空間不足 |
-| `PERMISSION_DENIED` | 下載資料夾無法寫入 |
+| `PERMISSION_DENIED` | 下載資料夾不存在、不是資料夾或無法寫入（T15b、Q46） |
 | `TIMEOUT` | 逾時（getInfo 90 秒、版本查詢 30 秒、更新 5 分鐘、取消 20 秒、單一下載 24 小時） |
 | `UPDATE_FAILED` | `yt-dlp -U` 失敗（訊息為 yt-dlp 的最後一行） |
 | `JOB_NOT_FOUND` | 工作不存在（或屬於另一個瀏覽器） |

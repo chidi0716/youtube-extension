@@ -36,7 +36,7 @@
 - 依容器、解析度（直式影片以短邊）、幀率（> 30 時標示，例如 1080p60）、HDR 分組，同組取已含聲音者優先、其次位元率較高者。
 - 由高到低排列，同解析度 MP4 在前；畫質標籤 4K／8K／2K／1080／HD。
 - 大小為影像加聲音；任一方只有估計值時加「約」（英文為「~」）；未知時「—」。時間範圍不是整部影片時依比例估算並加「約」。
-- 4K 只有 VP9／AV1，所以預設（只顯示 MP4）時看不到，要按「顯示更多格式」（QUESTIONS Q43）。
+- 2K 以上沒有 H.264 時，以 AV1（沒有才用 VP9）＋M4A 合併成 MP4 列在主清單，列中加註「部分播放器可能無法播放」（T18a、QUESTIONS Q43、002 FR-13）。
 
 ## T19 影片面板、T20 MP3 面板
 
@@ -74,7 +74,7 @@
 | `TOO_MANY_JOBS` | 同時下載數已達上限（8 個） | 重試 |
 | 其他（`INTERRUPTED`、`UNKNOWN` 等） | 下載失敗 | 重試 |
 
-  詳細代碼只寫進 console。設定的資料夾不存在時（橋接程式回應 `INVALID_ARGS` 的 dir）以 `PERMISSION_DENIED` 顯示（Q46）。
+  詳細代碼只寫進 console。設定的資料夾不存在、不是資料夾或無法寫入時，橋接程式回應 `PERMISSION_DENIED`（T15b、Q46）。
 - 「更新 yt-dlp」呼叫 `updateYtDlp`：直接更新時顯示結果（已更新到某版本／已是最新版本）；由套件管理工具安裝時顯示可複製的指令。
 
 ## T23 設定頁的下載區
@@ -100,7 +100,7 @@
   （齊全、缺 deno、缺 yt-dlp）。yt-dlp 是一個小腳本，每次執行時讀 `.cache/e2e/scenario`、`.cache/e2e/delay`，測試不用重新啟動瀏覽器就能切換情境。
 - 原生訊息：Playwright 的 Chromium 以 `--user-data-dir` 啟動時，從該資料夾的 `NativeMessagingHosts/` 讀取設定檔（`spikes/stage4/probe-native.mjs` 先確認可行）。
   瀏覽器的 `HOME`、`XDG_STATE_HOME`、`PATH` 指到 `spikes/stage4/.cache/`，橋接程式繼承後，狀態檔、記錄檔與預設下載資料夾（`~/Downloads`）都在工作目錄內。
-- `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS=1 node spikes/stage4/e2e-test.mjs`：**71/71 通過**，涵蓋：
+- `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS=1 node spikes/stage4/e2e-test.mjs`：**73/73 通過**，涵蓋：
   - 畫質清單、大小、「顯示更多格式」；整部影片下載（進度、速度、剩餘時間、取消按鈕、工具列進度環、完成檔名、通知內容）；
   - 時間範圍：比例估算、一次性提示、`--download-sections *60-90`、檔名「01m00s-01m30s」、不合法範圍停用；
   - MP3：預設 192、記住 320、同步開關、「設為目前時間」、拖動把手讓播放器跳轉、輸入「00:99:00」時停用、裁切下載與參數；

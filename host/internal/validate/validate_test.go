@@ -184,11 +184,14 @@ func TestDir(t *testing.T) {
 		t.Fatalf("write test left %d files", len(entries))
 	}
 	_, err = Dir(filepath.Join(dir, "missing"))
-	wantCode(t, "missing", err, errs.InvalidArgs)
+	wantCode(t, "missing", err, errs.PermissionDenied)
 	file := filepath.Join(dir, "file.txt")
 	os.WriteFile(file, []byte("x"), 0o644)
 	_, err = Dir(file)
-	wantCode(t, "file", err, errs.InvalidArgs)
+	wantCode(t, "file", err, errs.PermissionDenied)
+	// 格式錯誤仍是 INVALID_ARGS。
+	_, err = Dir("relative/path")
+	wantCode(t, "relative", err, errs.InvalidArgs)
 	if runtime.GOOS != "windows" && os.Geteuid() != 0 {
 		ro := filepath.Join(dir, "ro")
 		os.Mkdir(ro, 0o555)
