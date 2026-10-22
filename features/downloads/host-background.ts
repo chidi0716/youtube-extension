@@ -3,7 +3,7 @@
 // - 下載工作清單：以 storage.session 保存，改變時推播給曾經查詢過的 YouTube 分頁（002 FR-3、FR-4）；
 // - 完成／失敗通知，點通知在 Finder／檔案總管中顯示檔案（002 FR-5、FR-6）；擴充功能沒有連線時結束的工作
 //   在下一次連線時以 jobs 的 missed 補發通知（plan 4.6）。
-import { t } from '@/utils/i18n';
+import { initI18n, t } from '@/utils/i18n';
 import type { ContentMessage, MessageResponse } from '@/utils/messages';
 import { HostRequestError, NativeClient, type HostEvent, type PortLike } from '@/utils/native';
 import {
@@ -143,6 +143,7 @@ async function notifyFinished(jobId: string) {
   notified.add(jobId);
   await notifiedItem.setValue([...notified].slice(-200));
   const done = job.state === 'done';
+  await initI18n();
   try {
     await browser.notifications.create(`${NOTIFICATION_PREFIX}${jobId}`, {
       type: 'basic',

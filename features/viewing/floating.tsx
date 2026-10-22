@@ -4,6 +4,7 @@
 // 而浮出（FR-46）；劇院模式開啟期間暫停作用（FR-45）。
 import { render } from 'preact';
 import { Icon } from '@/components/icons';
+import { useLocale } from '@/components/useLocale';
 import { t } from '@/utils/i18n';
 import { floatingCorner, floatingPlayer } from '@/utils/settings';
 import { findPlayerContainer, findVideo, mastheadHeight } from '@/utils/youtube/dom';
@@ -58,6 +59,7 @@ svg { display: block; }
 `;
 
 function Controls({ onPointerDown, onClose }: { onPointerDown: (e: PointerEvent) => void; onClose: () => void }) {
+  useLocale();
   return (
     <div class="bar" title={t('floatingDrag')} onPointerDown={onPointerDown}>
       <Icon name="drag_indicator" size={20} />

@@ -757,6 +757,22 @@
     "message": "Settings",
     "description": "Title of the extension's settings page."
   },
+  "optionsLanguageTitle": {
+    "message": "Language",
+    "description": "Settings page: heading of the interface language section."
+  },
+  "optionsLanguage": {
+    "message": "Interface language",
+    "description": "Settings page: label of the interface language dropdown."
+  },
+  "optionsLanguageAuto": {
+    "message": "Follow the browser",
+    "description": "Interface language option: Chinese browsers use Traditional Chinese, others English."
+  },
+  "optionsLanguageNote": {
+    "message": "The extension's name and description on the browser's extensions page, and the tooltip of the extension's icon, are shown by the browser and always follow the browser language.",
+    "description": "Settings page: note under the interface language dropdown (007 FR-5)."
+  },
   "optionsTidyTitle": {
     "message": "Page tidy",
     "description": "Settings page: heading of the page tidy section."

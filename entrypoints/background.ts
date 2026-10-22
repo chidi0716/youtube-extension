@@ -1,5 +1,6 @@
 import { handleDownloadMessage } from '@/features/downloads/background';
 import { handleHostMessage, onNotificationClicked, resumeDownloads } from '@/features/downloads/host-background';
+import { initI18n } from '@/utils/i18n';
 import { isContentMessage } from '@/utils/messages';
 
 export default defineBackground(() => {
@@ -21,4 +22,6 @@ export default defineBackground(() => {
   browser.notifications.onClicked.addListener(onNotificationClicked);
   // 有進行中的下載時重新連線，繼續接收進度並補發通知（002 FR-7、plan 4.6）。
   void resumeDownloads();
+  // 通知等文字使用設定的介面語言（007 FR-3）。
+  void initI18n();
 });

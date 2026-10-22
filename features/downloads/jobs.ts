@@ -1,6 +1,6 @@
 // 經由橋接程式的下載工作（002 FR-3 至 FR-7、FR-6a、FR-6b，plan 3.8）：工作紀錄、事件套用、錯誤訊息對應、
 // 進度文字。純函式，背景腳本與內容腳本共用。
-import type { MessageKey } from '@/utils/i18n';
+import { formatNumber, type MessageKey } from '@/utils/i18n';
 import type { HostEvent } from '@/utils/native';
 import { FINAL_STATES, type HostErrorCode, type HostJob, type JobKind, type JobState } from '@/utils/native-protocol';
 
@@ -206,7 +206,7 @@ export function formatSpeed(bytesPerSecond: number | null): string {
     v /= 1000;
     u++;
   }
-  return `${u === 0 ? Math.round(v) : v.toFixed(1)} ${units[u]}`;
+  return `${formatNumber(u === 0 ? Math.round(v) : v, u === 0 ? 0 : 1)} ${units[u]}`;
 }
 
 /** 剩餘時間：例如「01:23」「1:02:03」。 */

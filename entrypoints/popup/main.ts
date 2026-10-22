@@ -1,8 +1,9 @@
 import './style.css';
-import { applyI18n, t } from '@/utils/i18n';
+import { applyI18n, initI18n, t } from '@/utils/i18n';
 import { enabled } from '@/utils/settings';
 
-// 介面文字一律來自 public/_locales，依瀏覽器語言自動選擇（預設英文）。
+// 介面文字依設定的介面語言（007 FR-3：彈出視窗在下次開啟時套用）。
+await initI18n();
 applyI18n(document);
 document.title = t('extName');
 

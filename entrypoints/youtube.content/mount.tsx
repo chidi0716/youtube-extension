@@ -23,7 +23,7 @@ import { createScreenshot } from '@/features/downloads/content';
 import { downloadJobs } from '@/features/downloads/host-client';
 import { buttonProgress } from '@/features/downloads/jobs';
 import { createViewingController } from '@/features/viewing';
-import { t } from '@/utils/i18n';
+import { initI18n, onLocaleChange, t } from '@/utils/i18n';
 import { enabled, QUALITY_LOCK_VALUES, toolbarLayout, type QualityLock } from '@/utils/settings';
 import { normalizeLayout, type ToolbarLayout } from '@/utils/toolbar-layout';
 import { WATCH_HOSTS, findPlayer, findToolbarAnchor } from '@/utils/youtube/dom';
@@ -43,6 +43,7 @@ const qualityOptions = () =>
   }));
 
 export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
+  await initI18n();
   let isEnabled = await enabled.getValue();
   // 自訂工具列（006）：讀取時驗證並與預設清單合併；其他分頁或設定頁改變時立即重新繪製（FR-21、FR-22）。
   let layout: ToolbarLayout = normalizeLayout(await toolbarLayout.getValue());
@@ -94,7 +95,8 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   };
 
   const { more } = viewing;
-  const moreItems: MoreItem[] = [
+  // 每次繪製時重新產生，下拉選單的文字跟著介面語言（007 FR-3）。
+  const moreItems = (): MoreItem[] => [
     { id: 'smartPause', icon: 'pause_presentation', label: 'moreSmartPause', description: 'moreSmartPauseDesc', ...pick(more.smartPause) },
     { id: 'autoplay', icon: 'autoplay', label: 'moreAutoplay', description: 'moreAutoplayDesc', ...pick(more.autoplay) },
     { id: 'audioOnly', icon: 'headphones', label: 'moreAudioOnly', description: 'moreAudioOnlyDesc', ...pick(more.audioOnly) },
@@ -122,7 +124,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
       case 'loop':
         return <LoopPanel loop={viewing.loop} />;
       case 'more':
-        return <MorePanel items={moreItems} onOpen={refreshMore} />;
+        return <MorePanel items={moreItems()} onOpen={refreshMore} />;
       // 下載：縮圖、字幕不需要橋接程式（階段 4a）；影片、MP3 經由橋接程式（階段 4）。
       case 'thumbnail':
         return videoId ? <ThumbnailPanel videoId={videoId} /> : undefined;
@@ -283,6 +285,8 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
       rerender();
     }),
   );
+  // 介面語言改變（007 FR-3）：同一個 Preact 樹重新繪製，工具列與面板狀態不變（NFR-1）。
+  ctx.onInvalidated(onLocaleChange(rerender));
   ctx.onInvalidated(viewing.subscribe(rerender));
   ctx.onInvalidated(screenshot.state.subscribe(rerender));
   ctx.onInvalidated(jobs.subscribe(rerender));

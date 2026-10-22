@@ -5,6 +5,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'preact/hoo
 import { t } from '@/utils/i18n';
 import { defaultLayout, splitLayout, type ToolbarLayout, type ToolId } from '@/utils/toolbar-layout';
 import { Icon } from '../icons';
+import { useLocale } from '../useLocale';
 import { ComingSoon } from '../panels/PanelStatus';
 import { FIXED, TOOLS, getButton, isToolOngoing, type ButtonDef, type ButtonId } from './buttons';
 import { OtherTools } from './OtherTools';
@@ -61,6 +62,7 @@ export function Toolbar({
   layout = defaultLayout(),
   onSaveLayout,
 }: ToolbarProps) {
+  useLocale();
   const [state, dispatch] = useReducer(panelReducer<ButtonId>, initialPanelState<ButtonId>());
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef(new Map<ButtonId, HTMLButtonElement>());

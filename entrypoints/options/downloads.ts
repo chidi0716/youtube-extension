@@ -41,7 +41,8 @@ const os = () => {
   return detectOs(nav.userAgentData?.platform || navigator.platform || '', navigator.userAgent);
 };
 
-export function renderDownloads(root: HTMLElement): void {
+/** 繪製下載區；回傳的函式取消監聽（介面語言改變時重新繪製，007 FR-3）。 */
+export function renderDownloads(root: HTMLElement): () => void {
   let state: HostState | null = null;
 
   // ---- 連線狀態 ----
@@ -180,8 +181,9 @@ export function renderDownloads(root: HTMLElement): void {
     embedInput.disabled = false;
   });
   embedInput.addEventListener('change', () => void embedInfo.setValue(embedInput.checked));
-  downloadDir.watch(() => void renderFolder());
+  const unwatch = downloadDir.watch(() => void renderFolder());
 
   renderStatus();
   void check(false);
+  return unwatch;
 }

@@ -85,7 +85,7 @@ function captionResponse(url) {
  * - nativeHost：橋接程式執行檔的路徑，寫入設定檔資料夾中的 NativeMessagingHosts/（Chromium 以 --user-data-dir 時從這裡讀取）；
  * - env：瀏覽器的環境變數（橋接程式會繼承，例如 HOME、PATH）。
  */
-export async function launch({ lang = 'en-US', name = 'fixture', viewport, colorScheme, downloadDir, userAgent, profile, keepProfile = false, nativeHost, env } = {}) {
+export async function launch({ lang = 'en-US', name = 'fixture', viewport, colorScheme, downloadDir, userAgent, profile, keepProfile = false, nativeHost, env, uiLanguage } = {}) {
   viewport ??= { width: 1280, height: 900 };
   profile ??= join(here, '.cache', `profile-${name}-${lang}`);
   if (!keepProfile) rmSync(profile, { recursive: true, force: true });
@@ -175,7 +175,24 @@ export async function launch({ lang = 'en-US', name = 'fixture', viewport, color
     }
     return route.abort();
   });
+  // 介面語言（007）：明確設定，不依賴「跟隨瀏覽器」。預設依瀏覽器語言選繁體中文或英文；'auto' 時不設定。
+  const ui = uiLanguage ?? (lang.startsWith('zh') ? 'zh_TW' : 'en');
+  if (ui !== 'auto' && !keepProfile) await setUiLanguage(context, ui);
   return context;
+}
+
+/** 擴充功能的背景腳本（service worker）。 */
+export async function extensionWorker(context) {
+  return (
+    context.serviceWorkers().find((w) => w.url().startsWith(`chrome-extension://${EXT_ID}/`)) ??
+    (await context.waitForEvent('serviceworker', { timeout: 10_000 }))
+  );
+}
+
+/** 設定介面語言（sync:uiLanguage）：'auto'、'zh_TW' 或 'en'。 */
+export async function setUiLanguage(context, value) {
+  const sw = await extensionWorker(context);
+  await sw.evaluate((v) => chrome.storage.sync.set({ uiLanguage: v }), value);
 }
 
 export function reporter() {

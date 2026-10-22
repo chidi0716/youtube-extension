@@ -20,7 +20,8 @@ import {
 
 const DRAG_THRESHOLD = 4;
 
-export function renderToolbarSettings(root: HTMLElement): void {
+/** 繪製工具列區；回傳的函式取消監聽（介面語言改變時重新繪製，007 FR-3）。 */
+export function renderToolbarSettings(root: HTMLElement): () => void {
   let layout: ToolbarLayout = defaultLayout();
   let loaded = false;
   let dragging = false;
@@ -202,7 +203,7 @@ export function renderToolbarSettings(root: HTMLElement): void {
     render();
   });
   // 在 YouTube 上編輯或其他裝置同步時更新（拖曳中不打斷）。
-  toolbarLayout.watch((value) => {
+  return toolbarLayout.watch((value) => {
     if (dragging) return;
     const active = document.activeElement as HTMLElement | null;
     const key = active?.dataset.focusKey;

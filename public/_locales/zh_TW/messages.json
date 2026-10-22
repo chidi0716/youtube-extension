@@ -757,6 +757,22 @@
     "message": "設定",
     "description": "Title of the extension's settings page."
   },
+  "optionsLanguageTitle": {
+    "message": "語言",
+    "description": "Settings page: heading of the interface language section."
+  },
+  "optionsLanguage": {
+    "message": "介面語言",
+    "description": "Settings page: label of the interface language dropdown."
+  },
+  "optionsLanguageAuto": {
+    "message": "跟隨瀏覽器",
+    "description": "Interface language option: Chinese browsers use Traditional Chinese, others English."
+  },
+  "optionsLanguageNote": {
+    "message": "擴充功能在瀏覽器擴充功能管理頁中的名稱與說明，以及擴充功能圖示的滑鼠提示由瀏覽器顯示，一律跟隨瀏覽器語言。",
+    "description": "Settings page: note under the interface language dropdown (007 FR-5)."
+  },
   "optionsTidyTitle": {
     "message": "頁面整理",
     "description": "Settings page: heading of the page tidy section."

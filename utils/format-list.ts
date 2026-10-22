@@ -5,6 +5,7 @@
 // - 2K 以上沒有 H.264 時，以 AV1（沒有才用 VP9）＋M4A 合併成 MP4 列在主清單，並標記部分播放器可能無法播放
 //   （002 FR-13、QUESTIONS Q43，tasks T18a）。
 // - 依解析度與幀率分組，每組取位元率最高的格式；由高到低排列。
+import { formatNumber } from './i18n';
 import type { HostFormat } from './native-protocol';
 
 export type Container = 'mp4' | 'webm';
@@ -207,6 +208,6 @@ export function formatSize(size: number | null, approx: boolean, approxPrefix: s
     value /= 1000;
     unit++;
   }
-  const text = unit === 0 ? `${Math.round(value)} ${units[unit]}` : `${value.toFixed(1)} ${units[unit]}`;
+  const text = `${formatNumber(unit === 0 ? Math.round(value) : value, unit === 0 ? 0 : 1)} ${units[unit]}`;
   return approx ? `${approxPrefix}${text}` : text;
 }

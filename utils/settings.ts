@@ -3,6 +3,11 @@
 // 設定都存在 sync 區：跨分頁、跨重新開機，並跟著使用者的瀏覽器帳號同步。
 import type { ToolbarLayout } from './toolbar-layout';
 
+/** 介面語言（007 FR-1、FR-4）：跟隨瀏覽器、繁體中文或英文。 */
+export type UiLanguagePreference = 'auto' | 'zh_TW' | 'en';
+export const UI_LANGUAGE_VALUES: readonly UiLanguagePreference[] = ['auto', 'zh_TW', 'en'];
+export const uiLanguage = storage.defineItem<UiLanguagePreference>('sync:uiLanguage', { fallback: 'auto' });
+
 /** 工具列是否顯示（001 FR-15、FR-16）。 */
 export const enabled = storage.defineItem<boolean>('sync:enabled', {
   fallback: true,
