@@ -9,9 +9,53 @@ import (
 	"testing"
 
 	"github.com/chidi0716/youtube-extension/host/internal/errs"
+	"github.com/chidi0716/youtube-extension/host/internal/jobs"
+	"github.com/chidi0716/youtube-extension/host/internal/platform"
 	"github.com/chidi0716/youtube-extension/host/internal/testenv"
+	"github.com/chidi0716/youtube-extension/host/internal/validate"
 	"github.com/chidi0716/youtube-extension/host/internal/ytdlp"
 )
+
+func TestRevealAndUpdate(t *testing.T) {
+	m := &jobs.Manager{
+		Store:  &jobs.Store{Dir: filepath.Join(t.TempDir(), "jobs")},
+		Client: "chrome",
+		Spawn:  func(string) (int, error) { return os.Getpid(), nil }, // 不實際執行
+		Emit:   func(*jobs.Event) error { return nil },
+	}
+	m.Init()
+	a := &App{Version: "x", Env: envWithPath(testenv.FakeToolsDir(t, true)), Manager: m, Actions: platform.NewActions()}
+	ctx := context.Background()
+	if _, err := a.Reveal(ctx, "0123456789abcdef"); errs.From(err).Code != errs.JobNotFound {
+		t.Errorf("unknown job: %v", err)
+	}
+	dir := t.TempDir()
+	v, err := a.Download(ctx, &validate.Download{VideoID: "dQw4w9WgXcQ", Kind: "mp3", Bitrate: 192, Dir: dir, NamePreset: "title-id", Embed: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := v.(*DownloadResult).JobID
+	if _, err := a.Reveal(ctx, id); errs.From(err).Code != errs.JobNotFinished {
+		t.Errorf("unfinished job: %v", err)
+	}
+	// 完成後檔案被刪除：FILE_NOT_FOUND。
+	st, _ := m.Store.ReadStatus(id)
+	st.State, st.Path = jobs.StateDone, filepath.Join(dir, "gone.mp3")
+	m.Store.WriteStatus(st)
+	if _, err := a.Reveal(ctx, id); errs.From(err).Code != errs.FileNotFound {
+		t.Errorf("deleted file: %v", err)
+	}
+	r, err := a.UpdateYtDlp(ctx)
+	if err != nil || !r.(*ytdlp.UpdateResult).UpToDate {
+		t.Errorf("update: %+v %v", r, err)
+	}
+	// 沒有 ffmpeg 時，影片下載立即回報 FFMPEG_NOT_FOUND。
+	a.Env = envWithPath(testenv.FakeToolsDir(t, false))
+	_, err = a.Download(ctx, &validate.Download{VideoID: "dQw4w9WgXcQ", Kind: "video", FormatID: "18", Container: "mp4", Dir: dir, NamePreset: "title-id"})
+	if errs.From(err).Code != errs.FFmpegNotFound {
+		t.Errorf("no ffmpeg: %v", err)
+	}
+}
 
 func TestMain(m *testing.M) { testenv.Main(m) }
 

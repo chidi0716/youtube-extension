@@ -19,6 +19,9 @@ type App struct {
 	Version string
 	Env     ytdlp.Env
 	Manager *jobs.Manager
+	Actions *platform.Actions
+
+	updateMu sync.Mutex
 
 	// infoSem 限制同時執行的 getInfo 數量。
 	infoOnce sync.Once
@@ -27,7 +30,7 @@ type App struct {
 
 // New 建立 App。
 func New(version string, m *jobs.Manager) *App {
-	return &App{Version: version, Env: ytdlp.SystemEnv(), Manager: m}
+	return &App{Version: version, Env: ytdlp.SystemEnv(), Manager: m, Actions: platform.NewActions()}
 }
 
 // tools 每次重新尋找 yt-dlp 與 ffmpeg，讓使用者安裝後按「重新檢查」就能生效。
@@ -124,8 +127,6 @@ func (a *App) GetInfo(ctx context.Context, videoID string) (any, error) {
 	return ytdlp.FitInfo(info, maxInfoResult), nil
 }
 
-func notYet() (any, error) { return nil, errs.New(errs.Unknown, "not implemented yet") }
-
 // DownloadResult 是 download 與 cancel 指令的結果。
 type DownloadResult struct {
 	JobID string `json:"jobId"`
@@ -167,11 +168,37 @@ func (a *App) Jobs(ctx context.Context) (any, error) {
 	return &JobsResult{Jobs: a.Manager.List()}, nil
 }
 
-// Reveal 實作 reveal 指令（T14）。
-func (a *App) Reveal(ctx context.Context, jobID string) (any, error) { return notYet() }
+// RevealResult 是 reveal 指令的結果。
+type RevealResult struct {
+	Path string `json:"path"`
+}
 
-// PickFolder 實作 pickFolder 指令（T14）。
-func (a *App) PickFolder(ctx context.Context) (any, error) { return notYet() }
+// Reveal 實作 reveal 指令：在 Finder／檔案總管中選取已完成的檔案。
+// 路徑來自橋接程式自己的工作紀錄，不接受擴充功能傳入路徑。
+func (a *App) Reveal(ctx context.Context, jobID string) (any, error) {
+	st, err := a.Manager.Get(jobID)
+	if err != nil {
+		return nil, err
+	}
+	if st.State != jobs.StateDone || st.Path == "" {
+		return nil, errs.New(errs.JobNotFinished, "the download has not finished")
+	}
+	if err := a.Actions.Reveal(ctx, st.Path); err != nil {
+		return nil, err
+	}
+	return &RevealResult{Path: st.Path}, nil
+}
 
-// UpdateYtDlp 實作 updateYtDlp 指令（T14）。
-func (a *App) UpdateYtDlp(ctx context.Context) (any, error) { return notYet() }
+// PickFolder 實作 pickFolder 指令：開啟系統的選擇資料夾視窗（參數固定）。
+func (a *App) PickFolder(ctx context.Context) (any, error) {
+	return a.Actions.PickFolder(ctx)
+}
+
+// UpdateYtDlp 實作 updateYtDlp 指令。
+func (a *App) UpdateYtDlp(ctx context.Context) (any, error) {
+	if !a.updateMu.TryLock() {
+		return nil, errs.New(errs.Busy, "an update is already running")
+	}
+	defer a.updateMu.Unlock()
+	return a.tools().Update(ctx)
+}

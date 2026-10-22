@@ -261,6 +261,9 @@ func DirSyntax(dir string) error {
 	return dirSyntax(dir, runtime.GOOS)
 }
 
+// DirSyntaxFor 依指定作業系統的路徑規則檢查（DirSyntax 使用目前的作業系統）。
+func DirSyntaxFor(goos, dir string) error { return dirSyntax(dir, goos) }
+
 func dirSyntax(dir, goos string) error {
 	if dir == "" {
 		return invalid("dir", "is required")

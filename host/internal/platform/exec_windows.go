@@ -18,6 +18,14 @@ func HideConsole(cmd *exec.Cmd) {
 	cmd.SysProcAttr.CreationFlags |= windows.CREATE_NO_WINDOW
 }
 
+// setCmdLine 直接指定整個命令列（Go 預設的引號方式 explorer.exe 無法解析）。
+func setCmdLine(cmd *exec.Cmd, line string) {
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	cmd.SysProcAttr.CmdLine = line
+}
+
 // knownDownloadsDir 查詢「下載」已知資料夾（FOLDERID_Downloads）。
 func knownDownloadsDir() string {
 	p, err := windows.KnownFolderPath(windows.FOLDERID_Downloads, 0)
