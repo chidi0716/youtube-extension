@@ -4,7 +4,7 @@
 // 新增語言時只需要新增語言檔、在 LOCALES 與 UI_LANGUAGES 加一項（007 FR-8）。
 import en from '../public/_locales/en/messages.json';
 import zhTW from '../public/_locales/zh_TW/messages.json';
-import { uiLanguage, type UiLanguagePreference } from './settings';
+import type { UiLanguagePreference } from './settings';
 
 interface MessageEntry {
   message: string;
@@ -66,12 +66,22 @@ export function onLocaleChange(listener: (locale: UiLocale) => void): () => void
 
 let ready: Promise<void> | null = null;
 
-/** 讀取 sync:uiLanguage 並監聽變更（每個執行環境呼叫一次；之後的呼叫回傳同一個 Promise）。 */
+/** sync:uiLanguage 的 storage 鍵（utils/settings.ts 的 uiLanguage）。 */
+const STORAGE_KEY = 'uiLanguage';
+
+/**
+ * 讀取 sync:uiLanguage 並監聽變更（每個執行環境呼叫一次；之後的呼叫回傳同一個 Promise）。
+ * 直接使用 browser.storage，不在模組載入時定義 storage 項目：頁面橋接腳本（MAIN world）也會間接載入本模組，
+ * 那裡沒有擴充功能的 API。
+ */
 export function initI18n(): Promise<void> {
   ready ??= (async () => {
     try {
-      setLocale(resolveLocale(await uiLanguage.getValue()));
-      uiLanguage.watch((value) => setLocale(resolveLocale(value)));
+      const stored = await browser.storage.sync.get(STORAGE_KEY);
+      setLocale(resolveLocale(stored[STORAGE_KEY]));
+      browser.storage.onChanged.addListener((changes, area) => {
+        if (area === 'sync' && STORAGE_KEY in changes) setLocale(resolveLocale(changes[STORAGE_KEY]!.newValue));
+      });
     } catch (err) {
       console.info('[youtube-extension] failed to read the interface language', err);
     }

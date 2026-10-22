@@ -53,7 +53,7 @@ function optionRow(option: TidyOption, cleanups: Array<() => void>): HTMLElement
 }
 
 /** 介面語言選單（007 FR-1、FR-5）。 */
-function renderLanguage(root: HTMLElement): () => void {
+function renderLanguage(root: HTMLElement, focus: boolean): () => void {
   const fieldset = document.createElement('fieldset');
   fieldset.className = 'group';
   fieldset.dataset.category = 'language';
@@ -86,12 +86,13 @@ function renderLanguage(root: HTMLElement): () => void {
   void uiLanguage.getValue().then((value) => {
     select.value = UI_LANGUAGE_VALUES.includes(value) ? value : 'auto';
     select.disabled = false;
+    if (focus) select.focus();
   });
-  select.addEventListener('change', () => {
+  select.addEventListener('change', async () => {
     const value = select.value as UiLanguagePreference;
-    // 立即換成新語言（007 FR-3），同時寫入設定，已開啟的 YouTube 分頁跟著改變。
+    // 寫入設定（已開啟的 YouTube 分頁跟著改變），再立即以新語言重新繪製設定頁（007 FR-3）。
+    await uiLanguage.setValue(value);
     setLocale(resolveLocale(value));
-    void uiLanguage.setValue(value);
   });
   row.append(label, select);
   fieldset.append(row);
@@ -100,7 +101,7 @@ function renderLanguage(root: HTMLElement): () => void {
 }
 
 /** 繪製整個設定頁；介面語言改變時以新語言重新繪製（007 FR-3）。回傳取消監聽的函式。 */
-function renderPage(): () => void {
+function renderPage(focusId?: string): () => void {
   applyI18n(document);
   document.title = t('optionsTitle');
   const cleanups: Array<() => void> = [];
@@ -109,7 +110,7 @@ function renderPage(): () => void {
     el.replaceChildren();
     return el;
   };
-  cleanups.push(renderLanguage(container('#language-groups')));
+  cleanups.push(renderLanguage(container('#language-groups'), focusId === 'ui-language'));
   // 工具列（T34）
   cleanups.push(renderToolbarSettings(container('#toolbar-groups')));
   const groups = container('#tidy-groups');
@@ -132,6 +133,6 @@ let dispose = renderPage();
 onLocaleChange(() => {
   const focusedId = (document.activeElement as HTMLElement | null)?.id;
   dispose();
-  dispose = renderPage();
-  if (focusedId) document.getElementById(focusedId)?.focus();
+  dispose = renderPage(focusedId);
+  if (focusedId && focusedId !== 'ui-language') document.getElementById(focusedId)?.focus();
 });
