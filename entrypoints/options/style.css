@@ -246,3 +246,105 @@ h2 {
 .select option {
   color: #0f0f0f;
 }
+
+/* 工具列區（006 FR-22） */
+.group[data-category='toolbar'] {
+  position: relative;
+}
+
+.toolbar-list {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.toolbar-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 44px 32px 32px;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  background: var(--group-background);
+}
+
+.toolbar-row + .toolbar-row {
+  border-top: 1px solid var(--outline);
+}
+
+.toolbar-row[data-hidden] .toolbar-name {
+  color: var(--text-secondary);
+}
+
+.toolbar-row[data-hidden] .toolbar-name .yte-icon {
+  opacity: 0.4;
+}
+
+.toolbar-row[data-dragging] {
+  position: relative;
+  z-index: 1;
+  border-radius: 8px;
+  background: var(--outline);
+  opacity: 0.9;
+}
+
+.toolbar-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.toolbar-row[data-item='separator'] .toolbar-name {
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: default;
+}
+
+.toolbar-divider-line {
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--text-secondary);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--outline);
+}
+
+.icon-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.toolbar-handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.toolbar-row[data-dragging] .toolbar-handle {
+  cursor: grabbing;
+}
+
+.toolbar-indicator {
+  position: absolute;
+  right: 16px;
+  left: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}

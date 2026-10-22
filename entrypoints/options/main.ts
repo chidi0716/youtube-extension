@@ -2,6 +2,7 @@ import './style.css';
 import { TIDY_CATEGORIES, type TidyOption } from '@/features/tidy/options';
 import { applyI18n, t } from '@/utils/i18n';
 import { renderDownloads } from './downloads';
+import { renderToolbarSettings } from './toolbar';
 
 // 設定頁：偏好設定依類別分組，每個選項一個開關、附一行說明（constitution 第 7a 點、005 FR-1）。
 // 開關後立即寫入 sync 設定；已開啟的 YouTube 分頁由內容腳本監聽設定變更而立即生效（005 FR-3）。
@@ -49,6 +50,9 @@ function optionRow(option: TidyOption): HTMLElement {
   });
   return row;
 }
+
+// 工具列（T34）
+renderToolbarSettings(document.querySelector<HTMLElement>('#toolbar-groups')!);
 
 const groups = document.querySelector<HTMLElement>('#tidy-groups')!;
 for (const category of TIDY_CATEGORIES) {
