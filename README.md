@@ -4,25 +4,33 @@
 
 A YouTube browser extension that adds a native-looking toolbar under the video player, with download tools and viewing tools. Built with [WXT](https://wxt.dev) + TypeScript for Chrome and Firefox (Firefox-based browsers such as Zen are treated as Firefox).
 
-> **Status:** under active development. The feature set below is the plan described in [`specs/`](./specs); not everything is implemented yet.
+> **Status:** all planned features are implemented and are waiting for hands-on testing on macOS, Windows, Chrome and Firefox/Zen (see the [test checklist](./specs/e2e-checklist.md)).
 
-## Features (planned)
+## Features
 
-**Download tools** (powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ffmpeg](https://ffmpeg.org) on your computer)
+A toolbar appears between the player and the video title on watch pages. It follows YouTube's light or dark look, can be hidden with ✕ (turn it back on from the extension's popup), and every panel can be pinned.
 
-- Video: pick a quality (8K / 4K / 2K / 1080p / HD …) with file sizes shown
-- MP3: choose bitrate and trim a time range
-- Thumbnails and subtitles (SRT / VTT / TXT)
-- Screenshot of the current frame
+**Download tools**
+
+- **Video:** a quality list from high to low (8K / 4K / 2K / 1080 / HD labels) with file sizes, as MP4 by default and WEBM under “Show more formats”. 2K and above, which YouTube has no H.264 version of, use AV1 (or VP9) inside MP4 and are marked “May not play in some players”.
+- **MP3:** 64–320 kbps (remembers your choice).
+- **Time range** for video and MP3: download only a part, with a range slider, start/end fields, “Sync with player” and “Set to current time”.
+- Cover, title, channel, upload date, link and chapters are embedded into videos and MP3 (can be turned off).
+- Progress on the toolbar button, speed and time left in the panel, cancel, retry, clear error messages, a notification when finished (click it to show the file), and downloads keep running if you close the tab or the browser.
+- **Thumbnails** (only sizes that really exist), **subtitles** (uploaded and auto-generated, as SRT / VTT / TXT) and **screenshots** of the current frame work without the helper and are saved to the browser's download folder. When a direct subtitle download fails, yt-dlp is used instead.
+- Videos, MP3 and subtitles that go through yt-dlp are saved to a folder you choose in the settings page, with a file name format of your choice.
+
+Video and MP3 downloads use [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org) and [deno](https://deno.com) on your computer through a small helper program; see [Install the helper](#install-the-helper).
 
 **Viewing tools**
 
-- Dark mode, cinema mode (dim everything but the player), picture-in-picture
-- Floating player while scrolling, A–B loop / repeat N times
+- Dark mode (switches YouTube's own appearance setting), cinema mode (dims everything except the player and the toolbar), picture-in-picture
+- Floating player while scrolling (drag it to any corner), A–B loop or repeat N times
 - Pause on tab switch, autoplay toggle, audio-only mode, mouse-wheel volume, hide comments
-- Lock the playback quality (e.g. always 1080p); copy a `youtu.be` link at the current time, also as Markdown
+- Lock the playback quality (for example always 1080p, unless you change it by hand)
+- Copy a `youtu.be` link with or without the current time, or as Markdown
 
-**Page tidy** (in the settings page, works on all YouTube pages)
+**Page tidy** (in the settings page, works on all YouTube pages even when the toolbar is hidden)
 
 - Always play the original audio instead of an AI dub; hide end cards and the end screen
 - Dismiss “Continue watching?”; turn off thumbnail previews
@@ -116,6 +124,26 @@ This removes the helper, its manifests and registry keys, its state and its logs
 
 **What the helper can do:** only the fixed commands the extension needs (check status, read video info, download, cancel, list downloads, show a file, choose a folder, update yt-dlp). Only this extension may start it (`allowed_origins` / `allowed_extensions` in the manifests). It accepts a YouTube video ID, never a URL or command-line options, opens no network ports, and only yt-dlp talks to YouTube (and to GitHub when you update yt-dlp).
 
+## FAQ
+
+**Downloads suddenly fail with “YouTube has changed. Please update yt-dlp.”**
+YouTube changes often and yt-dlp follows quickly. Click **Update yt-dlp** in the panel or in the settings page. If yt-dlp was installed with Homebrew or winget, run the command it shows (`brew upgrade yt-dlp` or `winget upgrade --id yt-dlp.yt-dlp`).
+
+**The panel says only deno is missing. Can I still download?**
+Yes. Without deno, yt-dlp may not see some YouTube formats (often the highest qualities). Install it with `brew install deno` or `winget install DenoLand.Deno`, then click **Check again**.
+
+**macOS says the helper “cannot be opened” or is from an unidentified developer (Gatekeeper).**
+Run the installer again (`sh host/dist/youtube-extension-host-macos/install.sh`); it removes the quarantine attribute that Gatekeeper checks. Do not use `sudo`. If it still happens, build the helper yourself with `npm run build:host` and install again.
+
+**Zen (or another Firefox-based browser) cannot find the helper.**
+The installer registers the helper for Firefox, which Zen normally reads. Restart Zen completely after installing and click **Check again**. If it still says the helper isn't connected, please open an issue with your Zen version, your macOS or Windows version, and whether `~/Library/Application Support/Mozilla/NativeMessagingHosts/com.chidi0716.youtube_extension.json` (macOS) exists. Messages starting with `[youtube-extension]` in the extension's console (open `about:debugging`, find the extension, click **Inspect**) also help.
+
+**Downloads fail with “Couldn't write to the download folder.”**
+The folder chosen in the settings page was moved or deleted, the disk is full, or the folder isn't writable. Choose another folder or click **Use default** in the settings page. On macOS, folders such as Desktop or Documents may need permission: if a prompt asks to allow access, allow it.
+
+**The extension disappeared from Firefox after a restart.**
+Add-ons loaded from `about:debugging` are temporary and are removed when Firefox restarts. Install the signed `.xpi` instead (see [Load the extension manually](#load-the-extension-manually)).
+
 ## Development
 
 ```bash
@@ -181,6 +209,7 @@ This project follows spec-driven development and a clean-room process:
 | [`specs/plan.md`](./specs/plan.md) / [`specs/tasks.md`](./specs/tasks.md) | Technical plan and tasks |
 | [`specs/ROADMAP.md`](./specs/ROADMAP.md) | Future directions |
 | [`specs/BACKLOG.md`](./specs/BACKLOG.md) | Feature ideas not yet specified |
+| [`specs/e2e-checklist.md`](./specs/e2e-checklist.md) | Manual test checklist |
 
 Specs are written in Traditional Chinese.
 
