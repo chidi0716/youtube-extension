@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/chidi0716/youtube-extension/host/internal/errs"
+	"github.com/chidi0716/youtube-extension/host/internal/jobs"
 	"github.com/chidi0716/youtube-extension/host/internal/platform"
 	"github.com/chidi0716/youtube-extension/host/internal/protocol"
 	"github.com/chidi0716/youtube-extension/host/internal/validate"
@@ -17,6 +18,7 @@ import (
 type App struct {
 	Version string
 	Env     ytdlp.Env
+	Manager *jobs.Manager
 
 	// infoSem 限制同時執行的 getInfo 數量。
 	infoOnce sync.Once
@@ -24,8 +26,8 @@ type App struct {
 }
 
 // New 建立 App。
-func New(version string) *App {
-	return &App{Version: version, Env: ytdlp.SystemEnv()}
+func New(version string, m *jobs.Manager) *App {
+	return &App{Version: version, Env: ytdlp.SystemEnv(), Manager: m}
 }
 
 // tools 每次重新尋找 yt-dlp 與 ffmpeg，讓使用者安裝後按「重新檢查」就能生效。
@@ -124,14 +126,46 @@ func (a *App) GetInfo(ctx context.Context, videoID string) (any, error) {
 
 func notYet() (any, error) { return nil, errs.New(errs.Unknown, "not implemented yet") }
 
-// Download 實作 download 指令（T13）。
-func (a *App) Download(ctx context.Context, d *validate.Download) (any, error) { return notYet() }
+// DownloadResult 是 download 與 cancel 指令的結果。
+type DownloadResult struct {
+	JobID string `json:"jobId"`
+	State string `json:"state"`
+}
 
-// Cancel 實作 cancel 指令（T13）。
-func (a *App) Cancel(ctx context.Context, jobID string) (any, error) { return notYet() }
+// Download 實作 download 指令：先確認 yt-dlp 與 ffmpeg 可用，再建立工作並啟動執行程序。
+func (a *App) Download(ctx context.Context, d *validate.Download) (any, error) {
+	t := a.tools()
+	if t.YtDlp == "" {
+		return nil, errs.New(errs.YtDlpNotFound, "yt-dlp was not found")
+	}
+	if ytdlp.NeedsFFmpeg(d) && t.FFmpeg == "" {
+		return nil, errs.New(errs.FFmpegNotFound, "ffmpeg was not found")
+	}
+	st, err := a.Manager.Start(d)
+	if err != nil {
+		return nil, err
+	}
+	return &DownloadResult{JobID: st.JobID, State: st.State}, nil
+}
 
-// Jobs 實作 jobs 指令（T13）。
-func (a *App) Jobs(ctx context.Context) (any, error) { return notYet() }
+// Cancel 實作 cancel 指令。
+func (a *App) Cancel(ctx context.Context, jobID string) (any, error) {
+	st, err := a.Manager.Cancel(ctx, jobID)
+	if err != nil {
+		return nil, err
+	}
+	return &DownloadResult{JobID: st.JobID, State: st.State}, nil
+}
+
+// JobsResult 是 jobs 指令的結果。
+type JobsResult struct {
+	Jobs []jobs.JobView `json:"jobs"`
+}
+
+// Jobs 實作 jobs 指令：進行中與最近結束的工作（plan 4.3）。
+func (a *App) Jobs(ctx context.Context) (any, error) {
+	return &JobsResult{Jobs: a.Manager.List()}, nil
+}
 
 // Reveal 實作 reveal 指令（T14）。
 func (a *App) Reveal(ctx context.Context, jobID string) (any, error) { return notYet() }

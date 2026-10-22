@@ -10,6 +10,7 @@
 //	FAKE_YTDLP_LOG       每次執行時把參數以 JSON 一行附加到這個檔案
 //	FAKE_YTDLP_CHILD_PID slow 情境中，模擬 ffmpeg 的子程序 PID 寫到這個檔案
 //	FAKE_YTDLP_VERSION   --version 的輸出（預設 2026.10.21）
+//	FAKE_YTDLP_DELAY_MS  ok 情境中每一行進度之間的間隔（毫秒）
 package main
 
 import (
@@ -170,6 +171,7 @@ func main() {
 		fail("ERROR: unable to write data: [Errno 28] No space left on device")
 	}
 
+	delay, _ := strconv.Atoi(os.Getenv("FAKE_YTDLP_DELAY_MS"))
 	for _, f := range parts {
 		for _, n := range []float64{0, 25, 50, 75, 100} {
 			status := "downloading"
@@ -177,6 +179,7 @@ func main() {
 				status = "finished"
 			}
 			emitProgress(progress, f, status, n*10, 1000)
+			time.Sleep(time.Duration(delay) * time.Millisecond)
 		}
 	}
 	for _, pp := range []string{"Merger", "Metadata", "MoveFiles"} {
