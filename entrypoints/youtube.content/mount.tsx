@@ -14,6 +14,7 @@ import { LoopPanel } from '@/components/panels/LoopPanel';
 import { MorePanel, type MoreItem, type MoreSwitchItem } from '@/components/panels/MorePanel';
 import { SubtitlePanel } from '@/components/panels/SubtitlePanel';
 import { ThumbnailPanel } from '@/components/panels/ThumbnailPanel';
+import { VideoPanel } from '@/components/panels/VideoPanel';
 import panelsCss from '@/components/panels/panels.css?inline';
 import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
@@ -120,12 +121,13 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         return <LoopPanel loop={viewing.loop} />;
       case 'more':
         return <MorePanel items={moreItems} onOpen={refreshMore} />;
-      // 下載（階段 4a）：縮圖、字幕不需要橋接程式；影片、MP3 在畫質清單完成前顯示橋接程式的狀態（T16）。
+      // 下載：縮圖、字幕不需要橋接程式（階段 4a）；影片、MP3 經由橋接程式（階段 4）。
       case 'thumbnail':
         return videoId ? <ThumbnailPanel videoId={videoId} /> : undefined;
       case 'subtitles':
         return videoId ? <SubtitlePanel videoId={videoId} /> : undefined;
       case 'video':
+        return videoId ? <VideoPanel videoId={videoId} /> : undefined;
       case 'mp3':
         return videoId ? <DownloadSetupPanel videoId={videoId} /> : undefined;
       default:
