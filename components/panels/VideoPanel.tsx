@@ -1,16 +1,19 @@
-// 影片面板（002 FR-10 至 FR-15、004 第 3 節，tasks T19）。
-// 需要橋接程式：未連線或缺少元件時顯示安裝說明（FR-2）；直播與尚未開始的影片顯示無法下載（FR-1）。
+// 影片面板（002 FR-10 至 FR-15、004 第 3 節，tasks T19）與 MP3 面板（002 FR-20 至 FR-24，tasks T20）。
+// 兩者都需要橋接程式：未連線或缺少元件時顯示安裝說明（FR-2）；直播與尚未開始的影片顯示無法下載（FR-1）。
 import type { ComponentChildren } from 'preact';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { getInfo, HostError, startDownload } from '@/features/downloads/host-client';
 import { canDownload, missingOnlyDeno } from '@/features/downloads/host-status';
-import type { DownloadRequest, JobRecord } from '@/features/downloads/jobs';
+import { MP3_BITRATES, type DownloadRequest, type JobRecord, type Mp3Bitrate } from '@/features/downloads/jobs';
 import { buildQualityList, formatSize, sizeForSection, visibleRows, type QualityRow } from '@/utils/format-list';
 import { t } from '@/utils/i18n';
 import type { HostInfo } from '@/utils/native-protocol';
-import { clipHintSeen } from '@/utils/settings';
+import { clipHintSeen, mp3Bitrate } from '@/utils/settings';
 import { findVideo } from '@/utils/youtube/dom';
+import { Button } from '../controls/Button';
+import { Select } from '../controls/Select';
 import { Icon } from '../icons';
+import { PanelPinContext } from '../toolbar/PanelHost';
 import { DenoHint, HostSetup, useHostState } from './HostSetup';
 import { ErrorBlock, JobList } from './JobList';
 import { PanelError, PanelLoading } from './PanelStatus';
@@ -179,4 +182,76 @@ function formatRange(section: { start: number; end: number }): string {
 
 export function VideoPanel({ videoId }: { videoId: string }) {
   return <DownloadGate videoId={videoId}>{(title) => <QualityList videoId={videoId} pageTitle={title} />}</DownloadGate>;
+}
+
+// ---------------------------------------------------------------------------
+// MP3
+// ---------------------------------------------------------------------------
+
+const isBitrate = (v: unknown): v is Mp3Bitrate => (MP3_BITRATES as readonly unknown[]).includes(v);
+
+function Mp3Options({ videoId, pageTitle }: { videoId: string; pageTitle: string }) {
+  const [bitrate, setBitrate] = useState<Mp3Bitrate>(192);
+  const [startError, setStartError] = useState<JobRecord['error']>(null);
+  const [starting, setStarting] = useState(false);
+  const pin = useContext(PanelPinContext);
+  const duration = usePlayerDuration();
+  const clip = useClipRange('mp3', videoId, Number.isFinite(duration) ? duration : 0);
+
+  useEffect(() => {
+    void mp3Bitrate.getValue().then((v) => isBitrate(v) && setBitrate(v));
+  }, []);
+
+  const download = async () => {
+    setStarting(true);
+    const section = clip.clip.section;
+    const error = await begin({
+      kind: 'mp3',
+      videoId,
+      title: pageTitle,
+      label: `MP3 ${bitrate} kbps${section ? ` ${formatRange(section)}` : ''}`,
+      bitrate,
+      section,
+    });
+    setStartError(error);
+    setStarting(false);
+  };
+
+  return (
+    <div class="yte-mp3">
+      <label class="yte-field yte-mp3-bitrate">
+        <span>{t('mp3Bitrate')}</span>
+        <Select
+          id="yte-mp3-bitrate"
+          value={String(bitrate)}
+          options={MP3_BITRATES.map((b) => ({ value: String(b), label: `${b} kbps` }))}
+          onChange={(v) => {
+            const b = Number(v);
+            if (!isBitrate(b)) return;
+            setBitrate(b);
+            void mp3Bitrate.setValue(b);
+          }}
+        />
+      </label>
+      <TimeRange id="yte-mp3-clip" hook={clip} />
+      <div class="yte-mp3-footer">
+        {pin && (
+          <Button variant="secondary" onClick={pin.pinned ? pin.unpin : pin.pin}>
+            <Icon name={pin.pinned ? 'keep_off' : 'keep'} size={18} />
+            <span>{pin.pinned ? t('panelUnpin') : t('panelPin')}</span>
+          </Button>
+        )}
+        <Button variant="primary" disabled={!clip.clip.valid || starting} onClick={() => void download()}>
+          <Icon name="download" size={18} />
+          <span>{t('download')}</span>
+        </Button>
+      </div>
+      {startError && <ErrorBlock code={startError} onRetry={() => void download()} />}
+      <JobList videoId={videoId} kind="mp3" />
+    </div>
+  );
+}
+
+export function Mp3Panel({ videoId }: { videoId: string }) {
+  return <DownloadGate videoId={videoId}>{(title) => <Mp3Options videoId={videoId} pageTitle={title} />}</DownloadGate>;
 }

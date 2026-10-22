@@ -7,14 +7,13 @@
 import { render } from 'preact';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { createShadowRootUi } from 'wxt/utils/content-script-ui/shadow-root';
-import { DownloadSetupPanel } from '@/components/panels/DownloadSetupPanel';
 import { HelpPanel } from '@/components/panels/HelpPanel';
 import { LinkPanel } from '@/components/panels/LinkPanel';
 import { LoopPanel } from '@/components/panels/LoopPanel';
 import { MorePanel, type MoreItem, type MoreSwitchItem } from '@/components/panels/MorePanel';
 import { SubtitlePanel } from '@/components/panels/SubtitlePanel';
 import { ThumbnailPanel } from '@/components/panels/ThumbnailPanel';
-import { VideoPanel } from '@/components/panels/VideoPanel';
+import { Mp3Panel, VideoPanel } from '@/components/panels/VideoPanel';
 import panelsCss from '@/components/panels/panels.css?inline';
 import type { ButtonId } from '@/components/toolbar/buttons';
 import { Toolbar } from '@/components/toolbar/Toolbar';
@@ -129,7 +128,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
       case 'video':
         return videoId ? <VideoPanel videoId={videoId} /> : undefined;
       case 'mp3':
-        return videoId ? <DownloadSetupPanel videoId={videoId} /> : undefined;
+        return videoId ? <Mp3Panel videoId={videoId} /> : undefined;
       default:
         return undefined;
     }

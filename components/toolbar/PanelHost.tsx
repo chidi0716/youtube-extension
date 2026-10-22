@@ -1,11 +1,14 @@
 // 展開中面板的定位、焦點與「點外面／Esc 收起」（001 FR-10 至 FR-13、FR-19，plan 3.6）。
-import type { ComponentChildren } from 'preact';
+import { createContext, type ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Panel } from './Panel';
 import { maxPanelWidth, placePanel, type HorizontalRange } from './position';
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** 面板內容可以使用的釘選操作（例如 MP3 面板底部的「釘選面板」按鈕，002 FR-20、FR-24）。 */
+export const PanelPinContext = createContext<{ pinned: boolean; pin: () => void; unpin: () => void } | null>(null);
 
 export interface PanelHostProps {
   panelId: string;
@@ -97,7 +100,7 @@ export function PanelHost(props: PanelHostProps) {
       left={layout?.left ?? null}
       maxWidth={layout?.maxWidth ?? null}
     >
-      {props.children}
+      <PanelPinContext.Provider value={{ pinned, pin: onPin, unpin: onUnpin }}>{props.children}</PanelPinContext.Provider>
     </Panel>
   );
 }
