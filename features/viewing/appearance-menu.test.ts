@@ -1,6 +1,6 @@
 // 操作 YouTube 外觀選單的流程（T06d，003 FR-10、FR-11、FR-15）：以假的頁面依賴測試。
 import { describe, expect, it } from 'vitest';
-import { APPEARANCE_MENU_TIMEOUT_MS, switchThemeWithMenu, type AppearanceMenuDeps, type ThemeChoice } from './appearance-menu';
+import { APPEARANCE_MENU_TIMEOUT_MS, describeFailure, switchThemeWithMenu, type AppearanceMenuDeps, type ThemeChoice } from './appearance-menu';
 
 interface FakeOptions {
   noMenuButton?: boolean;
@@ -120,5 +120,14 @@ describe('switchThemeWithMenu', () => {
     const page = fakePage({ onSelect: 'nothing' });
     expect(await switchThemeWithMenu('dark', page.deps)).toEqual({ ok: false, reason: 'THEME_NOT_CHANGED' });
     expect(page.log).toEqual(['open', 'appearance', 'select:dark', 'close']);
+  });
+});
+
+describe('describeFailure（003 FR-15：console 記錄失敗的步驟）', () => {
+  it('說明是哪一個步驟失敗', () => {
+    expect(describeFailure('NO_MENU_BUTTON', 'dark')).toContain('step 1/3 failed: the account/settings menu button');
+    expect(describeFailure('NO_APPEARANCE_ITEM', 'dark')).toContain('step 2/3 failed: the Appearance item');
+    expect(describeFailure('NO_THEME_OPTION', 'light')).toContain('step 3/3 failed: the light theme option');
+    expect(describeFailure('THEME_NOT_CHANGED', 'dark')).toContain('another extension may control the theme');
   });
 });

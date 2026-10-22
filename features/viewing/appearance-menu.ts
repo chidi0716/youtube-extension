@@ -86,3 +86,17 @@ export async function switchThemeWithMenu(target: ThemeChoice, deps: AppearanceM
     }
   }
 }
+
+/** 失敗時記錄在 console 的說明：哪一個步驟失敗（003 FR-15）。 */
+export function describeFailure(reason: Extract<AppearanceSwitchResult, { ok: false }>['reason'], target: ThemeChoice): string {
+  switch (reason) {
+    case 'NO_MENU_BUTTON':
+      return 'step 1/3 failed: the account/settings menu button was not found in the top bar';
+    case 'NO_APPEARANCE_ITEM':
+      return 'step 2/3 failed: the Appearance item was not found in the account/settings menu';
+    case 'NO_THEME_OPTION':
+      return `step 3/3 failed: the ${target} theme option was not found in the Appearance menu`;
+    case 'THEME_NOT_CHANGED':
+      return `the ${target} theme option was selected, but the page theme did not change (another extension may control the theme)`;
+  }
+}

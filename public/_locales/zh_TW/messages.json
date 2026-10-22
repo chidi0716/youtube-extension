@@ -284,5 +284,9 @@
   "volumeHint": {
     "message": "音量",
     "description": "Accessible label of the volume indicator shown over the player."
+  },
+  "darkModeUnavailableHint": {
+    "message": "找不到 YouTube 的外觀選項。若安裝了會改變主題的擴充功能（例如氛圍光），請將其主題設定改為跟隨 YouTube。",
+    "description": "Dark mode button: shown for about 6 seconds when YouTube's Appearance menu or option could not be found or used, e.g. because another extension controls the theme (spec 003 FR-15)."
   }
 }

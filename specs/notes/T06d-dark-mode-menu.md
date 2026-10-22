@@ -89,3 +89,19 @@ data 是頁面 JavaScript 的屬性，只有 main world 讀得到（isolated wor
 7. 若按下後按鈕提示出現「無法切換，請使用 YouTube 的外觀設定」，或主題沒有改變，請回報：
    - 開發者工具 console 中 `[youtube-extension]` 開頭的訊息（含括號中的原因代碼）；
    - 在 Elements 中選取頭像按鈕，它與上層幾個元素的 tag 與 id。
+
+## T06e 失敗提示（003 FR-15、FR-91）
+
+- 提示文字改為說明可能原因：「找不到 YouTube 的外觀選項。若安裝了會改變主題的擴充功能（例如氛圍光），請將其主題設定改為跟隨 YouTube。」（英文：“Couldn't find YouTube's Appearance option. If you use an extension that changes the theme (for example, an ambient light extension), set its theme to follow YouTube.”）。新增訊息 `darkModeUnavailableHint`，既有的 `darkModeUnavailable` 未修改（目前沒有使用）。
+- 顯示約 6 秒；時間到時滑鼠仍停在按鈕上，提示留到滑鼠移開為止（`ToolbarButton` 的暫時訊息都適用）。較長的提示換行顯示，最寬 320px。
+- console 記錄失敗的步驟，例如 `could not use YouTube's appearance menu (NO_APPEARANCE_ITEM): step 2/3 failed: the Appearance item was not found in the account/settings menu; nothing changed`。四種原因：
+  - 步驟 1：選單按鈕；
+  - 步驟 2：外觀項目；
+  - 步驟 3：深色／淺色選項；
+  - 選擇後主題沒有改變（可能是其他擴充功能接管了主題）。
+- 失敗時不重試，不與其他擴充功能搶奪主題設定（FR-91）。
+- 假觀看頁驗證：
+  - 提示文字與 console 步驟（沒有「外觀」項目 → 步驟 2；沒有選單按鈕 → 步驟 1）；
+  - 滑鼠移開時 5 秒仍在、7 秒已消失；
+  - 滑鼠停在按鈕上時 7 秒後仍在、移開後消失。
+- 截圖：`screenshots/T06e-unavailable-hint.png`。

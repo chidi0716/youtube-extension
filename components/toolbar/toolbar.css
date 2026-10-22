@@ -163,6 +163,13 @@
   transition-delay: 0s;
 }
 
+/* 較長的暫時訊息（例如 003 FR-15 的說明）換行顯示，不超出工具列太多。 */
+.yte-btn-wrap .yte-tooltip[data-notice] {
+  width: max-content;
+  max-width: 320px;
+  white-space: normal;
+}
+
 .yte-tooltip[data-hidden] {
   display: none;
 }

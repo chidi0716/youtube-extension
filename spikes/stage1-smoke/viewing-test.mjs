@@ -179,27 +179,36 @@ await section(
   { pref: 'hl=en', colorScheme: 'dark' },
 );
 
-for (const [flag, what] of [
-  ['fixture_no_appearance=1', '選單中沒有「外觀」項目'],
-  ['fixture_no_menu_button=1', '頂端列沒有選單按鈕'],
+const HINT_EN =
+  "Couldn't find YouTube's Appearance option. If you use an extension that changes the theme (for example, an ambient light extension), set its theme to follow YouTube.";
+const noticeShown = (page) =>
+  page.evaluate(
+    () => !!document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="darkMode"]').closest('.yte-btn-wrap').querySelector('.yte-tooltip[data-notice]'),
+  );
+
+for (const [flag, what, step] of [
+  ['fixture_no_appearance=1', '選單中沒有「外觀」項目', 'step 2/3 failed: the Appearance item was not found'],
+  ['fixture_no_menu_button=1', '頂端列沒有選單按鈕', 'step 1/3 failed: the account/settings menu button was not found'],
 ]) {
   await section(
     'T06',
     async (page) => {
-      // 找不到選單或選項（例如 YouTube 改版）：不做任何修改，按鈕短暫顯示原因（FR-15）
+      // 找不到選單或選項（例如 YouTube 改版，或其他擴充功能接管了主題）：不做任何修改，
+      // 按鈕提示說明可能原因（約 6 秒，或滑鼠移開為止），console 記錄失敗的步驟（FR-15、T06e）
       const logs = [];
       page.on('console', (m) => logs.push(m.text()));
       const prefBefore = await prefOf(page);
       await watchMenuVisibility(page);
       await button(page, 'darkMode').click();
-      // 等操作結束、提示出現（提示只顯示幾秒）
+      // 等操作結束、提示出現
       await page
         .waitForFunction(
           () => document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-btn[data-button="darkMode"]').closest('.yte-btn-wrap').querySelector('.yte-tooltip[data-notice]'),
           null,
-          { timeout: 7000 },
+          { timeout: 7000, polling: 50 },
         )
         .catch(() => {});
+      const shownAt = Date.now();
       const tip = await tooltipOf(page, 'darkMode');
       const state = await menuState(page);
       const frames = await menuFrames(page);
@@ -209,11 +218,28 @@ for (const [flag, what] of [
         `pref=${await prefOf(page)} ${JSON.stringify(state)} ${JSON.stringify(frames)} log=${await menuLog(page)}`,
       );
       check(
-        `${what}：按鈕提示顯示「無法切換」並在 console 記錄原因（FR-15）`,
-        tip.notice && tip.text === "Can't switch. Please use YouTube's Appearance setting." && logs.some((l) => l.includes("could not use YouTube's appearance menu")),
+        `${what}：按鈕提示說明可能原因（含其他擴充功能接管主題），console 記錄失敗的步驟（FR-15）`,
+        tip.notice && tip.text === HINT_EN && logs.some((l) => l.includes(step)),
         `${JSON.stringify(tip)} ${logs.filter((l) => l.includes('youtube-extension')).join(' | ')}`,
       );
-      if (flag === 'fixture_no_appearance=1') await shot(page, 'T06d-unavailable.png');
+      if (flag === 'fixture_no_appearance=1') {
+        await shot(page, 'T06e-unavailable-hint.png', { x: 0, y: 0, width: 900, height: 740 });
+        // 滑鼠移開按鈕：提示約 6 秒後消失
+        await page.mouse.move(5, 890);
+        await page.waitForTimeout(Math.max(0, shownAt + 5000 - Date.now()));
+        const at5 = await noticeShown(page);
+        await page.waitForTimeout(Math.max(0, shownAt + 7000 - Date.now()));
+        const at7 = await noticeShown(page);
+        check('提示顯示約 6 秒（5 秒時仍在，7 秒時已消失）', at5 && !at7, `5s=${at5} 7s=${at7}`);
+      } else {
+        // 滑鼠一直停在按鈕上：6 秒後提示仍在，移開後才消失
+        await page.waitForTimeout(Math.max(0, shownAt + 7000 - Date.now()));
+        const heldText = (await tooltipOf(page, 'darkMode')).text;
+        const held = await noticeShown(page);
+        await page.mouse.move(5, 890);
+        await page.waitForTimeout(300);
+        check('滑鼠停在按鈕上時，提示留到滑鼠移開為止', held && heldText === HINT_EN && !(await noticeShown(page)), `held=${held} after=${await noticeShown(page)}`);
+      }
     },
     { pref: 'f6=80000', url: `${WATCH}&${flag}` },
   );

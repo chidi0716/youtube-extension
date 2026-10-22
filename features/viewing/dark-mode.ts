@@ -2,7 +2,8 @@
 // （已登入：頭像選單；未登入：設定選單）選擇深色或淺色主題，效果與使用者自己選擇完全相同，
 // 已登入時帳號的外觀設定也跟著改變。操作期間 YouTube 的彈出選單不可見。
 // 擴充功能不另外記住狀態，也不修改主題 cookie 或頁面主題屬性；按鈕只反映 <html dark> 的實際狀態。
-// 找不到選單或選項時不做任何修改，按鈕短暫顯示原因（FR-15）。
+// 找不到選單或選項時（例如 YouTube 改版，或其他擴充功能接管了主題）不做任何修改、不重試（FR-91），
+// 按鈕提示說明可能原因，console 記錄失敗的步驟（FR-15）。
 import { t } from '@/utils/i18n';
 import {
   DARK_THEME_ATTRIBUTE,
@@ -13,13 +14,16 @@ import {
   isDarkTheme,
 } from '@/utils/youtube/dom';
 import { appearanceMenu } from '@/utils/youtube/player';
-import { switchThemeWithMenu, type AppearanceMenuDeps, type ThemeChoice } from './appearance-menu';
+import { describeFailure, switchThemeWithMenu, type AppearanceMenuDeps, type ThemeChoice } from './appearance-menu';
 import { THEME_MENU_BUSY_CLASS, ensurePageStyles } from './page-styles';
 import { createStore, type ToggleState, type ViewingFeature } from './store';
 
 const LOG_PREFIX = '[youtube-extension]';
-/** 無法切換時，按鈕提示顯示訊息的時間（一次性的計時器，001 NFR-3）。 */
-const NOTICE_MS = 4000;
+/**
+ * 無法切換時，按鈕提示顯示說明的時間（003 FR-15，約 6 秒）。時間到時滑鼠仍在按鈕上，
+ * 工具列會讓提示留到滑鼠移開為止。一次性的計時器（001 NFR-3）。
+ */
+const NOTICE_MS = 6000;
 
 export interface DarkModeFeature extends ViewingFeature {
   state: ReturnType<typeof createStore<ToggleState>>;
@@ -56,7 +60,7 @@ export function createDarkMode(): DarkModeFeature {
 
   const showNotice = () => {
     clearTimeout(noticeTimer);
-    state.set((prev) => ({ ...prev, notice: t('darkModeUnavailable') }));
+    state.set((prev) => ({ ...prev, notice: t('darkModeUnavailableHint') }));
     noticeTimer = setTimeout(() => state.set((prev) => ({ active: prev.active })), NOTICE_MS);
   };
 
@@ -85,7 +89,9 @@ export function createDarkMode(): DarkModeFeature {
       void switchThemeWithMenu(target, pageDeps(() => unloading))
         .then((result) => {
           if (!result.ok) {
-            console.info(`${LOG_PREFIX} dark mode: could not use YouTube's appearance menu (${result.reason}); nothing changed`);
+            console.info(
+              `${LOG_PREFIX} dark mode: could not use YouTube's appearance menu (${result.reason}): ${describeFailure(result.reason, target)}; nothing changed`,
+            );
             showNotice();
           }
         })
