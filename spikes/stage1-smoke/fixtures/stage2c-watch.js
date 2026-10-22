@@ -305,7 +305,11 @@
       // 網域不對的項目必須被頁面橋接腳本排除
       { baseUrl: 'https://evil.example/api/timedtext?lang=xx', name: { simpleText: 'Evil' }, languageCode: 'xx', vssId: '.xx' },
     ],
-    bbbbbbbbbbb: [{ baseUrl: tt('lang=fr&fail=1'), name: { simpleText: 'French' }, languageCode: 'fr', vssId: '.fr' }],
+    // 直接下載一律失敗（階段 4：改用橋接程式，含自動產生的字幕）。
+    bbbbbbbbbbb: [
+      { baseUrl: tt('lang=fr&fail=1'), name: { simpleText: 'French' }, languageCode: 'fr', vssId: '.fr' },
+      { baseUrl: tt('lang=ja&kind=asr&fail=1'), name: { simpleText: 'Japanese (auto-generated)' }, languageCode: 'ja', vssId: 'a.ja', kind: 'asr' },
+    ],
     ccccccccccc: [{ baseUrl: tt('lang=de&xml=1'), name: { simpleText: 'German' }, languageCode: 'de', vssId: '.de' }],
   };
   const LIVE = { liveliveliv: { isLive: true }, upcomingvid: { isUpcoming: true } };

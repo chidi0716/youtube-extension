@@ -1,8 +1,11 @@
 // 字幕面板（002 FR-40 至 FR-45）：字幕清單分成「上傳的字幕」與「自動產生的字幕」兩組，可選擇檔案格式，
-// 由擴充功能直接下載並轉換（不需要橋接程式）。直接下載失敗時顯示錯誤並說明安裝橋接程式可改善
-// （改用橋接程式的部分在 T21）。
+// 由擴充功能直接下載並轉換（不需要橋接程式）。直接下載失敗時，若橋接程式可用就改由 yt-dlp 下載（T21），
+// 否則顯示錯誤並說明安裝橋接程式可改善（FR-44）。
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { currentTitle, sendToBackground } from '@/features/downloads/content';
+import { checkHostStatus, HostError, startDownload } from '@/features/downloads/host-client';
+import { canDownload } from '@/features/downloads/host-status';
+import type { JobRecord } from '@/features/downloads/jobs';
 import { orderCaptions } from '@/features/downloads/logic';
 import { CAPTION_FORMATS, type CaptionFormat } from '@/utils/filename';
 import { t, type MessageKey } from '@/utils/i18n';
@@ -11,6 +14,7 @@ import { player } from '@/utils/youtube/player';
 import { Button } from '../controls/Button';
 import { Select } from '../controls/Select';
 import { Icon } from '../icons';
+import { ErrorBlock, JobList } from './JobList';
 import { PanelError, PanelLoading } from './PanelStatus';
 import { isLiveOrUpcoming, useVideoData } from './useVideoData';
 
@@ -22,7 +26,16 @@ const FORMAT_LABELS: Record<CaptionFormat, MessageKey> = {
 const SAVED_MS = 2500;
 
 type TracksState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; tracks: CaptionTrack[] };
-type DownloadState = { state: 'idle' } | { state: 'saving' } | { state: 'saved' } | { state: 'failed' };
+type DownloadState =
+  | { state: 'idle' }
+  | { state: 'saving' }
+  | { state: 'saved' }
+  /** 直接下載失敗，橋接程式也無法使用。 */
+  | { state: 'failed' }
+  /** 直接下載失敗，已改由橋接程式（yt-dlp）下載（T21）。 */
+  | { state: 'viaHost' }
+  /** 改用橋接程式時失敗。 */
+  | { state: 'hostFailed'; code: JobRecord['error'] };
 
 const trackId = (track: CaptionTrack) => `${track.isAuto ? 'auto' : 'up'}-${track.languageCode}-${track.url.length}`;
 
@@ -78,7 +91,30 @@ export function SubtitlePanel({ videoId }: { videoId: string }) {
       url: selected.url,
       format,
     });
-    setDownload({ state: res.ok ? 'saved' : 'failed' });
+    if (res.ok) {
+      setDownload({ state: 'saved' });
+      return;
+    }
+    // 直接下載失敗：橋接程式可用時改由 yt-dlp 下載（FR-44，T21），存到設定頁指定的下載資料夾（FR-45）。
+    const host = await checkHostStatus();
+    if (!canDownload(host)) {
+      setDownload({ state: 'failed' });
+      return;
+    }
+    try {
+      await startDownload({
+        kind: 'subtitle',
+        videoId,
+        title,
+        label: `${selected.name} ${format.toUpperCase()}`,
+        subLang: selected.languageCode,
+        subFormat: format,
+        subAuto: selected.isAuto,
+      });
+      setDownload({ state: 'viaHost' });
+    } catch (err) {
+      setDownload({ state: 'hostFailed', code: err instanceof HostError ? err.code : 'UNKNOWN' });
+    }
   };
 
   const group = (key: 'uploaded' | 'auto', title: MessageKey) => {
@@ -131,6 +167,13 @@ export function SubtitlePanel({ videoId }: { videoId: string }) {
           </span>
         )}
       </p>
+      {download.state === 'viaHost' && (
+        <p class="yte-hint yte-subs-via-host" role="status">
+          {t('subtitlesViaHost')}
+        </p>
+      )}
+      {download.state === 'hostFailed' && <ErrorBlock code={download.code} onRetry={() => void start()} />}
+      <JobList videoId={videoId} kind="subtitle" />
       {download.state === 'failed' && (
         <div class="yte-status yte-status-error yte-subs-error" role="alert">
           <Icon name="error" />
