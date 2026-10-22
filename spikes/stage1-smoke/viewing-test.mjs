@@ -854,6 +854,170 @@ await section('T10', async (page, context) => {
 });
 
 // ---------------------------------------------------------------------------
+// T10a 觀看輔助功能兩兩組合（003 FR-90、constitution 第 7b 點）
+// ---------------------------------------------------------------------------
+// 每組功能以兩種順序開啟。開啟後檢查：播放器位置與尺寸、是否被遮住、工具列是否可見，以及各功能自己的效果；
+// 有浮動播放器時再捲動檢查浮出的位置與尺寸；最後全部關閉，確認回到原狀。
+const COMBO_FEATURES = {
+  cinema: {
+    label: '劇院模式',
+    on: async (page) => button(page, 'cinema').click(),
+    off: async (page) => {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(150);
+      if ((await pressed(page, 'cinema')).pressed === 'true') await button(page, 'cinema').click();
+    },
+    active: (s) => s.cinema && s.dimmed <= 0.1,
+  },
+  floating: {
+    label: '浮動播放器',
+    on: async (page) => button(page, 'floating').click(),
+    off: async (page) => button(page, 'floating').click(),
+    active: (s) => s.floatingOn,
+  },
+  loop: {
+    label: '循環播放',
+    on: async (page) => {
+      await button(page, 'loop').click();
+      await page.locator('yte-toolbar .yte-panel #yte-loop-times').fill('99');
+      await page.locator('yte-toolbar .yte-panel .yte-button-primary').click();
+      await page.keyboard.press('Escape'); // 收起面板（循環繼續進行；劇院模式中也只收起面板）
+    },
+    off: async (page) => {
+      await button(page, 'loop').click();
+      await page.locator('yte-toolbar .yte-panel .yte-button-secondary').click();
+      await page.keyboard.press('Escape');
+    },
+    active: (s) => s.loopOn,
+  },
+  audioOnly: {
+    label: '純音訊模式',
+    on: async (page) => {
+      await button(page, 'more').click();
+      await page.locator('yte-toolbar .yte-more-item[data-item="audioOnly"] [role="switch"]').click();
+      await page.keyboard.press('Escape');
+    },
+    off: async (page) => {
+      await button(page, 'more').click();
+      await page.locator('yte-toolbar .yte-more-item[data-item="audioOnly"] [role="switch"]').click();
+      await page.keyboard.press('Escape');
+    },
+    active: (s) => s.audioOnly,
+  },
+  pip: {
+    label: '子母畫面',
+    on: async (page) => button(page, 'pip').click(),
+    off: async (page) => page.evaluate(() => document.exitPictureInPicture()),
+    active: (s) => s.pip,
+  },
+};
+
+/** 目前的版面與各功能狀態。 */
+const comboState = (page) =>
+  page.evaluate(() => {
+    const c = document.querySelector('ytd-watch-flexy #player-container');
+    const r = c.getBoundingClientRect();
+    const player = document.querySelector('#movie_player').getBoundingClientRect();
+    const hit = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      return el?.closest('yte-toolbar') ? 'toolbar' : el?.closest('#movie_player') ? 'player' : el ? el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') : 'none';
+    };
+    const shadow = document.querySelector('yte-toolbar')?.shadowRoot;
+    const tb = shadow?.querySelector('.yte-btn[data-button="cinema"]')?.getBoundingClientRect();
+    const opacity = (el) => {
+      let o = 1;
+      for (let e = el; e; e = e.parentElement) o *= Number(getComputedStyle(e).opacity);
+      return Math.round(o * 100) / 100;
+    };
+    const video = document.querySelector('video');
+    return {
+      scrollY: Math.round(scrollY),
+      floating: c.classList.contains('yte-floating'),
+      rect: [r.left, r.top, r.width, r.height].map(Math.round).join(','),
+      playerHit: hit(player.left + player.width / 2, player.top + player.height / 2),
+      playerOpacity: opacity(document.querySelector('#movie_player')),
+      toolbarHit: tb ? hit(tb.left + tb.width / 2, tb.top + tb.height / 2) : 'missing',
+      cinema: document.documentElement.classList.contains('yte-cinema'),
+      dimmed: opacity(document.querySelector('#secondary a')),
+      floatingOn: shadow?.querySelector('.yte-btn[data-button="floating"]')?.getAttribute('aria-pressed') === 'true',
+      loopOn: shadow?.querySelector('.yte-btn[data-button="loop"]')?.hasAttribute('data-on') ?? false,
+      audioOnly: getComputedStyle(video).opacity === '0' && getComputedStyle(document.querySelector('.html5-video-container')).backgroundImage.includes('hqdefault'),
+      pip: document.pictureInPictureElement === video,
+      floatingControls: !!document.querySelector('yte-floating-controls'),
+    };
+  });
+
+async function comboPair(page, original, first, second) {
+  const [a, b] = [COMBO_FEATURES[first], COMBO_FEATURES[second]];
+  const name = `${a.label}→${b.label}`;
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(200);
+  await a.on(page);
+  await page.waitForTimeout(400);
+  await b.on(page);
+  await page.waitForTimeout(400);
+  // 點面板中的按鈕時 Playwright 會先把面板捲到畫面內（例如循環播放），檢查前捲回頂端
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400);
+  let s = await comboState(page);
+  const problems = [];
+  if (!a.active(s)) problems.push(`${a.label} 沒有作用`);
+  if (!b.active(s)) problems.push(`${b.label} 沒有作用`);
+  if (s.floating || s.rect !== original.rect) problems.push(`播放器位置或尺寸改變 ${s.rect} floating=${s.floating}`);
+  if (s.playerHit !== 'player') problems.push(`播放器被遮住（${s.playerHit}）`);
+  if (s.playerOpacity !== 1) problems.push(`播放器變暗 ${s.playerOpacity}`);
+  if (s.toolbarHit !== 'toolbar') problems.push(`工具列不可見（${s.toolbarHit}）`);
+  check(`${name}：兩個功能都作用，播放器原位、大小正常、沒被遮住，工具列可見（FR-90）`, problems.length === 0, problems.join('；') || s.rect);
+
+  // 有浮動播放器時往下捲：劇院模式中不浮出（FR-45），否則浮到右下角、大小正確、沒被遮住
+  if (first === 'floating' || second === 'floating') {
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.waitForTimeout(500);
+    s = await comboState(page);
+    const expectFloat = !s.cinema;
+    const ok = expectFloat
+      ? s.floating && s.rect === '944,704,320,180' && s.playerHit === 'player' && s.floatingControls && s.playerOpacity === 1
+      : !s.floating;
+    check(`${name}：往下捲時${expectFloat ? '浮到右下角，大小正確、沒被遮住' : '不浮出（劇院模式期間，FR-45）'}`, ok, JSON.stringify(s));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+  }
+
+  // 依相反順序關閉，回到原狀
+  await b.off(page);
+  await page.waitForTimeout(300);
+  await a.off(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(500);
+  s = await comboState(page);
+  const clean = !s.cinema && !s.floatingOn && !s.loopOn && !s.audioOnly && !s.pip && !s.floating && s.rect === original.rect && s.toolbarHit === 'toolbar';
+  check(`${name}：全部關閉後回到原狀`, clean, JSON.stringify(s));
+}
+
+for (const [x, y] of [
+  ['cinema', 'floating'],
+  ['cinema', 'loop'],
+  ['floating', 'audioOnly'],
+  ['floating', 'pip'],
+  ['cinema', 'audioOnly'],
+  ['cinema', 'pip'],
+  ['floating', 'loop'],
+  ['audioOnly', 'pip'],
+]) {
+  await section('T10a', async (page) => {
+    await page.evaluate(() => {
+      const v = document.querySelector('video');
+      v.muted = true;
+      return v.play();
+    });
+    await page.waitForTimeout(300);
+    const original = await comboState(page);
+    await comboPair(page, original, x, y);
+    await comboPair(page, original, y, x);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 「啟用」關閉時停用所有觀看輔助功能（QUESTIONS Q11 的目前做法）
 // ---------------------------------------------------------------------------
 await section('DISABLE', async (page, context) => {
