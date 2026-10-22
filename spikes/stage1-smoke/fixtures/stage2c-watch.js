@@ -290,6 +290,38 @@
   browse.src = '/__fixture/browse.js';
   document.body.append(browse);
 
+  // -------------------------------------------------------------------------
+  // 字幕清單與直播狀態（階段 4a，002 FR-1、FR-40 至 FR-44）。影片資料的結構依 YouTube 公開的影片資料：
+  // captions.playerCaptionsTracklistRenderer.captionTracks[]（baseUrl、name、languageCode、vssId、kind）。
+  // 字幕檔由 lib.mjs 的 /api/timedtext 回應。
+  // -------------------------------------------------------------------------
+  const tt = (params) => `https://www.youtube.com/api/timedtext?v=${videoId()}&${params}`;
+  const CAPTIONS = {
+    jNQXAC9IVRw: [
+      { baseUrl: tt('lang=en'), name: { simpleText: 'English' }, languageCode: 'en', vssId: '.en' },
+      { baseUrl: tt('lang=ja'), name: { simpleText: 'Japanese' }, languageCode: 'ja', vssId: '.ja' },
+      { baseUrl: tt('lang=zh-TW'), name: { runs: [{ text: 'Chinese (Taiwan)' }] }, languageCode: 'zh-TW', vssId: '.zh-TW' },
+      { baseUrl: tt('lang=en&kind=asr'), name: { simpleText: 'English (auto-generated)' }, languageCode: 'en', vssId: 'a.en', kind: 'asr' },
+      // 網域不對的項目必須被頁面橋接腳本排除
+      { baseUrl: 'https://evil.example/api/timedtext?lang=xx', name: { simpleText: 'Evil' }, languageCode: 'xx', vssId: '.xx' },
+    ],
+    bbbbbbbbbbb: [{ baseUrl: tt('lang=fr&fail=1'), name: { simpleText: 'French' }, languageCode: 'fr', vssId: '.fr' }],
+    ccccccccccc: [{ baseUrl: tt('lang=de&xml=1'), name: { simpleText: 'German' }, languageCode: 'de', vssId: '.de' }],
+  };
+  const LIVE = { liveliveliv: { isLive: true }, upcomingvid: { isUpcoming: true } };
+  const baseResponse = player.getPlayerResponse;
+  player.getPlayerResponse = () => {
+    const res = baseResponse();
+    const state = LIVE[videoId()] ?? {};
+    return {
+      ...res,
+      videoDetails: { ...res.videoDetails, isLive: !!state.isLive, isUpcoming: !!state.isUpcoming },
+      ...(CAPTIONS[videoId()] ? { captions: { playerCaptionsTracklistRenderer: { captionTracks: CAPTIONS[videoId()] } } } : {}),
+    };
+  };
+  const baseVideoData = player.getVideoData;
+  player.getVideoData = () => ({ ...baseVideoData(), isLive: !!LIVE[videoId()]?.isLive });
+
   // 測試用：站內換頁到任一部假影片（與 watch.html 中 #secondary 連結的處理相同）。
   window.__fixtureNavigate = (id) => {
     history.pushState({}, '', `/watch?v=${id}`);

@@ -1,8 +1,9 @@
-// 背景腳本端：不需要橋接程式的下載（002 FR-30 至 FR-32、FR-50 至 FR-53，plan 3.8）。
+// 背景腳本端：不需要橋接程式的下載（002 FR-30 至 FR-32、FR-44、FR-45、FR-50 至 FR-53，plan 3.8）。
 // 檔案一律以 downloads.download 存到瀏覽器的預設下載位置。
-import { screenshotFilename, thumbnailFilename } from '@/utils/filename';
+import { convertCaption } from '@/utils/captions';
+import { captionFilename, screenshotFilename, thumbnailFilename } from '@/utils/filename';
 import type { ContentMessage, MessageResponse, ThumbnailInfo } from '@/utils/messages';
-import { THUMBNAIL_SIZES, thumbnailSizeUrl } from '@/utils/youtube/dom';
+import { THUMBNAIL_SIZES, thumbnailSizeUrl, validateCaptionUrl } from '@/utils/youtube/dom';
 import { isRealThumbnail } from './logic';
 
 const LOG_PREFIX = '[youtube-extension]';
@@ -120,6 +121,38 @@ async function handle(message: Exclude<ContentMessage, { type: 'openOptions' }>)
       }
     }
 
+    case 'downloadCaption': {
+      const valid = validateCaptionUrl(message.url);
+      if (!valid) return { ok: false, error: 'INVALID' };
+      const url = new URL(valid);
+      url.searchParams.set('fmt', 'vtt');
+      let source: string;
+      try {
+        const res = await fetch(url.href, { credentials: 'include' });
+        if (!res.ok) return { ok: false, error: 'FETCH_FAILED' };
+        source = await res.text();
+      } catch (err) {
+        console.info(`${LOG_PREFIX} caption fetch failed`, err);
+        return { ok: false, error: 'FETCH_FAILED' };
+      }
+      const text = convertCaption(source, message.format);
+      if (text === null) {
+        console.info(`${LOG_PREFIX} caption response was empty or not a caption file (${source.length} chars)`);
+        return { ok: false, error: 'EMPTY' };
+      }
+      try {
+        // SRT、VTT 以 application/octet-stream 存檔：瀏覽器可能依 text/plain 把副檔名改成 .txt。
+        const type = message.format === 'txt' ? 'text/plain;charset=utf-8' : 'application/octet-stream';
+        await downloadBlob(
+          new Blob([text], { type }),
+          captionFilename(message.title, message.videoId, message.languageCode, message.format),
+        );
+        return { ok: true };
+      } catch (err) {
+        console.info(`${LOG_PREFIX} caption download failed`, err);
+        return { ok: false, error: 'DOWNLOAD_FAILED' };
+      }
+    }
   }
 }
 

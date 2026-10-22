@@ -189,6 +189,134 @@ await section('T17', async (page, context, dl) => {
   check('縮圖與截圖不需要橋接程式（FR-32、FR-53）', listFiles(dl).length === 3, listFiles(dl).join(', '));
 });
 
+// ---------------------------------------------------------------------------
+// T21a 字幕直接下載（002 FR-40 至 FR-45）
+// ---------------------------------------------------------------------------
+const subsState = (page) =>
+  page.evaluate(() => {
+    const root = document.querySelector('yte-toolbar').shadowRoot;
+    const group = (key) =>
+      [...root.querySelectorAll(`.yte-subs-group[data-group="${key}"] .yte-subs-track`)].map((l) => ({
+        name: l.textContent.trim(),
+        lang: l.dataset.lang,
+        checked: l.querySelector('input').checked,
+        icon: !!l.querySelector('.yte-subs-auto svg'),
+      }));
+    return {
+      legends: [...root.querySelectorAll('.yte-subs-legend')].map((l) => l.textContent),
+      uploaded: group('uploaded'),
+      auto: group('auto'),
+      formats: [...root.querySelectorAll('#yte-subs-format option')].map((o) => `${o.value}:${o.textContent}`),
+      format: root.querySelector('#yte-subs-format')?.value,
+    };
+  });
+const openSubs = async (page) => {
+  await button(page, 'subtitles').click();
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-panel');
+    return panel && !panel.querySelector('.yte-spinner');
+  });
+};
+const chooseTrack = (page, group, lang) => page.locator(`yte-toolbar .yte-subs-group[data-group="${group}"] .yte-subs-track[data-lang="${lang}"] input`).check();
+const downloadSubs = (page) => page.locator('yte-toolbar .yte-subs .yte-button-primary').click();
+
+await section('T21a', async (page, context, dl) => {
+  await openSubs(page);
+  const s = await subsState(page);
+  check(
+    '字幕分為「上傳的字幕」與「自動產生的字幕」兩組，自動產生的以圖示標記（FR-40）',
+    s.legends.join('|') === 'Uploaded subtitles|Auto-generated subtitles' &&
+      s.uploaded.length === 3 &&
+      s.auto.length === 1 &&
+      s.auto[0].icon &&
+      s.uploaded.every((t) => !t.icon),
+    `${s.uploaded.map((t) => t.name).join(', ')} / ${s.auto.map((t) => t.name).join(', ')}`,
+  );
+  check('網域不是 youtube.com 的字幕不出現在清單中（plan 3.8）', ![...s.uploaded, ...s.auto].some((t) => t.lang === 'xx'));
+  check('格式可選 SRT（預設）、VTT、純文字（FR-41）', s.formats.join() === 'srt:SRT,vtt:VTT,txt:Text only (TXT)' && s.format === 'srt', s.formats.join());
+  check('預設選中與瀏覽器語言（en-US）相同的字幕，並排在清單最上方（FR-43）', s.uploaded[0].lang === 'en' && s.uploaded[0].checked, JSON.stringify(s.uploaded[0]));
+  await shot(page, 'T21a-subtitles-panel.png');
+
+  // SRT（上傳的英文字幕）
+  await downloadSubs(page);
+  const srt = (await waitForFile(dl, 'Fixture video [jNQXAC9IVRw].en.srt'))?.toString('utf8');
+  check(
+    '下載的 SRT 時間碼正確（FR-41、FR-44）',
+    srt === '1\n00:00:01,000 --> 00:00:04,500\nHello & welcome to the fixture\n\n2\n00:01:02,250 --> 00:01:05,000\nThis is the second line\n',
+    JSON.stringify(srt),
+  );
+  check('字幕以 fmt=vtt 從 YouTube 的字幕網址取得', captionRequests.some((q) => /lang=en/.test(q) && /fmt=vtt/.test(q)), captionRequests.join(' '));
+  await page.waitForTimeout(150);
+  check('完成後顯示「已存到下載資料夾」', /Saved to Downloads/.test(await panelText(page)));
+
+  // TXT（自動產生的字幕）
+  await chooseTrack(page, 'auto', 'en');
+  await page.locator('yte-toolbar #yte-subs-format').selectOption('txt');
+  await downloadSubs(page);
+  const txt = (await waitForFile(dl, 'Fixture video [jNQXAC9IVRw].en.txt'))?.toString('utf8');
+  check('選 TXT 時沒有時間碼，自動字幕的重複行只保留一次（FR-41）', txt === 'so today we\nare testing\n', JSON.stringify(txt));
+
+  // VTT（中文）
+  await chooseTrack(page, 'uploaded', 'zh-TW');
+  await page.locator('yte-toolbar #yte-subs-format').selectOption('vtt');
+  await downloadSubs(page);
+  const vtt = (await waitForFile(dl, 'Fixture video [jNQXAC9IVRw].zh-TW.vtt'))?.toString('utf8');
+  check('VTT 原樣保留，中文正確（FR-41）', !!vtt && vtt.startsWith('WEBVTT') && vtt.includes('你好，歡迎') && vtt.includes('00:01:02.250 --> 00:01:05.000'), JSON.stringify(vtt?.slice(0, 80)));
+  check('字幕直接存到瀏覽器的下載資料夾，不需要橋接程式（FR-44、FR-45）', listFiles(dl).length === 3, listFiles(dl).join(', '));
+  await page.keyboard.press('Escape');
+
+  // YouTube 的 XML 格式
+  await page.evaluate(() => window.__fixtureNavigate('ccccccccccc'));
+  await page.waitForTimeout(300);
+  await openSubs(page);
+  await downloadSubs(page);
+  const xmlSrt = (await waitForFile(dl, 'Fixture video ccccccccccc [ccccccccccc].de.srt'))?.toString('utf8');
+  check(
+    'YouTube 回傳 XML 格式時也能轉成 SRT（plan 3.8）',
+    xmlSrt === "1\n00:00:01,500 --> 00:00:03,500\nIt's XML & fine\n\n2\n00:01:02,250 --> 00:01:05,000\nSecond XML line\n",
+    JSON.stringify(xmlSrt),
+  );
+  await page.keyboard.press('Escape');
+
+  // 直接下載失敗
+  await page.evaluate(() => window.__fixtureNavigate('bbbbbbbbbbb'));
+  await page.waitForTimeout(300);
+  await openSubs(page);
+  await downloadSubs(page);
+  await page.waitForSelector('yte-toolbar .yte-subs-error', { timeout: 5000 });
+  const err = await page.evaluate(() => {
+    const e = document.querySelector('yte-toolbar').shadowRoot.querySelector('.yte-subs-error');
+    return { text: e.textContent, retry: !!e.querySelector('button') };
+  });
+  check('直接下載失敗時顯示錯誤，說明安裝橋接程式可改善，並可重試（FR-44）', /helper program/.test(err.text) && /yt-dlp/.test(err.text) && err.retry, err.text);
+  await shot(page, 'T21a-subtitles-direct-failed.png');
+  await page.keyboard.press('Escape');
+
+  // 沒有字幕
+  await page.evaluate(() => window.__fixtureNavigate('aaaaaaaaaaa'));
+  await page.waitForTimeout(300);
+  await openSubs(page);
+  check('沒有任何字幕時顯示「這部影片沒有字幕」（FR-42）', (await panelText(page)).includes('This video has no subtitles.'));
+  await page.keyboard.press('Escape');
+
+  // 直播
+  await page.evaluate(() => window.__fixtureNavigate('liveliveliv'));
+  await page.waitForTimeout(300);
+  await openSubs(page);
+  check('直播中的影片，字幕面板顯示無法下載（FR-1）', (await panelText(page)).includes("Live and upcoming videos can't be downloaded."));
+});
+
+await section(
+  'T21a-zh',
+  async (page) => {
+    await openSubs(page);
+    const s = await subsState(page);
+    check('瀏覽器語言為繁體中文時預設選中「Chinese (Taiwan)」並排在最上方（FR-43）', s.uploaded[0].lang === 'zh-TW' && s.uploaded[0].checked, JSON.stringify(s.uploaded.map((t) => t.lang)));
+    check('繁體中文介面（NFR-4）', s.legends.join('|') === '上傳的字幕|自動產生的字幕', s.legends.join('|'));
+  },
+  { lang: 'zh-TW' },
+);
+
 if (!summary()) process.exitCode = 1;
 void EXT_ID;
 void skip;

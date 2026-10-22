@@ -548,3 +548,65 @@ export function isThumbnailKey(value: unknown): value is ThumbnailKey {
 export function thumbnailSizeUrl(videoId: string, key: ThumbnailKey): string {
   return `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/${key}.jpg`;
 }
+
+// ---------------------------------------------------------------------------
+// 字幕清單（002 FR-40、FR-44、plan 3.8）：播放器影片資料（getPlayerResponse()）中的
+// captions.playerCaptionsTracklistRenderer.captionTracks；每項有 baseUrl、name（simpleText 或 runs）、
+// languageCode、vssId，自動產生的字幕 kind 為 "asr"（vssId 以 "a." 開頭）。
+// 本環境的觀看頁影片無法播放，影片資料中沒有字幕清單，這個結構依 YouTube 公開可見的影片資料，未在真實頁面確認
+// （spikes/stage4a/results-captions.txt）。
+// ---------------------------------------------------------------------------
+
+export interface CaptionTrack {
+  languageCode: string;
+  /** YouTube 顯示的字幕名稱，例如 "English (auto-generated)"。 */
+  name: string;
+  /** 自動產生的字幕。 */
+  isAuto: boolean;
+  /** 字幕網址（已驗證為 https 的 youtube.com 網域）。 */
+  url: string;
+}
+
+/** 字幕語言代碼的格式（與 plan 4.4 的 subLang 相同）。 */
+export const CAPTION_LANGUAGE_PATTERN = /^[A-Za-z0-9-]{1,20}$/;
+
+/**
+ * 字幕網址必須是 https 的 youtube.com 或其子網域（plan 3.8）；相對網址以 https://www.youtube.com 解析。
+ * 合法時回傳完整網址，否則回傳 null。
+ */
+export function validateCaptionUrl(raw: unknown): string | null {
+  if (typeof raw !== 'string' || raw.length > 4000) return null;
+  let url: URL;
+  try {
+    url = new URL(raw, 'https://www.youtube.com');
+  } catch {
+    return null;
+  }
+  const host = url.hostname.toLowerCase();
+  const ok = url.protocol === 'https:' && !url.username && !url.password && !url.port && (host === 'youtube.com' || host.endsWith('.youtube.com'));
+  return ok ? url.href : null;
+}
+
+const textOf = (value: unknown): string => {
+  if (!isRecord(value)) return '';
+  if (typeof value.simpleText === 'string') return value.simpleText;
+  return Array.isArray(value.runs) ? value.runs.map((r) => (isRecord(r) && typeof r.text === 'string' ? r.text : '')).join('') : '';
+};
+
+/** 讀出字幕清單；格式不對或網址不是 youtube.com 的項目略過。 */
+export function readCaptionTracks(player: { getPlayerResponse?: () => unknown }): CaptionTrack[] {
+  const response = player.getPlayerResponse?.();
+  const captions = isRecord(response) ? response.captions : undefined;
+  const renderer = isRecord(captions) ? captions.playerCaptionsTracklistRenderer : undefined;
+  const tracks = isRecord(renderer) && Array.isArray(renderer.captionTracks) ? renderer.captionTracks : [];
+  const out: CaptionTrack[] = [];
+  for (const t of tracks.slice(0, 200)) {
+    if (!isRecord(t)) continue;
+    const languageCode = typeof t.languageCode === 'string' ? t.languageCode : '';
+    const url = validateCaptionUrl(t.baseUrl);
+    if (!CAPTION_LANGUAGE_PATTERN.test(languageCode) || !url) continue;
+    const isAuto = t.kind === 'asr' || (typeof t.vssId === 'string' && t.vssId.startsWith('a.'));
+    out.push({ languageCode, name: textOf(t.name).slice(0, 100) || languageCode, isAuto, url });
+  }
+  return out;
+}

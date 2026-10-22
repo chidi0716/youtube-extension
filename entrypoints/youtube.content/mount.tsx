@@ -11,6 +11,7 @@ import { HelpPanel } from '@/components/panels/HelpPanel';
 import { LinkPanel } from '@/components/panels/LinkPanel';
 import { LoopPanel } from '@/components/panels/LoopPanel';
 import { MorePanel, type MoreItem, type MoreSwitchItem } from '@/components/panels/MorePanel';
+import { SubtitlePanel } from '@/components/panels/SubtitlePanel';
 import { ThumbnailPanel } from '@/components/panels/ThumbnailPanel';
 import panelsCss from '@/components/panels/panels.css?inline';
 import type { ButtonId } from '@/components/toolbar/buttons';
@@ -116,9 +117,11 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         return <LoopPanel loop={viewing.loop} />;
       case 'more':
         return <MorePanel items={moreItems} onOpen={refreshMore} />;
-      // 下載（階段 4a）：縮圖不需要橋接程式。
+      // 下載（階段 4a）：縮圖、字幕不需要橋接程式。
       case 'thumbnail':
         return videoId ? <ThumbnailPanel videoId={videoId} /> : undefined;
+      case 'subtitles':
+        return videoId ? <SubtitlePanel videoId={videoId} /> : undefined;
       default:
         return undefined;
     }

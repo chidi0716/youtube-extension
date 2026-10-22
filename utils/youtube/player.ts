@@ -57,6 +57,7 @@ export const player = {
   setQuality: (quality: BridgeQuality) => callPageBridge('setQuality', { quality }),
   getAudioTracks: () => callPageBridge('getAudioTracks', {}),
   setAudioTrack: (trackId: string) => callPageBridge('setAudioTrack', { trackId }),
+  getCaptionTracks: () => callPageBridge('getCaptionTracks', {}),
 };
 
 type BridgeQuality = Extract<BridgeRequest, { type: 'setQuality' }>['quality'];

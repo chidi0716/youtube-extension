@@ -1,6 +1,7 @@
 // 內容腳本 → 背景腳本的訊息型別（plan 3.1）。背景腳本只處理通過驗證的訊息。
-// 下載相關的訊息（階段 4a）只帶影片 ID、尺寸代號等經過驗證的值；檔名與縮圖網址由背景腳本組出。
-import { isThumbnailKey, type ThumbnailKey } from './youtube/dom';
+// 下載相關的訊息（階段 4a）只帶影片 ID、尺寸代號、字幕網址等經過驗證的值；檔名與縮圖網址由背景腳本組出。
+import { CAPTION_FORMATS, type CaptionFormat } from './filename';
+import { CAPTION_LANGUAGE_PATTERN, isThumbnailKey, validateCaptionUrl, type ThumbnailKey } from './youtube/dom';
 import { isValidVideoId } from './youtube/page';
 
 /** 標題的長度上限（字元）；過長的部分在檔名中也會被截斷。 */
@@ -17,7 +18,9 @@ export type ContentMessage =
   /** 下載某個尺寸的縮圖（002 FR-31）。 */
   | { type: 'downloadThumbnail'; videoId: string; title: string; key: ThumbnailKey }
   /** 儲存截圖（002 FR-50、FR-51）：內容腳本畫好的 PNG。 */
-  | { type: 'saveScreenshot'; videoId: string; title: string; seconds: number; dataUrl: string };
+  | { type: 'saveScreenshot'; videoId: string; title: string; seconds: number; dataUrl: string }
+  /** 直接下載字幕（002 FR-44）。 */
+  | { type: 'downloadCaption'; videoId: string; title: string; languageCode: string; url: string; format: CaptionFormat };
 
 export type DownloadError = 'INVALID' | 'NOT_FOUND' | 'FETCH_FAILED' | 'EMPTY' | 'DOWNLOAD_FAILED';
 
@@ -53,6 +56,15 @@ export function isContentMessage(value: unknown): value is ContentMessage {
         m.dataUrl.startsWith(SCREENSHOT_DATA_URL_PREFIX) &&
         m.dataUrl.length <= MAX_SCREENSHOT_DATA_URL &&
         /^[A-Za-z0-9+/]*={0,2}$/.test(m.dataUrl.slice(SCREENSHOT_DATA_URL_PREFIX.length, SCREENSHOT_DATA_URL_PREFIX.length + 4096))
+      );
+    case 'downloadCaption':
+      return (
+        isValidVideoId(m.videoId) &&
+        isTitle(m.title) &&
+        typeof m.languageCode === 'string' &&
+        CAPTION_LANGUAGE_PATTERN.test(m.languageCode) &&
+        validateCaptionUrl(m.url) !== null &&
+        (CAPTION_FORMATS as readonly unknown[]).includes(m.format)
       );
     default:
       return false;

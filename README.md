@@ -45,7 +45,7 @@ Browser extensions cannot run yt-dlp directly, so a small helper program (writte
 Toolbar on YouTube  →  extension background  →  local helper  →  yt-dlp  →  ffmpeg
 ```
 
-Installation scripts for macOS and Windows will be provided. Thumbnails, screenshots and all viewing tools work without the helper.
+Installation scripts for macOS and Windows will be provided. Thumbnails, screenshots, subtitles and all viewing tools work without the helper.
 
 ## Development
 

@@ -297,3 +297,67 @@ describe('語音軌請求（005 FR-10、plan 3.7.2）', () => {
     expect(handleBridgeRequest({ id: 'a', type: 'setAudioTrack', trackId: 'en.4' }, p)).toEqual({ id: 'a', ok: true, result: false });
   });
 });
+
+describe('字幕清單請求（002 FR-44、plan 3.8）', () => {
+  const response = (captionTracks: unknown) => () => ({ videoDetails: {}, captions: { playerCaptionsTracklistRenderer: { captionTracks } } }) as never;
+
+  it('接受不帶參數的 getCaptionTracks，多餘的欄位不會被帶進請求', () => {
+    expect(req({ id: 'c', type: 'getCaptionTracks' })).toEqual({ id: 'c', type: 'getCaptionTracks' });
+    expect(req({ id: 'c', type: 'getCaptionTracks', url: 'https://evil.example/' })).toEqual({ id: 'c', type: 'getCaptionTracks' });
+  });
+
+  it('回傳語言代碼、名稱、是否自動產生與完整的字幕網址', () => {
+    const p = fakePlayer({
+      getPlayerResponse: response([
+        { baseUrl: 'https://www.youtube.com/api/timedtext?v=x&lang=en', name: { simpleText: 'English' }, languageCode: 'en', vssId: '.en' },
+        { baseUrl: '/api/timedtext?v=x&lang=en&kind=asr', name: { runs: [{ text: 'English' }, { text: ' (auto-generated)' }] }, languageCode: 'en', vssId: 'a.en', kind: 'asr' },
+        { baseUrl: 'https://youtube.com/api/timedtext?lang=zh-TW', name: { simpleText: '中文（台灣）' }, languageCode: 'zh-TW', vssId: '.zh-TW' },
+      ]),
+    });
+    expect(handleBridgeRequest({ id: 'a', type: 'getCaptionTracks' }, p)).toEqual({
+      id: 'a',
+      ok: true,
+      result: [
+        { languageCode: 'en', name: 'English', isAuto: false, url: 'https://www.youtube.com/api/timedtext?v=x&lang=en' },
+        { languageCode: 'en', name: 'English (auto-generated)', isAuto: true, url: 'https://www.youtube.com/api/timedtext?v=x&lang=en&kind=asr' },
+        { languageCode: 'zh-TW', name: '中文（台灣）', isAuto: false, url: 'https://youtube.com/api/timedtext?lang=zh-TW' },
+      ],
+    });
+  });
+
+  it('字幕網址不是 https 的 youtube.com 網域時略過該項', () => {
+    const bad = [
+      'https://evil.example/api/timedtext',
+      'https://youtube.com.evil.example/x',
+      'https://notyoutube.com/x',
+      'http://www.youtube.com/api/timedtext',
+      'https://user:pw@www.youtube.com/api/timedtext',
+      'https://www.youtube.com:8443/api/timedtext',
+      'javascript:alert(1)',
+      '//evil.example/x',
+      42,
+    ];
+    const p = fakePlayer({ getPlayerResponse: response(bad.map((baseUrl) => ({ baseUrl, languageCode: 'en', name: { simpleText: 'x' } }))) });
+    expect(handleBridgeRequest({ id: 'a', type: 'getCaptionTracks' }, p)).toEqual({ id: 'a', ok: true, result: [] });
+  });
+
+  it('語言代碼格式不對的項目略過', () => {
+    const p = fakePlayer({
+      getPlayerResponse: response([
+        { baseUrl: 'https://www.youtube.com/api/timedtext', languageCode: '../en' },
+        { baseUrl: 'https://www.youtube.com/api/timedtext', languageCode: '' },
+        { baseUrl: 'https://www.youtube.com/api/timedtext', languageCode: 'pt-BR' },
+      ]),
+    });
+    expect(handleBridgeRequest({ id: 'a', type: 'getCaptionTracks' }, p)).toMatchObject({ result: [{ languageCode: 'pt-BR', name: 'pt-BR', isAuto: false }] });
+  });
+
+  it('沒有字幕或影片資料格式不同時回傳空陣列', () => {
+    expect(handleBridgeRequest({ id: 'a', type: 'getCaptionTracks' }, fakePlayer())).toEqual({ id: 'a', ok: true, result: [] });
+    expect(handleBridgeRequest({ id: 'a', type: 'getCaptionTracks' }, fakePlayer({ getPlayerResponse: response('nope') }))).toEqual({
+      id: 'a',
+      ok: true,
+      result: [],
+    });
+  });
+});
