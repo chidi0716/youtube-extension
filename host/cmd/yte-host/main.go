@@ -11,10 +11,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/chidi0716/youtube-extension/host/internal/app"
 	"github.com/chidi0716/youtube-extension/host/internal/commands"
-	"github.com/chidi0716/youtube-extension/host/internal/errs"
 	"github.com/chidi0716/youtube-extension/host/internal/protocol"
-	"github.com/chidi0716/youtube-extension/host/internal/validate"
 )
 
 // version 在建置時以 -ldflags "-X main.version=..." 覆寫。
@@ -56,22 +55,8 @@ func main() {
 	signal.Notify(make(chan os.Signal, 1), syscall.SIGPIPE)
 
 	w := protocol.NewWriter(os.Stdout)
-	d := &commands.Dispatcher{Backend: notImplemented{}}
+	d := &commands.Dispatcher{Backend: app.New(version)}
 	if err := commands.Serve(context.Background(), os.Stdin, w, d); err != nil {
 		os.Exit(1)
 	}
 }
-
-// notImplemented 是 T11 階段的暫時 Backend：驗證通過的指令一律回 UNKNOWN。
-type notImplemented struct{}
-
-func (notImplemented) err() (any, error) { return nil, errs.New(errs.Unknown, "not implemented yet") }
-
-func (n notImplemented) Status(context.Context) (any, error)                       { return n.err() }
-func (n notImplemented) GetInfo(context.Context, string) (any, error)              { return n.err() }
-func (n notImplemented) Download(context.Context, *validate.Download) (any, error) { return n.err() }
-func (n notImplemented) Cancel(context.Context, string) (any, error)               { return n.err() }
-func (n notImplemented) Jobs(context.Context) (any, error)                         { return n.err() }
-func (n notImplemented) Reveal(context.Context, string) (any, error)               { return n.err() }
-func (n notImplemented) PickFolder(context.Context) (any, error)                   { return n.err() }
-func (n notImplemented) UpdateYtDlp(context.Context) (any, error)                  { return n.err() }

@@ -1,0 +1,196 @@
+// Package ytdlp 負責尋找 yt-dlp 與 ffmpeg、組合命令列參數、解析輸出（plan 4.5）。
+package ytdlp
+
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"sort"
+	"strings"
+)
+
+// Env 是尋找執行檔時用到的環境，方便在測試中替換。
+type Env struct {
+	GOOS     string
+	Getenv   func(string) string
+	LookPath func(string) (string, error)
+	Glob     func(string) ([]string, error)
+	IsFile   func(string) bool
+}
+
+// SystemEnv 回傳目前系統的 Env。
+func SystemEnv() Env {
+	return Env{
+		GOOS:     runtime.GOOS,
+		Getenv:   os.Getenv,
+		LookPath: exec.LookPath,
+		Glob:     filepath.Glob,
+		IsFile: func(p string) bool {
+			st, err := os.Stat(p)
+			return err == nil && st.Mode().IsRegular()
+		},
+	}
+}
+
+func (e Env) join(parts ...string) string {
+	if e.GOOS == "windows" {
+		return strings.Join(parts, `\`)
+	}
+	return strings.Join(parts, "/")
+}
+
+// ExtraDirs 是 PATH 以外要找的資料夾（plan 4.5）。瀏覽器啟動的程式在 macOS 上
+// PATH 很短（/usr/bin:/bin:/usr/sbin:/sbin），看不到 Homebrew 安裝的程式。
+func (e Env) ExtraDirs() []string {
+	switch e.GOOS {
+	case "darwin":
+		return []string{"/opt/homebrew/bin", "/usr/local/bin"}
+	case "windows":
+		if la := e.Getenv("LOCALAPPDATA"); la != "" {
+			return []string{e.join(la, "Microsoft", "WinGet", "Links")}
+		}
+	}
+	return nil
+}
+
+// packagePatterns 是 winget 套件資料夾內的位置（Links 沒有建立時的備用）。
+func (e Env) packagePatterns(tool string) []string {
+	if e.GOOS != "windows" {
+		return nil
+	}
+	la := e.Getenv("LOCALAPPDATA")
+	if la == "" {
+		return nil
+	}
+	pkgs := e.join(la, "Microsoft", "WinGet", "Packages")
+	switch tool {
+	case "yt-dlp":
+		return []string{e.join(pkgs, "yt-dlp.yt-dlp_*", "yt-dlp.exe"), e.join(pkgs, "*", "yt-dlp.exe")}
+	case "ffmpeg":
+		return []string{e.join(pkgs, "Gyan.FFmpeg_*", "*", "bin", "ffmpeg.exe"), e.join(pkgs, "*", "*", "bin", "ffmpeg.exe")}
+	}
+	return nil
+}
+
+// Find 依序在 PATH、ExtraDirs、winget 套件資料夾尋找 tool（"yt-dlp" 或 "ffmpeg"）。
+// 找不到時回傳空字串。
+func (e Env) Find(tool string) string {
+	exe := tool
+	if e.GOOS == "windows" {
+		exe += ".exe"
+	}
+	if p, err := e.LookPath(exe); err == nil && p != "" {
+		if abs, err := filepath.Abs(p); err == nil {
+			return abs
+		}
+		return p
+	}
+	for _, dir := range e.ExtraDirs() {
+		if p := e.join(dir, exe); e.IsFile(p) {
+			return p
+		}
+	}
+	for _, pat := range e.packagePatterns(tool) {
+		matches, _ := e.Glob(pat)
+		sort.Sort(sort.Reverse(sort.StringSlice(matches))) // 版本號較新的通常排在後面
+		for _, m := range matches {
+			if e.IsFile(m) {
+				return m
+			}
+		}
+	}
+	return ""
+}
+
+// ChildPath 回傳給 yt-dlp 子程序使用的 PATH：原本的 PATH 加上 ExtraDirs 與
+// 找到的 ffmpeg 所在資料夾，讓 yt-dlp 也找得到 ffprobe 與 JavaScript 執行環境
+// （例如 Homebrew 安裝的 deno）。
+func (e Env) ChildPath(ffmpeg string) string {
+	sep := ":"
+	if e.GOOS == "windows" {
+		sep = ";"
+	}
+	var parts []string
+	seen := map[string]bool{}
+	add := func(p string) {
+		if p != "" && !seen[p] {
+			seen[p] = true
+			parts = append(parts, p)
+		}
+	}
+	for _, p := range strings.Split(e.Getenv("PATH"), sep) {
+		add(p)
+	}
+	for _, p := range e.ExtraDirs() {
+		add(p)
+	}
+	if ffmpeg != "" {
+		if e.GOOS == "windows" {
+			add(ffmpeg[:max(0, strings.LastIndexAny(ffmpeg, `\/`))])
+		} else {
+			add(filepath.Dir(ffmpeg))
+		}
+	}
+	return strings.Join(parts, sep)
+}
+
+// Manager 判斷 yt-dlp 是由哪個套件管理工具安裝的；不是時回傳空字串。
+// path 是找到的路徑，resolved 是解析符號連結後的路徑（Homebrew 會連到 Cellar），
+// head 是檔案開頭的幾百個位元組（pip 安裝的是 Python 腳本）。
+func Manager(goos, path, resolved string, head []byte) string {
+	lower := strings.ToLower(path + "\n" + resolved)
+	switch goos {
+	case "windows":
+		if strings.Contains(lower, `\microsoft\winget\`) || strings.Contains(lower, `/microsoft/winget/`) {
+			return "winget"
+		}
+		if strings.Contains(lower, `\scoop\`) {
+			return "scoop"
+		}
+		if strings.Contains(lower, `\python`) && strings.Contains(lower, `\scripts\`) {
+			return "pip"
+		}
+	default:
+		if strings.Contains(lower, "/cellar/") || strings.Contains(lower, "/homebrew/") {
+			return "homebrew"
+		}
+		if strings.Contains(lower, "/pipx/") {
+			return "pipx"
+		}
+		if strings.Contains(lower, "/opt/local/") {
+			return "macports"
+		}
+		if len(head) > 2 && head[0] == '#' && head[1] == '!' {
+			line, _, _ := strings.Cut(string(head), "\n")
+			// 官方 release 的 yt-dlp 也是以 #!/usr/bin/env python3 開頭的 zip 檔，
+			// pip 產生的腳本則會 import yt_dlp。
+			if strings.Contains(line, "python") && strings.Contains(string(head), "from yt_dlp") {
+				return "pip"
+			}
+		}
+	}
+	return ""
+}
+
+// UpdateCommand 回傳由套件管理工具安裝時的更新指令。
+func UpdateCommand(goos, manager string) string {
+	switch manager {
+	case "homebrew":
+		return "brew upgrade yt-dlp"
+	case "winget":
+		return "winget upgrade --id yt-dlp.yt-dlp"
+	case "scoop":
+		return "scoop update yt-dlp"
+	case "pipx":
+		return "pipx upgrade yt-dlp"
+	case "pip":
+		if goos == "windows" {
+			return "py -m pip install -U yt-dlp"
+		}
+		return "python3 -m pip install -U yt-dlp"
+	case "macports":
+		return "sudo port selfupdate && sudo port upgrade yt-dlp"
+	}
+	return ""
+}
