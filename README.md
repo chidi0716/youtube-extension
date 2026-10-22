@@ -8,7 +8,7 @@ A YouTube browser extension that adds a native-looking toolbar under the video p
 
 ## Features
 
-A toolbar appears between the player and the video title on watch pages. It follows YouTube's light or dark look, can be hidden with ✕ (turn it back on from the extension's popup), and every panel can be pinned.
+A toolbar appears between the player and the video title on watch pages. It follows YouTube's light or dark look, can be hidden with ✕ (turn it back on from the extension's popup), and every panel can be pinned. You can choose which tools appear and in what order (“More” → “Edit toolbar”, or in the settings page); hidden tools stay available from the “More” menu.
 
 **Download tools**
 

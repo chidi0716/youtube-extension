@@ -599,6 +599,50 @@ await session(
 );
 
 // ===========================================================================
+// 006：隱藏的「影片」工具從「更多」使用；下載中時「更多」按鈕顯示提示圓點（006 FR-15、FR-17，T32）
+// ===========================================================================
+await session('hiddenTool', async ({ page }) => {
+  scenario('slow');
+  // 編輯工具列：隱藏「影片」
+  await button(page, 'more').click();
+  await page.waitForSelector('yte-toolbar .yte-more-edit');
+  await page.locator('yte-toolbar .yte-more-edit').click();
+  await page.waitForSelector('yte-toolbar .yte-toolbar[data-editing]');
+  await page.locator('yte-toolbar .yte-edit-item[data-item="video"] .yte-edit-eye').click();
+  await page.locator('yte-toolbar .yte-edit-actions .yte-button-primary').click();
+  await sleep(300);
+  check('T32：「影片」隱藏後不在工具列上', (await button(page, 'video').count()) === 0);
+  // 從「更多」的其他工具開啟影片面板
+  await button(page, 'more').click();
+  await page.locator('yte-toolbar .yte-other-item[data-tool="video"] button').click();
+  await page.waitForSelector('yte-toolbar .yte-quality-row', { timeout: 10_000 });
+  const align = await inToolbar(
+    page,
+    `const p = root.querySelector('.yte-panel').getBoundingClientRect(); const m = root.querySelector('.yte-btn[data-button="more"]').getBoundingClientRect(); return { pr: p.right, mr: m.right, pl: p.left, ml: m.left }`,
+  );
+  check('T32：從「其他工具」開啟影片面板，面板對齊「更多」按鈕（006 FR-15）', Math.abs(align.pr - align.mr) <= 1 || Math.abs(align.pl - align.ml) <= 1, JSON.stringify(align));
+  await page.locator('yte-toolbar .yte-quality-row[data-format="18"]').click();
+  const job = await waitJob(page, (j) => j.state === 'downloading');
+  await page.keyboard.press('Escape');
+  await sleep(300);
+  const dot = await inToolbar(page, `const b = root.querySelector('.yte-btn[data-button="more"]'); return { dot: b.hasAttribute('data-dot'), label: b.getAttribute('aria-label') }`);
+  check('T32：隱藏的「影片」下載中，「更多」按鈕顯示提示圓點（006 FR-17、驗收 7）', !!job && dot.dot, JSON.stringify(dot));
+  await shot(page, 'T32-more-dot-download.png');
+  await button(page, 'more').click();
+  const busy = await inToolbar(page, `return !!root.querySelector('.yte-other-item[data-tool="video"] .yte-other-dot')`);
+  check('T32：「其他工具」中下載中的「影片」有圓點', busy);
+  // 取消後圓點消失
+  await page.locator('yte-toolbar .yte-other-item[data-tool="video"] button').click();
+  await page.waitForSelector(`yte-toolbar .yte-job[data-job="${job?.id}"]`);
+  await page.locator(`yte-toolbar .yte-job[data-job="${job?.id}"] .yte-job-foot button`).click();
+  await sleep(1500);
+  await page.keyboard.press('Escape');
+  await sleep(300);
+  check('T32：取消下載後提示圓點消失', !(await inToolbar(page, `return root.querySelector('.yte-btn[data-button="more"]').hasAttribute('data-dot')`)));
+  scenario('ok');
+});
+
+// ===========================================================================
 // 繁體中文介面
 // ===========================================================================
 await session(

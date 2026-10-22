@@ -47,6 +47,8 @@ const download = page.getByRole('button', { name: 'Download' });
 // 鍵盤調整把手，輸入框同步
 await thumbs.nth(0).focus();
 await page.keyboard.press('ArrowRight');
+// Preact 的重新繪製是非同步的：等畫面更新再讀取（避免讀到按鍵前的值）。
+await page.waitForFunction(() => document.querySelector('[role="slider"]').getAttribute('aria-valuenow') !== '90', null, { timeout: 2000 }).catch(() => {});
 check('方向鍵移動開始把手並同步輸入框', (await thumbs.nth(0).getAttribute('aria-valuenow')) === '91' && (await start.inputValue()) === '00:01:31');
 await page.keyboard.press('End');
 check('開始把手不會超過結束', (await thumbs.nth(0).getAttribute('aria-valuenow')) === '225');

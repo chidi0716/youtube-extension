@@ -191,6 +191,18 @@ try {
     await sleep(200);
   }
   check('Firefox：設定頁的連線狀態四項都可用', rows.join('|') === 'host:true|ytDlp:true|ffmpeg:true|deno:true', rows.join('|'));
+
+  // 006：設定頁的「工具列」區（T34）
+  const toolbarRows = JSON.parse(await evaluate(`JSON.stringify([...document.querySelectorAll('#toolbar-list .toolbar-row')].map((r) => r.dataset.item))`));
+  await evaluate(`document.querySelector('#toolbar-list .toolbar-row[data-item="mp3"] .icon-button[aria-label="Move MP3 up"]').click(), document.querySelector('#toolbar-visible-loop').click(), true`);
+  await sleep(500);
+  const stored = JSON.parse(await evaluate(`browser.storage.sync.get('toolbarLayout').then((r) => JSON.stringify(r.toolbarLayout))`));
+  const ids = stored?.items?.map((i) => (i.visible ? i.id : `-${i.id}`)).join(' ');
+  check(
+    'Firefox：設定頁的工具列區可以上移與隱藏，寫入 sync:toolbarLayout（006 FR-22）',
+    toolbarRows.length === 13 && stored?.version === 1 && ids === 'mp3 video thumbnail subtitles screenshot link separator darkMode cinema pip floating -loop help',
+    ids,
+  );
 } catch (err) {
   check('Firefox script', false, String(err));
 } finally {
