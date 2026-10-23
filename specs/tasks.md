@@ -157,7 +157,7 @@ T11 可以和階段 1、2 同時進行。
 - **T45 安裝引導**（乙）：plan 3.10 的安裝指令、三步驟說明、「這個指令會做什麼？」、自動偵測；設定頁「下載」區同樣的說明（008 FR-1、FR-2）。
 - **T46 設定頁下載區與移除**（乙）：元件版本與來源、自動更新開關、立即檢查、最近結果、連續失敗提示、移除下載功能、新錯誤代碼的訊息（008 FR-24、FR-25、FR-30）。開發時用假的 `status` 回應測試，不依賴甲的進度。
 - **T47 檢查更新**（乙）：T26 的檢查加入「`api.github.com` 只能出現在 `utils/update-check.ts`」；權限仍與 plan 3.2 完全一致；更新 `specs/e2e-checklist.md`（新增第 9 節：008 驗收條件）。
-- **T48 文件**（甲，最後做）：README（英文與繁中）的安裝章節改為一行指令、手動安裝、移除、維護者；白話說明文件 `docs/what-gets-installed.md` 與 `docs/what-gets-installed.zh-TW.md`（008 FR-40）；第三方授權列表。`LICENSE` 等專案擁有者決定 D-2 後由規格方加入。
+- **T48 文件**（甲，最後做）：README（英文與繁中）的安裝章節改為一行指令、手動安裝、移除、維護者；白話說明文件 `docs/what-gets-installed.md` 與 `docs/what-gets-installed.zh-TW.md`（008 FR-40）；第三方授權列表。專案採用 MIT（根目錄 `LICENSE` 已由規格方加入），README 結尾加入授權章節。
 - **完成條件**：所有測試、`compile`、`build`、`build:firefox`、`build:host`、`release:dry`、`web-ext lint` 通過；008 驗收條件中能在容器內驗證的部分逐條自測，其餘列在 e2e-checklist。
 
 ## 階段 5：收尾
