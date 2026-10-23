@@ -34,6 +34,7 @@ describe('parseHostMessage（plan 4.2）', () => {
       eta: 3,
       part: 1,
       parts: 2,
+      stage: null,
     });
     // 沒有百分比（裁切由 ffmpeg 處理時，002 FR-6b）
     expect(parseHostMessage({ event: 'progress', jobId: 'j1', videoId: VID, kind: 'mp3', state: 'processing' })).toMatchObject({ percent: null, state: 'processing' });

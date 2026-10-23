@@ -93,3 +93,17 @@ export const mp3Bitrate = storage.defineItem<number>('sync:mp3Bitrate', { fallba
 
 /** 是否已顯示過「裁切需要額外處理時間」的說明（004 FR-23：第一次使用裁切時顯示）。 */
 export const clipHintSeen = storage.defineItem<boolean>('local:clipHintSeen', { fallback: false });
+
+// 新版本提醒（008 FR-26 至 FR-29b，plan 3.9）：只存在本機，不同步。內容由 utils/update-check.ts 驗證與解讀。
+
+/** 最近一次查詢的時間與結果、最新正式版本。 */
+export const updateCheck = storage.defineItem<unknown>('local:updateCheck', { fallback: null });
+
+/** 跳過的版本、不再提醒、卡片最近一次出現的版本與時間、已處理（前往下載）的版本。 */
+export const updateReminder = storage.defineItem<unknown>('local:updateReminder', { fallback: null });
+
+/**
+ * 下載面板中「小幫手自動更新連續失敗」提示（008 FR-25、FR-29c）被關閉時，記下當時最近一次檢查的時間；
+ * 之後再有新的失敗（檢查時間改變）時再顯示。設定頁可以清除（重新顯示）。
+ */
+export const hostUpdateHintDismissed = storage.defineItem<number | null>('local:hostUpdateHintDismissed', { fallback: null });

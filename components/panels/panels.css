@@ -455,6 +455,75 @@
   overflow-wrap: anywhere;
 }
 
+/* 一行安裝指令與「複製」（008 FR-1）。 */
+.yte-command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.yte-command .yte-command-text {
+  flex: 1 1 260px;
+  min-width: 0;
+  margin: 0;
+}
+
+.yte-command-status {
+  flex-basis: 100%;
+  color: var(--yte-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.yte-command-status:empty {
+  display: none;
+}
+
+.yte-install-details {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.yte-install-details summary {
+  color: var(--yte-call-to-action);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.yte-install-detail-list {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.yte-install-detail-list li + li {
+  margin-top: 6px;
+}
+
+.yte-inline-code {
+  display: block;
+  color: var(--yte-text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.yte-install-note {
+  margin: 8px 0 0;
+  color: var(--yte-text-secondary);
+}
+
+.yte-install-details .yte-code {
+  white-space: pre-wrap;
+}
+
+.yte-install-auto {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
 .yte-setup-actions {
   display: flex;
   align-items: center;
@@ -524,6 +593,31 @@ a.yte-link {
 
 .yte-hint .yte-code {
   margin-top: 4px;
+}
+
+/* 小幫手自動更新連續失敗（008 FR-25）：一行提示，可以關閉。 */
+.yte-update-failed-text {
+  flex: 1;
+}
+
+.yte-inline-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--yte-call-to-action);
+  font: inherit;
+  cursor: pointer;
+}
+
+.yte-inline-link:hover {
+  text-decoration: underline;
+}
+
+.yte-hint .yte-hint-close {
+  width: 24px;
+  height: 24px;
+  margin: -4px -6px -4px 0;
+  color: var(--yte-text-secondary);
 }
 
 /* ---------- 畫質清單（002 FR-10 至 FR-13） ---------- */

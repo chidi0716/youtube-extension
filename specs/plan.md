@@ -340,7 +340,7 @@ install/
 
 **整體做法**：一行指令只下載一個很小的引導腳本；腳本只負責下載對應系統的小幫手並核對檢查碼，然後執行 `yte-host --install`。所有實際工作（下載 yt-dlp、deno、ffmpeg、核對、解壓、註冊瀏覽器）都在 Go 裡完成，方便測試且 macOS／Windows 共用。
 
-**發佈清單 `components.json`**（每個 GitHub Release 都附上，並附 `components.json.sig`）：
+**發佈清單 `components.json`**（每個 GitHub Release 都附上，並附 `components.json.sig`；實際格式以 `specs/notes/T40-T43-install-and-release.md` 為準，下面是概念範例）：
 
 ```json
 {
@@ -417,7 +417,7 @@ install/
 
 這兩個腳本不需下載小幫手，直接刪除 4.8 節的位置。
 
-**網路連線範圍**（constitution 第 2 點）：小幫手與腳本只連 `github.com`／`objects.githubusercontent.com`（本專案、yt-dlp、deno、FFmpeg-Builds 的 Release）、`ffmpeg.martin-riedl.de`，以及 yt-dlp 自己連的 YouTube。網址以常數集中在一個檔案，測試確認沒有其他網域。
+**網路連線範圍**（constitution 第 2 點）：小幫手與腳本只連 `github.com`（本專案、yt-dlp、deno、FFmpeg-Builds 的 Release）與其轉址目的地 `objects.githubusercontent.com`、`release-assets.githubusercontent.com`、`ffmpeg.martin-riedl.de`，以及 yt-dlp 自己連的 YouTube。網址以常數集中在一個檔案，測試確認沒有其他網域。
 
 ### 4.10 發佈流程（008 第六節）
 
@@ -430,7 +430,7 @@ install/
   6. 建立 GitHub Release，附上：引導腳本與移除腳本、三種小幫手、`components.json(.sig)`、Chrome zip、`.xpi`、`updates.json`、`SHA256SUMS`。說明文字以範本產生，包含各瀏覽器的更新步驟（Chrome：下載 zip、解壓覆蓋原資料夾、在擴充功能頁按重新載入）。
 - Firefox manifest 加入 `browser_specific_settings.gecko.update_url: "https://github.com/chidi0716/youtube-extension/releases/latest/download/updates.json"`（Firefox 會跟隨轉址；實作時確認）。
 - 新增 `npm run release:dry`：在本機完成第 1、3、4（用臨時產生的測試金鑰）、5 步，輸出到 `release/dist/`，方便沒有 Secrets 時驗證。
-- 預先發行版本（標籤含 `-`，例如 `v0.2.0-beta.1`）建立為 prerelease，不會被 `releases/latest` 取得，因此不觸發提醒與自動更新。
+- 預先發行版本（標籤含 `-`，例如 `v0.2.0-beta.1`）建立為 prerelease，不會被 `releases/latest` 取得，因此不觸發提醒與自動更新；預先發行版本**不送 Firefox 簽署**（AMO 同一個數字版本只能簽一次），需要給 Firefox 使用者測試時直接發正式的小版本。
 - README「維護者」章節：產生簽章金鑰、設定三個 Secrets、建立第一個版本的步驟。
 
 ## 5. 測試策略

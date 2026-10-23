@@ -14,8 +14,8 @@ import { Button } from '../controls/Button';
 import { Select } from '../controls/Select';
 import { Icon } from '../icons';
 import { PanelPinContext } from '../toolbar/PanelHost';
-import { DenoHint, HostSetup, useHostState } from './HostSetup';
-import { ErrorBlock, JobList } from './JobList';
+import { DenoHint, HostSetup, UpdateFailureHint, useHostState } from './HostSetup';
+import { ErrorBlock, JobList, openSettings } from './JobList';
 import { PanelError, PanelLoading } from './PanelStatus';
 import { TimeRange, useClipRange } from './TimeRange';
 import { isLiveOrUpcoming, useVideoData } from './useVideoData';
@@ -26,7 +26,7 @@ const isLiveInfo = (info: HostInfo) => info.isLive || info.liveStatus === 'is_li
 function DownloadGate({ videoId, children }: { videoId: string; children: (title: string) => ComponentChildren }) {
   const [attempt, setAttempt] = useState(0);
   const video = useVideoData(videoId, attempt);
-  const host = useHostState();
+  const host = useHostState({ pollWhileMissing: true });
   if (video.status === 'loading' || host.state === null) return <PanelLoading />;
   if (video.status === 'error') return <PanelError onRetry={() => setAttempt((n) => n + 1)} />;
   if (isLiveOrUpcoming(video.data)) return <p class="yte-muted yte-live-unavailable">{t('liveUnavailable')}</p>;
@@ -34,6 +34,7 @@ function DownloadGate({ videoId, children }: { videoId: string; children: (title
   return (
     <>
       {missingOnlyDeno(host.state) && <DenoHint state={host.state} />}
+      <UpdateFailureHint state={host.state} onOpenSettings={openSettings} />
       {children(video.data?.title ?? '')}
     </>
   );

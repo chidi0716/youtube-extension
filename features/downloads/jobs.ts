@@ -2,7 +2,7 @@
 // 進度文字。純函式，背景腳本與內容腳本共用。
 import { formatNumber, type MessageKey } from '@/utils/i18n';
 import type { HostEvent } from '@/utils/native';
-import { FINAL_STATES, type HostErrorCode, type HostJob, type JobKind, type JobState } from '@/utils/native-protocol';
+import { FINAL_STATES, type HostErrorCode, type HostJob, type JobKind, type JobStage, type JobState } from '@/utils/native-protocol';
 
 /** 內容腳本送給背景腳本的下載請求（下載資料夾、檔名格式、嵌入資訊由背景腳本依設定補上）。 */
 export type DownloadRequest =
@@ -29,6 +29,8 @@ export interface JobRecord {
   eta: number | null;
   fileName: string | null;
   error: HostErrorCode | null;
+  /** 正在自動更新 yt-dlp 後重試（008 FR-22）；舊的紀錄沒有這個欄位。 */
+  stage?: JobStage | null;
   /** 重試用的原始請求（瀏覽器重新啟動後從橋接程式補回的工作沒有）。 */
   request: DownloadRequest | null;
   createdAt: number;
@@ -65,6 +67,14 @@ export function newJob(jobId: string, request: DownloadRequest, now: number): Jo
 /** 把橋接程式的事件套用到工作清單。未知的工作（例如瀏覽器重新啟動前開始的）也會加入。 */
 export function applyEvent(jobs: readonly JobRecord[], event: HostEvent, now: number): JobRecord[] {
   const index = jobs.findIndex((j) => j.jobId === event.jobId);
+  if (event.kind === 'stage') {
+    // 只更新已知、進行中的工作：顯示「正在更新 yt-dlp…」與不確定的進度。
+    const job = index >= 0 ? jobs[index]! : null;
+    if (!job || isFinal(job.state)) return [...jobs];
+    const out = [...jobs];
+    out[index] = { ...job, state: 'downloading', stage: event.stage, percent: null, speed: null, eta: null, updatedAt: now };
+    return out;
+  }
   const base: JobRecord =
     index >= 0
       ? jobs[index]!
@@ -89,13 +99,13 @@ export function applyEvent(jobs: readonly JobRecord[], event: HostEvent, now: nu
   let next: JobRecord;
   switch (event.kind) {
     case 'progress':
-      next = { ...base, state: event.state, percent: event.percent, speed: event.speed, eta: event.eta, updatedAt: now };
+      next = { ...base, state: event.state, percent: event.percent, speed: event.speed, eta: event.eta, stage: event.stage ?? null, updatedAt: now };
       break;
     case 'done':
-      next = { ...base, state: 'done', percent: 100, speed: null, eta: null, fileName: event.fileName, error: null, updatedAt: now };
+      next = { ...base, state: 'done', percent: 100, speed: null, eta: null, fileName: event.fileName, error: null, stage: null, updatedAt: now };
       break;
     case 'failed':
-      next = { ...base, state: 'failed', speed: null, eta: null, error: event.error.code, updatedAt: now };
+      next = { ...base, state: 'failed', speed: null, eta: null, error: event.error.code, stage: null, updatedAt: now };
       break;
   }
   const out = [...jobs];
@@ -187,6 +197,11 @@ export function errorInfo(code: HostErrorCode | null): ErrorInfo {
       return { message: 'errCannotWrite', action: 'settings', retry: true };
     case 'TOO_MANY_JOBS':
       return { message: 'errTooManyJobs', action: null, retry: true };
+    case 'JOBS_RUNNING':
+      return { message: 'errJobsRunning', action: null, retry: true };
+    case 'SIGNATURE_INVALID':
+    case 'CHECKSUM_MISMATCH':
+      return { message: 'errVerifyFailed', action: null, retry: true };
     default:
       return { message: 'errDownloadFailed', action: null, retry: true };
   }

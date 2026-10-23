@@ -30,6 +30,10 @@ export const REQUEST_TIMEOUT_MS: Record<HostCommand, number> = {
   reveal: 15_000,
   pickFolder: 30 * 60_000,
   updateYtDlp: 6 * 60_000,
+  // 008（plan 4.9）：都只是寫入狀態檔或啟動分離的程序，立即回應。
+  setAutoUpdate: 15_000,
+  checkUpdates: 15_000,
+  uninstall: 30_000,
 };
 
 /** 自動重連的間隔（毫秒）：1、2、4、8、16、30、30… 秒。 */

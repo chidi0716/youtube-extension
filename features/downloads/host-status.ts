@@ -1,6 +1,7 @@
 // 橋接程式的連線狀態（002 FR-2，tasks T16、T22）：由背景腳本以 status 指令查詢。
 // 必要元件為橋接程式、yt-dlp、ffmpeg、deno；ready（yt-dlp 與 ffmpeg 可用）時可以下載，只缺 deno 時顯示建議安裝的提示。
 import type { HostStatusResult } from '@/utils/native-protocol';
+import { INSTALL_COMMANDS } from './install-guide';
 import type { HostOs } from './logic';
 
 export type HostComponent = 'host' | 'ytDlp' | 'ffmpeg' | 'deno';
@@ -13,15 +14,6 @@ export type HostState =
 
 /** README 的安裝章節（QUESTIONS Q33）。 */
 export const INSTALL_GUIDE_URL = 'https://github.com/chidi0716/youtube-extension#install-the-helper';
-
-/** 安裝說明中的指令（002 FR-2、README 的安裝章節）；指令本身不翻譯。 */
-export const INSTALL_COMMANDS: Record<Exclude<HostOs, 'other'>, { packages: string; script: string }> = {
-  mac: { packages: 'brew install yt-dlp ffmpeg deno', script: 'sh host/dist/youtube-extension-host-macos/install.sh' },
-  windows: {
-    packages: 'winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno',
-    script: 'powershell -ExecutionPolicy Bypass -File host\\dist\\youtube-extension-host-windows\\install.ps1',
-  },
-};
 
 /** 可以下載（yt-dlp 與 ffmpeg 都可用）。 */
 export const canDownload = (s: HostState): s is Extract<HostState, { state: 'connected' }> => s.state === 'connected' && s.status.ready;
@@ -43,11 +35,23 @@ export function componentVersion(s: HostState, c: HostComponent): string | null 
   return tool?.found ? tool.version : null;
 }
 
-/** 安裝缺少元件的指令：橋接程式回報的指令優先，否則依作業系統一次安裝三者（002 FR-2）。 */
-export function installCommand(s: HostState, os: HostOs): string | null {
-  if (s.state === 'connected' && s.status.installCommand) return s.status.installCommand;
-  return os === 'other' ? null : INSTALL_COMMANDS[os].packages;
+/**
+ * 安裝或補齊元件的指令（008 FR-1、FR-13）：一律是一行安裝指令。指令可以重複執行，
+ * 已安裝的部分會跳過、缺少的部分會補上，所以小幫手未安裝或缺少 yt-dlp、ffmpeg、deno 時都用同一個指令。
+ */
+export function installCommand(_s: HostState, os: HostOs): string | null {
+  return os === 'other' ? null : INSTALL_COMMANDS[os];
 }
 
 /** 只缺 deno（可以下載，但建議安裝，T15a）。 */
 export const missingOnlyDeno = (s: HostState) => canDownload(s) && componentState(s, 'deno') === false;
+
+/** 自動更新連續失敗幾次以上才在下載面板提示（008 FR-25）。 */
+export const UPDATE_FAILURE_HINT_AT = 3;
+
+/** 下載面板是否顯示「自動更新連續失敗」的一行提示：失敗 3 次以上、且這次的失敗沒有被使用者關閉。 */
+export function showUpdateFailureHint(s: HostState, dismissedAt: number | null): boolean {
+  if (s.state !== 'connected' || !s.status.update) return false;
+  const u = s.status.update;
+  return u.consecutiveFailures >= UPDATE_FAILURE_HINT_AT && (dismissedAt === null || u.lastCheck === null || u.lastCheck !== dismissedAt);
+}

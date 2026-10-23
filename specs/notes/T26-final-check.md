@@ -87,3 +87,42 @@
 | 瀏覽器重新啟動後補發完成通知、取消後沒有殘留的 yt-dlp／ffmpeg 程序 | 已在 Linux 自動化驗證；macOS（程序群組）與 Windows（Job Object）需實測 | Q35、Q44 |
 | Firefox／Zen 上的工具列、觀看輔助與頁面整理 | 假頁面測試只用 Chromium；Firefox 只驗證了背景腳本與設定頁 | 001–005「Chrome、Firefox 上都符合以上各項」 |
 | 子母畫面 | headless 無法開啟原生子母畫面 | 003 FR-30 至 FR-33 |
+
+## 6. 階段 8 擴充功能端（T44–T47）的追加檢查
+
+日期：2026-10-23　負責：實作方（乙）　檢查的版本：T44–T46 提交之後
+
+### 6.1 權限與連線範圍
+
+| 項目 | 結果 |
+|---|---|
+| 兩份 manifest 的 `permissions`、`host_permissions` | 與 plan 3.2 完全一致（`storage`、`downloads`、`notifications`、`nativeMessaging`；`*://*.youtube.com/*`、`https://i.ytimg.com/*`）；沒有 `optional_permissions`、`management` 或 GitHub 的主機權限。新增單元測試 `utils/policy.test.ts`，直接以 `wxt.config.ts` 的 manifest 函式檢查 Chrome 與 Firefox 兩種輸出 |
+| `api.github.com` | 原始碼（`entrypoints/`、`components/`、`features/`、`utils/`、`public/`、`wxt.config.ts`，不含單元測試）只出現在 `utils/update-check.ts`（`utils/policy.test.ts` 自動檢查）；建置結果只在兩份 `background.js` |
+| 其他 GitHub 網址 | 只有給使用者的連結與指令：版本頁面前綴 `https://github.com/chidi0716/youtube-extension/releases/`（「前往下載」只開啟通過檢查的網址）、安裝指令中的 `…/releases/latest/download/install.sh`、`install.ps1`、README 的安裝章節。擴充功能不會 `fetch` 這些網址（同一測試檢查） |
+| `management.getSelf()` | 不需要 `management` 權限（Chrome 與 MDN 文件）；Chromium 實測載入未封裝時回傳 `development` |
+| 查詢內容 | `GET`，`credentials: 'omit'`、`referrerPolicy: 'no-referrer'`、沒有自訂標頭；Chromium 實測的請求標頭只有 `accept`、`origin`（擴充功能 ID）、`user-agent` |
+
+### 6.2 建置與測試
+
+| 項目 | 結果 |
+|---|---|
+| `npm run compile` | 通過 |
+| `npm test` | 38 個測試檔、443 項通過（新增 `utils/update-check.test.ts`、`features/update/reminder.test.ts`、`features/update/background.test.ts`、`features/downloads/install-guide.test.ts`、`features/downloads/host-008.test.ts`、`utils/policy.test.ts`） |
+| `npm run build`、`npm run build:firefox` | 通過 |
+| `npx web-ext lint -s .output/firefox-mv3` | 0 個錯誤、0 個 notice、2 個警告（`lint-exceptions.md` 的既有例外） |
+| 既有假頁面測試 | `viewing-test` 110/110、`convenience-test` 72/72、`fixture-test` 10/10、`downloads-test` 41/41（安裝說明的項目改為一行指令）、`stage6/toolbar-test` 53/53、`stage7/language-test` 16/16、`stage7/appearance-test` 13/13 |
+| `spikes/stage4/e2e-test.mjs`（真正的橋接程式＋假 yt-dlp） | 83/83（缺少元件時的安裝說明與設定頁下載區的分組改為 008 的內容） |
+
+### 6.3 新版本提醒、安裝說明與下載區的假頁面測試（實作時執行，腳本未提交）
+
+在本機假觀看頁（Chromium）以 Playwright 提供假的 GitHub API 回應，並以一支依 plan 4.9 通訊協定回應的假小幫手（Node 腳本，回應 `status` 的 `components`、`update`，以及 `setAutoUpdate`、`checkUpdates`、`uninstall`、`stage: "updating-ytdlp"` 事件）測試。依指示，這些腳本沒有提交。
+
+| 範圍 | 結果 | 涵蓋 |
+|---|---|---|
+| 新版本提醒 | 47/47 | 卡片位置（工具列下方靠右、不疊在播放器上）、不搶焦點、Tab 可到達、淡入、NEW 標記、只查詢一次且沒有 cookie／自訂標頭、24 小時內不再查詢、當天只出現一次、隔天再出現；20 秒不操作不收合、有操作累計 15 秒收合、滑鼠停在卡片上暫停、「更多」選單頂端顯示提醒；面板展開、編輯工具列、輸入中、全螢幕時延後；劇院模式（調暗）下在最上層；深色主題；工具列關閉時不顯示、重新啟用後出現；前往下載（新分頁、其他分頁同步、標記清除）、跳過（更新的版本再提醒）、不再提醒（不再查詢、設定頁重新開啟）、✕、繁體中文、查詢失敗安靜略過 |
+| 安裝說明 | 15/15 | macOS、Windows 指令與三步驟、「這個指令會做什麼？」、複製到剪貼簿、安裝後 3 秒內自動切換、可以下載後不再檢查、面板收起時不檢查、只缺 deno、繁體中文、設定頁相同說明與自動更新狀態 |
+| 設定頁下載區 | 22/22 | 元件版本與來源、擴充功能的更新方式、自動更新開關、立即檢查與結果、連續失敗提示（面板提示、關閉、設定頁重新顯示）、「正在更新 yt-dlp…」後完成、移除（對話框、取消、JOBS_RUNNING、成功後顯示未安裝）、舊版小幫手、繁體中文 |
+
+### 6.4 仍需實測
+
+見 [`e2e-checklist.md`](../e2e-checklist.md) 第 9 節。重點：Firefox／Zen 臨時附加元件的 `installType`（9.17）、簽署版不提醒（9.18）、子母畫面中延後（9.4）、真正的一行指令安裝與小幫手的自動更新、移除（9.21、9.22、9.27 至 9.30，需要甲方的小幫手）。

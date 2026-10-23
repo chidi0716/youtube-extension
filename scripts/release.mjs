@@ -155,6 +155,11 @@ try {
     lintFirefox();
     copyFileSync(findOutput(`-${version}-firefox.zip`), join(uploadDir, xpiName));
     console.log('(dry run: the Firefox package is NOT signed by Mozilla)');
+  } else if (prerelease) {
+    // 預先發行版本不送 Mozilla 簽署：AMO 同一個數字版本只能簽一次（plan 4.10、Q58）。
+    run('npm', ['run', 'build:firefox']);
+    lintFirefox();
+    console.log('(prerelease: the Firefox package is not signed or published)');
   } else {
     run('npm', ['run', 'build:firefox']);
     lintFirefox();
@@ -171,27 +176,31 @@ try {
   // 第 5 步：Firefox 的更新資訊。版本號使用建置出的 manifest 中的版本（WXT 會把預先發行標記
   // 從 manifest 的 version 去掉），必須與 .xpi 中的版本完全相同。
   step('8. updates.json');
-  const firefoxManifest = JSON.parse(readFileSync(join(root, '.output', 'firefox-mv3', 'manifest.json'), 'utf8'));
-  const gecko = firefoxManifest.browser_specific_settings?.gecko ?? {};
-  if (gecko.id !== GECKO_ID || gecko.update_url !== `https://github.com/${REPO}/releases/latest/download/updates.json`) {
-    fail('the Firefox manifest does not have the expected gecko id and update_url');
-  }
-  const updates = {
-    addons: {
-      [GECKO_ID]: {
-        updates: [
-          {
-            version: firefoxManifest.version,
-            update_link: `https://github.com/${REPO}/releases/download/${tag}/${xpiName}`,
-            update_hash: `sha256:${sha256(join(uploadDir, xpiName))}`,
-            update_info_url: `https://github.com/${REPO}/releases/tag/${tag}`,
-            applications: { gecko: { strict_min_version: gecko.strict_min_version } },
-          },
-        ],
+  if (prerelease && !dry) {
+    console.log('(prerelease: no updates.json)');
+  } else {
+    const firefoxManifest = JSON.parse(readFileSync(join(root, '.output', 'firefox-mv3', 'manifest.json'), 'utf8'));
+    const gecko = firefoxManifest.browser_specific_settings?.gecko ?? {};
+    if (gecko.id !== GECKO_ID || gecko.update_url !== `https://github.com/${REPO}/releases/latest/download/updates.json`) {
+      fail('the Firefox manifest does not have the expected gecko id and update_url');
+    }
+    const updates = {
+      addons: {
+        [GECKO_ID]: {
+          updates: [
+            {
+              version: firefoxManifest.version,
+              update_link: `https://github.com/${REPO}/releases/download/${tag}/${xpiName}`,
+              update_hash: `sha256:${sha256(join(uploadDir, xpiName))}`,
+              update_info_url: `https://github.com/${REPO}/releases/tag/${tag}`,
+              applications: { gecko: { strict_min_version: gecko.strict_min_version } },
+            },
+          ],
+        },
       },
-    },
-  };
-  writeFileSync(join(uploadDir, 'updates.json'), `${JSON.stringify(updates, null, 2)}\n`);
+    };
+    writeFileSync(join(uploadDir, 'updates.json'), `${JSON.stringify(updates, null, 2)}\n`);
+  }
 
   // Release 說明與 SHA256SUMS
   step('9. release notes and SHA256SUMS');

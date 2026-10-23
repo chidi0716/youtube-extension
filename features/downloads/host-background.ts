@@ -111,7 +111,7 @@ function broadcast() {
 async function onHostEvent(event: HostEvent) {
   await load();
   await setJobs(applyEvent(jobs, event, Date.now()));
-  if (event.kind !== 'progress') {
+  if (event.kind !== 'progress' && event.kind !== 'stage') {
     await notifyFinished(event.jobId);
     scheduleIdleClose();
   }
@@ -226,8 +226,31 @@ async function startDownload(request: DownloadRequest): Promise<string> {
   return jobId;
 }
 
-type HostMessageType = 'hostStatus' | 'getInfo' | 'startDownload' | 'cancelJob' | 'revealJob' | 'getJobs' | 'pickFolder' | 'updateYtDlp';
-export const HOST_MESSAGE_TYPES: readonly string[] = ['hostStatus', 'getInfo', 'startDownload', 'cancelJob', 'revealJob', 'getJobs', 'pickFolder', 'updateYtDlp'];
+type HostMessageType =
+  | 'hostStatus'
+  | 'getInfo'
+  | 'startDownload'
+  | 'cancelJob'
+  | 'revealJob'
+  | 'getJobs'
+  | 'pickFolder'
+  | 'updateYtDlp'
+  | 'hostSetAutoUpdate'
+  | 'hostCheckUpdates'
+  | 'hostUninstall';
+export const HOST_MESSAGE_TYPES: readonly string[] = [
+  'hostStatus',
+  'getInfo',
+  'startDownload',
+  'cancelJob',
+  'revealJob',
+  'getJobs',
+  'pickFolder',
+  'updateYtDlp',
+  'hostSetAutoUpdate',
+  'hostCheckUpdates',
+  'hostUninstall',
+];
 
 async function handle(message: Extract<ContentMessage, { type: HostMessageType }>, tabId: number | undefined): Promise<MessageResponse<Record<string, unknown>>> {
   switch (message.type) {
@@ -263,6 +286,24 @@ async function handle(message: Extract<ContentMessage, { type: HostMessageType }
       statusCache = null;
       return { ok: true, update: result };
     }
+    // 008（plan 4.9、3.10）
+    case 'hostSetAutoUpdate':
+      await client.request('setAutoUpdate', { enabled: message.enabled });
+      statusCache = null;
+      return { ok: true };
+    case 'hostCheckUpdates': {
+      const result = await client.request('checkUpdates');
+      statusCache = null;
+      return { ok: true, started: result.started === true };
+    }
+    case 'hostUninstall':
+      // 有進行中的下載時，小幫手回應 JOBS_RUNNING。成功後小幫手 2 秒後刪除自己與瀏覽器的註冊。
+      await client.request('uninstall');
+      statusCache = null;
+      infoCache.clear();
+      // 關閉這次的連線：正在執行的小幫手隨之結束，下一次查詢會重新連線（註冊已被刪除時為未安裝）。
+      client.close();
+      return { ok: true };
   }
 }
 

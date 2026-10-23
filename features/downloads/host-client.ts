@@ -40,6 +40,9 @@ export const startDownload = (request: DownloadRequest) => call<{ jobId: string 
 export const cancelJob = (jobId: string) => call({ type: 'cancelJob', jobId });
 export const revealJob = (jobId: string) => call({ type: 'revealJob', jobId });
 export const updateYtDlp = () => call<{ update: UpdateResult }>({ type: 'updateYtDlp' }).then((r) => r.update);
+export const setAutoUpdate = (enabled: boolean) => call({ type: 'hostSetAutoUpdate', enabled });
+export const checkUpdates = () => call<{ started: boolean }>({ type: 'hostCheckUpdates' }).then((r) => r.started);
+export const uninstallHost = () => call({ type: 'hostUninstall' });
 export const pickFolder = () => call<{ path: string | null }>({ type: 'pickFolder' }).then((r) => r.path);
 
 /** 下載工作（所有影片）；第一次使用時向背景腳本查詢，之後由推播更新。 */

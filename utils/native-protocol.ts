@@ -31,6 +31,10 @@ export const HOST_ERROR_CODES = [
   'TOO_MANY_JOBS',
   'BUSY',
   'INTERRUPTED',
+  // 008（plan 4.9）
+  'JOBS_RUNNING',
+  'SIGNATURE_INVALID',
+  'CHECKSUM_MISMATCH',
   'UNKNOWN',
   'HOST_UNREACHABLE',
 ] as const;
@@ -40,7 +44,24 @@ export function toErrorCode(value: unknown): HostErrorCode {
   return (HOST_ERROR_CODES as readonly unknown[]).includes(value) ? (value as HostErrorCode) : 'UNKNOWN';
 }
 
-export type HostCommand = 'status' | 'getInfo' | 'download' | 'cancel' | 'jobs' | 'reveal' | 'pickFolder' | 'updateYtDlp';
+export type HostCommand =
+  | 'status'
+  | 'getInfo'
+  | 'download'
+  | 'cancel'
+  | 'jobs'
+  | 'reveal'
+  | 'pickFolder'
+  | 'updateYtDlp'
+  // 008（plan 4.9）
+  | 'setAutoUpdate'
+  | 'checkUpdates'
+  | 'uninstall';
+
+/** 下載途中的特殊階段（008 FR-22：遇到 YTDLP_OUTDATED 等錯誤時先更新 yt-dlp 再重試）。 */
+export type JobStage = 'updating-ytdlp';
+const STAGES: readonly string[] = ['updating-ytdlp'];
+const toStage = (v: unknown): JobStage | null => (typeof v === 'string' && STAGES.includes(v) ? (v as JobStage) : null);
 
 export interface HostRequest {
   id: string;
@@ -60,7 +81,9 @@ export interface HostError {
 export type HostMessage =
   | { kind: 'response'; id: string; ok: true; result: Record<string, unknown> }
   | { kind: 'response'; id: string | null; ok: false; error: HostError }
-  | { kind: 'progress'; jobId: string; videoId: string; jobKind: JobKind; state: 'downloading' | 'processing'; percent: number | null; speed: number | null; eta: number | null; part: number | null; parts: number | null }
+  | { kind: 'progress'; jobId: string; videoId: string; jobKind: JobKind; state: 'downloading' | 'processing'; percent: number | null; speed: number | null; eta: number | null; part: number | null; parts: number | null; stage?: JobStage | null }
+  /** 只帶 jobId 與 stage 的進度事件（plan 4.9：{"event":"progress","jobId":…,"stage":"updating-ytdlp"}）。 */
+  | { kind: 'stage'; jobId: string; stage: JobStage }
   | { kind: 'done'; jobId: string; videoId: string; jobKind: JobKind; path: string; fileName: string }
   | { kind: 'failed'; jobId: string; videoId: string; jobKind: JobKind; error: HostError };
 
@@ -81,6 +104,10 @@ export function parseHostMessage(raw: unknown): HostMessage | null {
   if (!isRecord(raw)) return null;
   if ('event' in raw) {
     const jobId = str(raw.jobId);
+    const stage = toStage(raw.stage);
+    if (raw.event === 'progress' && stage && jobId && JOB_ID_PATTERN.test(jobId) && (raw.videoId === undefined || raw.kind === undefined)) {
+      return { kind: 'stage', jobId, stage };
+    }
     const videoId = str(raw.videoId);
     const jobKind = str(raw.kind);
     if (!jobId || !JOB_ID_PATTERN.test(jobId) || !videoId || !VIDEO_ID_PATTERN.test(videoId) || !jobKind || !KINDS.includes(jobKind)) return null;
@@ -97,6 +124,7 @@ export function parseHostMessage(raw: unknown): HostMessage | null {
           eta: num(raw.eta),
           part: num(raw.part),
           parts: num(raw.parts),
+          stage,
         };
       }
       case 'done': {
@@ -149,6 +177,74 @@ export interface HostStatusResult {
   deno: ToolInfo | null;
   defaultDir: string;
   namePresets: Array<{ id: string; example: string }>;
+  /** 小幫手的安裝資料夾（008，plan 4.9）；舊版小幫手沒有回報時為 null。 */
+  installDir: string | null;
+  /** 各元件的版本、位置與來源（008 FR-24）；舊版小幫手沒有回報時為 null。 */
+  components: HostComponentInfo[] | null;
+  /** 自動更新的狀態（008 FR-24、FR-25）；舊版小幫手沒有回報時為 null。 */
+  update: HostUpdateInfo | null;
+}
+
+export const COMPONENT_NAMES = ['helper', 'yt-dlp', 'deno', 'ffmpeg', 'ffprobe'] as const;
+export type ComponentName = (typeof COMPONENT_NAMES)[number];
+export const COMPONENT_SOURCES = ['bundled', 'homebrew', 'winget', 'path'] as const;
+export type ComponentSource = (typeof COMPONENT_SOURCES)[number];
+
+export interface HostComponentInfo {
+  name: ComponentName;
+  version: string | null;
+  path: string | null;
+  /** bundled：小幫手安裝的；homebrew、winget：套件管理工具；path：系統上原本就有的。不明時為 null。 */
+  source: ComponentSource | null;
+}
+
+export interface HostUpdateInfo {
+  /** 「自動更新」開關（預設開啟）。 */
+  auto: boolean;
+  /** 最近一次檢查的時間（毫秒）；從未檢查時為 null。 */
+  lastCheck: number | null;
+  lastResult: 'ok' | 'updated' | 'failed' | null;
+  consecutiveFailures: number;
+  /** 正在檢查或更新。 */
+  running: boolean;
+}
+
+/** 時間：接受 ISO 8601 字串、毫秒或秒（plan 4.9 沒有規定格式）。 */
+export function parseTime(v: unknown): number | null {
+  if (typeof v === 'string' && v) {
+    const ms = Date.parse(v);
+    return Number.isFinite(ms) ? ms : null;
+  }
+  if (typeof v === 'number' && Number.isFinite(v) && v > 0) return v < 1e12 ? v * 1000 : v;
+  return null;
+}
+
+function parseComponents(v: unknown): HostComponentInfo[] | null {
+  if (!Array.isArray(v)) return null;
+  const out: HostComponentInfo[] = [];
+  for (const c of v) {
+    if (!isRecord(c) || !(COMPONENT_NAMES as readonly unknown[]).includes(c.name)) continue;
+    if (out.some((o) => o.name === c.name)) continue;
+    out.push({
+      name: c.name as ComponentName,
+      version: str(c.version)?.slice(0, 64) || null,
+      path: str(c.path)?.slice(0, 1024) || null,
+      source: (COMPONENT_SOURCES as readonly unknown[]).includes(c.source) ? (c.source as ComponentSource) : null,
+    });
+  }
+  return COMPONENT_NAMES.flatMap((n) => out.filter((o) => o.name === n));
+}
+
+function parseUpdateInfo(v: unknown): HostUpdateInfo | null {
+  if (!isRecord(v)) return null;
+  const failures = num(v.consecutiveFailures);
+  return {
+    auto: v.auto !== false,
+    lastCheck: parseTime(v.lastCheck),
+    lastResult: v.lastResult === 'ok' || v.lastResult === 'updated' || v.lastResult === 'failed' ? v.lastResult : null,
+    consecutiveFailures: failures !== null && failures > 0 ? Math.floor(failures) : 0,
+    running: v.running === true,
+  };
 }
 
 function parseTool(v: unknown): ToolInfo {
@@ -185,6 +281,9 @@ export function parseStatus(result: Record<string, unknown>): HostStatusResult {
       .filter(isRecord)
       .map((p) => ({ id: str(p.id) ?? '', example: str(p.example) ?? '' }))
       .filter((p) => /^[a-z-]{1,32}$/.test(p.id)),
+    installDir: str(result.installDir) || null,
+    components: parseComponents(result.components),
+    update: parseUpdateInfo(result.update),
   };
 }
 

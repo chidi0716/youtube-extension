@@ -364,3 +364,164 @@ h2 {
   background: var(--accent);
   pointer-events: none;
 }
+
+/* ---------- 主要按鈕（008：前往下載、移除下載功能的確認） ---------- */
+
+.button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+:root[data-theme='dark'] .button.primary {
+  color: #0f0f0f;
+}
+
+.button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.1);
+}
+
+/* ---------- 關於（008 FR-29、FR-29a） ---------- */
+
+.about-status {
+  margin: 8px 0 0;
+}
+
+.about-status:empty {
+  display: none;
+}
+
+#about-note {
+  margin: 8px 0 0;
+}
+
+#about-note:empty {
+  display: none;
+}
+
+/* ---------- 安裝說明（008 FR-2） ---------- */
+
+.install-title {
+  display: block;
+  margin: 8px 0 4px;
+}
+
+.command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.command .command-text {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.command .button,
+.button.with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.command-status {
+  flex-basis: 100%;
+}
+
+.command-status:empty {
+  display: none;
+}
+
+.install-steps,
+.install-details ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.install-steps li + li,
+.install-details li + li {
+  margin-top: 4px;
+}
+
+.install-details summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.inline-code {
+  display: block;
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.review-code {
+  white-space: pre-wrap;
+}
+
+/* ---------- 自動更新與移除下載功能（008 FR-24、FR-30） ---------- */
+
+[hidden] {
+  display: none !important;
+}
+
+.button.danger {
+  border-color: #c30027;
+  color: #c30027;
+}
+
+:root[data-theme='dark'] .button.danger {
+  border-color: #ff7b8a;
+  color: #ff7b8a;
+}
+
+.button.danger:hover:not(:disabled) {
+  background: rgba(195, 0, 39, 0.08);
+}
+
+dialog.confirm {
+  max-width: 420px;
+  padding: 20px 24px 12px;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  background: inherit;
+  background-color: var(--dialog-background, #fff);
+  color: inherit;
+}
+
+:root[data-theme='dark'] dialog.confirm {
+  --dialog-background: #212121;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) dialog.confirm {
+    --dialog-background: #212121;
+  }
+}
+
+dialog.confirm::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+dialog.confirm h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+dialog.confirm p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+}
+
+#downloads-updates-message:empty,
+#downloads-uninstall-message:empty {
+  display: none;
+}

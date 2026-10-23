@@ -212,16 +212,12 @@
     "description": "Download panels: shown for live and upcoming videos."
   },
   "hostMissingTitle": {
-    "message": "The download helper isn't connected",
-    "description": "Video and MP3 panels: heading when the helper program is not available."
-  },
-  "hostMissingIntro": {
-    "message": "Videos and MP3 are downloaded by yt-dlp and ffmpeg on your computer, through a small helper program. You need:",
-    "description": "Video and MP3 panels: explanation before the list of components."
+    "message": "Downloads aren't set up yet",
+    "description": "Video/MP3 panel title when the helper isn't installed."
   },
   "hostComponentHelper": {
-    "message": "Helper program",
-    "description": "Name of the native helper program component."
+    "message": "Helper",
+    "description": "Name of this project's helper program in the interface (008)."
   },
   "hostComponentYtDlp": {
     "message": "yt-dlp",
@@ -237,7 +233,7 @@
   },
   "hostStatusUnknown": {
     "message": "Can't check without the helper",
-    "description": "Status of yt-dlp or ffmpeg when the helper is not connected."
+    "description": "Tool status when the helper isn't installed."
   },
   "hostStepsTitleMac": {
     "message": "Install on macOS",
@@ -251,29 +247,9 @@
     "message": "Installation",
     "description": "Heading of the installation steps on other systems."
   },
-  "hostStepPackagesMac": {
-    "message": "Install the tools with Homebrew in Terminal:",
-    "description": "macOS installation step 1."
-  },
-  "hostStepPackagesWindows": {
-    "message": "Install the tools with winget in PowerShell:",
-    "description": "Windows installation step 1."
-  },
-  "hostStepScriptMac": {
-    "message": "Download the helper and run its install script:",
-    "description": "macOS installation step 2."
-  },
-  "hostStepScriptWindows": {
-    "message": "Download the helper and run its install script:",
-    "description": "Windows installation step 2."
-  },
-  "hostStepRecheck": {
-    "message": "Restart the browser, then press “Check again”.",
-    "description": "Last installation step."
-  },
   "hostOtherOs": {
-    "message": "The helper program is available for macOS and Windows.",
-    "description": "Shown on systems other than macOS and Windows."
+    "message": "The helper is available for macOS and Windows.",
+    "description": "Shown on other operating systems."
   },
   "hostInstallGuide": {
     "message": "Installation guide",
@@ -313,13 +289,9 @@
       }
     }
   },
-  "hostStepRecheckOnly": {
-    "message": "Then press “Check again”.",
-    "description": "Last installation step when the helper is already installed."
-  },
   "hostDenoHint": {
-    "message": "deno is not installed. yt-dlp may miss some YouTube formats without it. Install it with:",
-    "description": "Hint shown when only deno is missing."
+    "message": "deno is not installed. yt-dlp may miss some YouTube formats without it. Run the install command again to add it:",
+    "description": "Hint when only deno is missing."
   },
   "clipTitle": {
     "message": "Time range",
@@ -409,7 +381,7 @@
   },
   "errMissingTools": {
     "message": "The helper, yt-dlp or ffmpeg is missing. See the installation guide.",
-    "description": "Download error: missing components."
+    "description": "Download error message."
   },
   "errOutdated": {
     "message": "YouTube has changed. Please update yt-dlp.",
@@ -1026,5 +998,351 @@
   "darkModeUnavailableHint": {
     "message": "Couldn't find YouTube's Appearance option. If you use an extension that changes the theme (for example, an ambient light extension), set its theme to follow YouTube.",
     "description": "Dark mode button: shown for about 6 seconds when YouTube's Appearance menu or option could not be found or used, e.g. because another extension controls the theme (spec 003 FR-15)."
+  },
+  "updateReminderTitle": {
+    "message": "Version $VERSION$ is available",
+    "description": "New version reminder card heading (008 FR-28).",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.0"
+      }
+    }
+  },
+  "updateReminderOpen": {
+    "message": "Go to download",
+    "description": "Opens the GitHub page of the new version in a new tab."
+  },
+  "updateReminderSkip": {
+    "message": "Skip this version",
+    "description": "Do not remind about this version again (008 FR-29)."
+  },
+  "updateReminderDisable": {
+    "message": "Don't remind me",
+    "description": "Turn off new version reminders and checks (008 FR-29)."
+  },
+  "updateReminderClose": {
+    "message": "Close for now",
+    "description": "Accessible label of the ✕ on the reminder card; the reminder stays as a dot on More."
+  },
+  "updateReminderDot": {
+    "message": "new version available",
+    "description": "Added to the More button label while the reminder dot is shown."
+  },
+  "optionsAboutTitle": {
+    "message": "About",
+    "description": "Options page section heading."
+  },
+  "optionsAboutDesc": {
+    "message": "Version information and new version reminders.",
+    "description": "Options page About section description."
+  },
+  "aboutCurrentVersion": {
+    "message": "Current version",
+    "description": "Label in the About section."
+  },
+  "aboutLatestVersion": {
+    "message": "Latest version",
+    "description": "Label in the About section."
+  },
+  "aboutLastChecked": {
+    "message": "Last checked",
+    "description": "Label in the About section."
+  },
+  "aboutNotChecked": {
+    "message": "Not checked yet",
+    "description": "Shown when the latest version has never been checked."
+  },
+  "aboutCheckFailed": {
+    "message": "$TIME$ (couldn't reach GitHub; will try again later)",
+    "description": "Last check time when the check failed.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "2026/10/23 14:05"
+      }
+    }
+  },
+  "aboutUpToDate": {
+    "message": "You're using the latest version.",
+    "description": "About section status."
+  },
+  "aboutNewAvailable": {
+    "message": "Version $VERSION$ is available.",
+    "description": "About section status.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.0"
+      }
+    }
+  },
+  "aboutAutoUpdated": {
+    "message": "This installation is updated automatically by the browser, so the extension doesn't check for new versions itself.",
+    "description": "About section note for signed Firefox installs (008 FR-26)."
+  },
+  "aboutCheckNote": {
+    "message": "When you open a video, the extension checks this project's GitHub for the latest release at most once a day. Only the version number, title and link are read; nothing about you is sent.",
+    "description": "About section explanation of the update check (constitution 2)."
+  },
+  "aboutRemindersOff": {
+    "message": "New version reminders are off, and the extension no longer checks for new versions.",
+    "description": "About section status after choosing Don't remind me."
+  },
+  "aboutReenable": {
+    "message": "Turn new version reminders back on",
+    "description": "About section button (008 FR-29)."
+  },
+  "installIntro": {
+    "message": "Downloading videos and MP3 needs yt-dlp (the open-source tool that downloads videos), ffmpeg (joins video and audio, converts to MP3) and deno (a runtime yt-dlp needs) on your computer, plus this project's helper (lets the browser use them). About 150 MB in total, installed only for your user account, and you can remove it at any time.",
+    "description": "Install guide introduction (008 FR-1)."
+  },
+  "hostStatusNotInstalled": {
+    "message": "Not installed",
+    "description": "Status of the helper when the browser can't reach it."
+  },
+  "installCopy": {
+    "message": "Copy",
+    "description": "Copies the install command."
+  },
+  "installCopied": {
+    "message": "Copied",
+    "description": "Shown after copying the install command."
+  },
+  "installCopyFailed": {
+    "message": "Couldn't copy automatically. The command is selected; press Ctrl+C (⌘C on Mac) to copy it.",
+    "description": "Shown when the clipboard can't be written."
+  },
+  "installStepMacOpen": {
+    "message": "Press ⌘ + Space, type “Terminal” and press Return.",
+    "description": "Install step 1 on macOS (008 FR-1)."
+  },
+  "installStepMacPaste": {
+    "message": "Paste the command and press Return.",
+    "description": "Install step 2 on macOS."
+  },
+  "installStepWindowsOpen": {
+    "message": "Press the Start key, type “PowerShell” and open it.",
+    "description": "Install step 1 on Windows (008 FR-1)."
+  },
+  "installStepWindowsPaste": {
+    "message": "Paste the command and press Enter.",
+    "description": "Install step 2 on Windows."
+  },
+  "installStepDone": {
+    "message": "When you see “Done”, come back here.",
+    "description": "Install step 3."
+  },
+  "installAutoDetect": {
+    "message": "This panel switches to downloads automatically once the installation finishes.",
+    "description": "Shown under the install steps; the panel checks every few seconds (008 FR-1)."
+  },
+  "installWhatTitle": {
+    "message": "What does this command do?",
+    "description": "Expandable section with the install steps and sources (008 FR-1, FR-11)."
+  },
+  "installDetailHelper": {
+    "message": "Downloads this project's helper for your system from this project's GitHub releases and verifies its signature:",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailYtDlp": {
+    "message": "Downloads yt-dlp from its official GitHub releases and verifies the official checksum:",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailDeno": {
+    "message": "Downloads deno from its official GitHub releases and verifies the official checksum:",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailFfmpeg": {
+    "message": "Downloads ffmpeg and ffprobe and verifies their checksums (skipped if you already have them):",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailFolder": {
+    "message": "Puts everything in one folder in your user account and registers the helper with Chrome and Firefox (including Zen):",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailDone": {
+    "message": "Prints “Done! Go back to your browser”.",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installWhatNote": {
+    "message": "No administrator password is needed. Nothing outside that folder is changed, PATH is not modified, and tools you installed yourself (for example with Homebrew) are left alone. Running the command again only updates or repairs what's needed.",
+    "description": "Install guide note (008 FR-12, FR-13, FR-15)."
+  },
+  "installReview": {
+    "message": "Want to read the script first? Download it, open it, then run it:",
+    "description": "Install guide: how to review the script before running it (008 FR-1)."
+  },
+  "errJobsRunning": {
+    "message": "Some downloads are still running. Wait for them to finish or cancel them, then try again.",
+    "description": "Error JOBS_RUNNING (plan 4.9)."
+  },
+  "errVerifyFailed": {
+    "message": "A downloaded update didn't pass verification, so it wasn't used. The current version is kept.",
+    "description": "Errors SIGNATURE_INVALID and CHECKSUM_MISMATCH (plan 4.9, 008 SR-2)."
+  },
+  "jobUpdatingYtDlp": {
+    "message": "Updating yt-dlp…",
+    "description": "Job state while the helper updates yt-dlp before retrying (008 FR-22)."
+  },
+  "hostUpdateFailingHint": {
+    "message": "The helper couldn't update itself several times in a row.",
+    "description": "One-line hint in the download panel after 3+ failed updates (008 FR-25)."
+  },
+  "hintDismiss": {
+    "message": "Dismiss",
+    "description": "Accessible label of the ✕ on a hint."
+  },
+  "componentExtension": {
+    "message": "Extension",
+    "description": "Row label in the options Downloads area (008 FR-24)."
+  },
+  "componentSourceBundled": {
+    "message": "installed by the helper",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourceHomebrew": {
+    "message": "Homebrew",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourceWinget": {
+    "message": "winget",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourcePath": {
+    "message": "already on your computer",
+    "description": "Component source (008 FR-24)."
+  },
+  "extensionSourceManual": {
+    "message": "loaded manually (update it yourself)",
+    "description": "Extension source for unpacked/temporary installs."
+  },
+  "extensionSourceAuto": {
+    "message": "updated by the browser",
+    "description": "Extension source for signed installs."
+  },
+  "updatesTitle": {
+    "message": "Updates",
+    "description": "Options group heading (008 FR-24)."
+  },
+  "updatesAuto": {
+    "message": "Update automatically",
+    "description": "Switch label (008 FR-24)."
+  },
+  "updatesAutoDesc": {
+    "message": "When you start a download, the helper checks for updates to yt-dlp, deno and itself at most once a day and installs them in the background.",
+    "description": "Switch description (008 FR-20)."
+  },
+  "updatesLastCheck": {
+    "message": "Last check",
+    "description": "Label (008 FR-24)."
+  },
+  "updatesNever": {
+    "message": "Not checked yet",
+    "description": "Last check value when never checked."
+  },
+  "updatesRunning": {
+    "message": "Checking for updates…",
+    "description": "Last check value while running."
+  },
+  "updatesLastCheckResult": {
+    "message": "$TIME$ — $RESULT$",
+    "description": "Last check time and result.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "Oct 23, 2026, 2:05 PM"
+      },
+      "result": {
+        "content": "$2",
+        "example": "up to date"
+      }
+    }
+  },
+  "updatesResultOk": {
+    "message": "up to date",
+    "description": "Update result."
+  },
+  "updatesResultUpdated": {
+    "message": "updated",
+    "description": "Update result."
+  },
+  "updatesResultFailed": {
+    "message": "failed",
+    "description": "Update result."
+  },
+  "updatesCheckNow": {
+    "message": "Check for updates now",
+    "description": "Button (008 FR-24)."
+  },
+  "updatesStarted": {
+    "message": "Checking in the background. Updates are installed when no download is running.",
+    "description": "Shown after starting a check (008 FR-21)."
+  },
+  "updatesAlreadyRunning": {
+    "message": "A check is already running.",
+    "description": "Shown when checkUpdates returns started: false."
+  },
+  "updatesSaveFailed": {
+    "message": "Couldn't reach the helper. Try again.",
+    "description": "Shown when an update command fails."
+  },
+  "updatesFailures": {
+    "message": "Automatic updates failed $COUNT$ times in a row. Running the install command again usually fixes this.",
+    "description": "Shown after 3+ consecutive failures (008 FR-25).",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "updatesShowHint": {
+    "message": "Show the hint in the download panel again",
+    "description": "Re-enables the dismissed update failure hint (constitution 7c)."
+  },
+  "updatesUnsupported": {
+    "message": "This version of the helper doesn't update automatically. Run the install command again to get the latest helper.",
+    "description": "Shown when status has no update information (older helper)."
+  },
+  "uninstallTitle": {
+    "message": "Remove downloads",
+    "description": "Options group heading (008 FR-30)."
+  },
+  "uninstallDesc": {
+    "message": "Deletes the helper, the yt-dlp, ffmpeg and deno it installed, its log files, and its registration with the browsers. Videos you downloaded are not affected. Tools you installed yourself (for example with Homebrew) are left alone.",
+    "description": "Uninstall description (008 FR-30)."
+  },
+  "uninstallButton": {
+    "message": "Remove downloads…",
+    "description": "Opens the confirmation dialog."
+  },
+  "uninstallDialogTitle": {
+    "message": "Remove downloads?",
+    "description": "Confirmation dialog title."
+  },
+  "uninstallDialogDesc": {
+    "message": "The helper, yt-dlp, ffmpeg, deno and the log files will be deleted. Videos you downloaded stay where they are. You can install again at any time with the install command.",
+    "description": "Confirmation dialog text."
+  },
+  "uninstallCancel": {
+    "message": "Cancel",
+    "description": "Dialog button."
+  },
+  "uninstallConfirm": {
+    "message": "Remove",
+    "description": "Dialog button."
+  },
+  "uninstallRunning": {
+    "message": "Removing…",
+    "description": "Status while removing."
+  },
+  "uninstallDone": {
+    "message": "Downloads were removed. Videos you downloaded are still in their folder.",
+    "description": "Status after removing."
+  },
+  "uninstallFailed": {
+    "message": "Couldn't remove downloads. Make sure the helper is installed, then try again.",
+    "description": "Status when uninstall fails."
   }
 }

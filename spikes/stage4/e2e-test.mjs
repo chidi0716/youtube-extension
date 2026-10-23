@@ -467,7 +467,7 @@ await session('connected', async ({ page, context, home, downloads }) => {
   await opt.reload();
   await opt.waitForSelector('#downloads-groups .status-row[data-component="deno"]');
   await opt.waitForFunction(() => document.querySelector('#downloads-groups .status-row[data-component="ytDlp"]')?.dataset.ok === 'true', null, { timeout: 10_000 });
-  const status = await opt.evaluate(() => [...document.querySelectorAll('#downloads-groups .status-row')].map((r) => `${r.dataset.component}:${r.dataset.ok}:${r.lastElementChild.textContent}`));
+  const status = await opt.evaluate(() => [...document.querySelectorAll('#downloads-groups .status-row[data-component]:not([data-component="extension"])')].map((r) => `${r.dataset.component}:${r.dataset.ok}:${r.lastElementChild.textContent}`));
   check('T23：連線狀態列出橋接程式、yt-dlp、ffmpeg、deno 與版本', status.length === 4 && status.every((s) => s.split(':')[1] === 'true') && status[1].includes('2026.10.21'), status.join(' | '));
   const folder = await opt.locator('#downloads-folder').textContent();
   check('T23：下載資料夾顯示預設的系統「下載」資料夾路徑', folder === `System Downloads folder (${downloads})`, folder);
@@ -570,14 +570,19 @@ await session(
       `const setup = root.querySelector('.yte-setup');
        return setup && { state: setup.dataset.state, title: setup.querySelector('.yte-setup-title').textContent,
          components: [...setup.querySelectorAll('.yte-setup-components li')].map((li) => li.dataset.component + ':' + li.querySelector('.yte-setup-state').textContent),
-         commands: [...setup.querySelectorAll('.yte-code')].map((c) => c.textContent) }`,
+         commands: [...setup.querySelectorAll('.yte-command-text')].map((c) => c.textContent) }`,
     );
     check(
       'T16/T22：已連線但缺 yt-dlp：標題「Some download tools are missing」，列出各元件狀態（FR-2）',
       s?.state === 'connected' && s.title === 'Some download tools are missing' && s.components[0] === 'host:Installed (dev)' && s.components[1] === 'ytDlp:Not installed' && /^ffmpeg:Installed/.test(s.components[2]) && /^deno:Installed/.test(s.components[3]),
       JSON.stringify(s),
     );
-    check('T16：安裝指令使用橋接程式回報的 installCommand，不顯示安裝腳本', s?.commands.length === 1, JSON.stringify(s?.commands));
+    // 008（T45）：缺少元件時也顯示一行安裝指令（可以重複執行，已安裝的部分會跳過）。作業系統以 runtime.getPlatformInfo 為準，
+    // 測試環境是 Linux，所以沒有指令（只有說明）；不會依 user agent 顯示 macOS 的指令。
+    await page.waitForTimeout(500);
+    const commands = await inToolbar(page, `return [...root.querySelectorAll('.yte-setup .yte-command-text')].map((c) => c.textContent)`);
+    const other = await inToolbar(page, `return root.querySelector('.yte-setup-os')?.textContent ?? null`);
+    check('T16/T45：缺少元件時不顯示套件管理工具的指令或舊的安裝腳本（Linux：只有說明）', commands.length === 0 && /macOS/.test(other ?? ''), JSON.stringify({ commands, other }));
     await shot(page, 'T22-tools-missing.png');
   },
   { tools: 'tools-noytdlp' },
@@ -717,7 +722,7 @@ await session(
     await page.goto(`chrome-extension://${EXT_ID}/options.html`);
     await page.waitForFunction(() => document.querySelector('#downloads-groups .status-row[data-component="deno"]')?.dataset.ok === 'true', null, { timeout: 10_000 });
     const legends = await page.evaluate(() => [...document.querySelectorAll('#downloads-groups legend')].map((l) => l.textContent));
-    check('T23：繁體中文的設定頁下載區', legends.join('|') === '連線狀態|下載資料夾|下載的檔案', legends.join('|'));
+    check('T23：繁體中文的設定頁下載區', legends.join('|') === '連線狀態|更新|移除下載功能|下載資料夾|下載的檔案', legends.join('|'));
     const box = await page.locator('#downloads').boundingBox();
     await page.screenshot({ path: join(shots, 'T23-options-downloads-zh-TW.png'), clip: { x: 0, y: box.y - 16, width: 1280, height: box.height + 32 }, fullPage: true });
   },

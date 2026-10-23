@@ -22,6 +22,7 @@ import toolbarCss from '@/components/toolbar/toolbar.css?inline';
 import { createScreenshot } from '@/features/downloads/content';
 import { downloadJobs } from '@/features/downloads/host-client';
 import { buttonProgress } from '@/features/downloads/jobs';
+import { createUpdateReminder } from '@/features/update/content';
 import { createViewingController } from '@/features/viewing';
 import { initI18n, onLocaleChange, t } from '@/utils/i18n';
 import { enabled, QUALITY_LOCK_VALUES, toolbarLayout, type QualityLock } from '@/utils/settings';
@@ -94,6 +95,10 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
     screenshot: () => screenshot.capture(),
   };
 
+  // 新版本提醒（008 第三之一節）：影片頁載入完成時請背景腳本查詢；卡片由工具列繪製。
+  const reminder = createUpdateReminder();
+  let checkedVideoId: string | null = null;
+
   const { more } = viewing;
   // 每次繪製時重新產生，下拉選單的文字跟著介面語言（007 FR-3）。
   const moreItems = (): MoreItem[] => [
@@ -165,6 +170,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
         progress={downloadProgress(videoId)}
         layout={layout}
         onSaveLayout={saveLayout}
+        reminder={reminder}
       />,
       container,
     );
@@ -236,6 +242,12 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   };
 
   function sync() {
+    // 打開影片頁時查詢新版本（工具列關閉時也查詢，只更新擴充功能圖示的標記；FR-27、FR-29b）。
+    const watchId = isWatchPage(location.href) ? getVideoId(location.href) : null;
+    if (watchId && watchId !== checkedVideoId) {
+      checkedVideoId = watchId;
+      reminder.check();
+    }
     const show = isEnabled && isWatchPage(location.href);
     if (!show) {
       stopWaiting();
@@ -291,6 +303,7 @@ export async function startToolbar(ctx: ContentScriptContext): Promise<void> {
   ctx.onInvalidated(screenshot.state.subscribe(rerender));
   ctx.onInvalidated(jobs.subscribe(rerender));
   ctx.onInvalidated(() => viewing.setActive(false));
+  ctx.onInvalidated(() => reminder.dispose());
   ctx.addEventListener(document, 'fullscreenchange', applyFullscreen);
   ctx.onInvalidated(() => {
     stopWaiting();

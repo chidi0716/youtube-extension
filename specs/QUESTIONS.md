@@ -379,50 +379,100 @@
 
 ## 階段 8（T40–T43、T48，實作方甲）
 
-### Q53 Windows 的 ffmpeg 下載比預估大（T40、008 FR-1）
+### Q53 Windows 的 ffmpeg 下載比預估大（T40、008 FR-1） — 已回答：維持靜態版，FR-1 說明改為「macOS 約 150 MB、Windows 約 300 MB」
 
 - **狀況**：008 FR-1 的說明寫「全部約 150 MB」。macOS 實際約 yt-dlp 35 MB＋deno 約 45 MB＋ffmpeg／ffprobe 各約 28 MB（壓縮後）＝約 140 MB，符合。Windows 的 yt-dlp/FFmpeg-Builds 只有 master 每日建置，靜態版 zip 約 189 MB（解壓後只保留 ffmpeg.exe、ffprobe.exe），加上 yt-dlp 與 deno，下載量約 270 MB。
 - **目前做法**：使用靜態版（`-win64-gpl.zip`），固定在每月月底的建置（月底的建置會長期保留，見 `specs/notes/ffmpeg-source.md`）。共用程式庫版（約 84 MB）需要一併複製所有 DLL，暫不採用。
 - **請規格方決定**：是否把 FR-1 的說明改為「約 150 MB（Windows 約 300 MB）」或「約 150–300 MB」；或改用共用程式庫版以縮小下載量。
 
-### Q54 GitHub Release 檔案的轉址網域（T40、plan 4.9）
+### Q54 GitHub Release 檔案的轉址網域（T40、plan 4.9） — 已回答：同意，plan 4.9 已更新
 
 - **狀況**：plan 4.9 的網路連線範圍列了 `github.com`／`objects.githubusercontent.com`。實際下載 Release 檔案時，GitHub 轉址到 `release-assets.githubusercontent.com`。
 - **目前做法**：兩個轉址網域都在允許清單中（`host/internal/release/hosts.go`），而且只允許出現在轉址中的位置不受限制；`github.com` 只允許本專案、`yt-dlp/yt-dlp`、`denoland/deno`、`yt-dlp/FFmpeg-Builds`、`BtbN/FFmpeg-Builds` 的 `/releases/` 路徑，`ffmpeg.martin-riedl.de` 只允許 `/download/`。每一次轉址都重新檢查。
 - **請規格方確認**，並更新 plan 4.9 與 constitution 第 2 點的網域說明（若需要列出）。
 
-### Q55 components.json 的實際格式（T40、plan 4.9）
+### Q55 components.json 的實際格式（T40、plan 4.9） — 已回答：同意，plan 4.9 改為引用 notes
 
 - **狀況**：plan 4.9 的範例把平台鍵與 `version`、`archive`、`binaries` 放在同一層，且每個平台只有一個檔案。macOS 的 ffmpeg 與 ffprobe 是兩個獨立的 zip，而 Windows 的 ffmpeg 版本號與 macOS 不同。
 - **目前做法**：`tools.<工具> = { version, platforms: { <平台>: { version?, files: [ { url, sha256, archive?: "zip", name?（非壓縮檔時安裝的檔名）, extract?（zip 中要取出的檔名） } ] } } }`；`helper` 維持 plan 的格式。不認得的欄位一律拒絕；網址必須是允許清單中的固定版本網址（不能含 `/latest/`）。`release/components.lock.json` 使用同一個格式，另外每個檔案多一個 `checksums`（官方檢查碼檔案的網址），而且 lock 檔就記錄 SHA256（發佈時與官方檢查碼、實際下載的檔案三方比對），所以 `npm run release:dry` 不需要網路也能產生清單。完整說明見 `specs/notes/T40-T43-install-and-release.md`。
 - **請規格方確認**，並視需要更新 plan 4.9 的範例。
 
-### Q56 內建公鑰尚未設定（T40）
+### Q56 內建公鑰尚未設定（T40） — 待專案擁有者產生金鑰
 
 - **狀況**：簽章私鑰只能由專案擁有者產生並存到 GitHub Secret，實作方不能產生後提交。
 - **目前做法**：`host/internal/release/pubkey.go` 的 `PublicKeyBase64` 先留空字串。留空時小幫手的 `--install` 與自動更新一律以 `SIGNATURE_INVALID` 拒絕清單；發佈流程第一步以 `yte-release check-key` 確認 Secret 的私鑰與這個公鑰相符，不相符（或尚未設定）時停止發佈。`npm run release:dry` 以 `-ldflags -X` 換成臨時產生的測試公鑰。
 - **請專案擁有者**依 README「維護者」章節產生金鑰、提交公鑰並設定 Secret。
 
-### Q57 Firefox 的 update_url 與 web-ext lint（T43、plan 4.10）
+### Q57 Firefox 的 update_url 與 web-ext lint（T43、plan 4.10） — 已回答：同意改用 --self-hosted
 
 - **狀況**：加入 `browser_specific_settings.gecko.update_url` 後，`web-ext lint` 回報錯誤 `MANIFEST_UPDATE_URL`（「"update_url" is not allowed.」），因為預設以 AMO 上架版本檢查。
 - **目前做法**：本專案以 AMO 不公開（unlisted）頻道簽署後自行發佈，所以改以 `web-ext lint --self-hosted` 檢查（0 個錯誤，警告與之前相同）；`scripts/release.mjs`、`spikes/stage4/final-check.sh` 與 `specs/notes/lint-exceptions.md` 都已更新。AMO 的不公開頻道接受 `update_url` 是依公開文件判斷，無法在本環境送簽署確認。
 - **請規格方確認**，並在 tasks 的完成條件中把「`web-ext lint`」改為「`web-ext lint --self-hosted`」；第一次正式發佈時請專案擁有者確認簽署成功（e2e-checklist 第 10 節）。
 
-### Q58 Firefox 是否跟隨 update_url 的轉址、預先發行版本的版本號（T43）
+### Q58 Firefox 是否跟隨 update_url 的轉址、預先發行版本的版本號（T43） — 部分回答：預先發行版本不送 Firefox 簽署；轉址待第一次發佈後實測
 
 - **狀況**：plan 4.10 的 `update_url` 是 `releases/latest/download/updates.json`，GitHub 會轉址兩次（到固定版本，再到 `release-assets.githubusercontent.com`）。Mozilla 的文件沒有說明更新檢查是否跟隨轉址。另外 WXT 會把 `package.json` 版本中的預先發行標記（例如 `-beta.1`）從 manifest 的 `version` 去掉，AMO 也只接受數字的版本號。
 - **目前做法**：依 plan 使用 latest 網址；`updates.json` 的 `version` 取自建置出的 Firefox manifest（與 `.xpi` 完全一致）。預先發行版本不會成為 latest，所以不會被正式版的使用者取得；但同一個數字版本不能在 AMO 簽署兩次，例如先發 `v0.2.0-beta.1` 再發 `v0.2.0` 時，後者的 Firefox 版會簽署失敗。
 - **請專案擁有者**在第一次發佈後依 e2e-checklist 第 10 節確認 Firefox／Zen 會自動更新；若不跟隨轉址，改為由發佈流程把 `updates.json` 放在固定網址（例如 GitHub Pages 或 repo 的 raw 檔案）。**請規格方決定**預先發行版本的版本號規則（例如預先發行用 `0.2.0.1` 這種四段數字，或預先發行不送 Firefox 簽署）。
 
-### Q59 Windows 上移除下載功能留下的暫存複本（T41、008 FR-30）
+### Q59 Windows 上移除下載功能留下的暫存複本（T41、008 FR-30） — 已回答：同意；擴充功能端已在成功後關閉連線（Q65 第 5 點）
 
 - **狀況**：Windows 無法刪除執行中的檔案。`uninstall` 指令執行時，瀏覽器啟動的小幫手（安裝資料夾中的 `yte-host.exe`）還在執行。
 - **目前做法**：`yte-host --uninstall` 從安裝資料夾執行時，先把自己複製到 `%TEMP%\yte-uninstall-<時間>.exe`，以分離的方式執行複本，由複本在 2 秒後刪除安裝資料夾（失敗時重試最多 2 分鐘，等瀏覽器的小幫手結束）與登錄機碼。複本本身（約 7 MB）留在暫存資料夾，由 Windows 的暫存檔清理移除。擴充功能在 `uninstall` 回應後應中斷與小幫手的連線，讓它盡快結束。
 - **請規格方確認**這個做法，並告知擴充功能端（乙）在 `uninstall` 成功後關閉原生訊息連線。
 
-### Q60 引導腳本沒有驗證 components.json 的簽章，只驗證小幫手的 SHA256（T41、plan 4.9 信任鏈）
+### Q60 引導腳本沒有驗證 components.json 的簽章，只驗證小幫手的 SHA256（T41、plan 4.9 信任鏈） — 已回答：同意
 
 - **狀況**：與 plan 4.9 的信任鏈相同：引導腳本以 HTTPS 從同一個 Release 下載清單與小幫手，核對小幫手的 SHA256；小幫手再以內建公鑰驗證清單簽章後才下載其他元件。
 - **補充做法**：引導腳本由發佈流程代入版本標籤，清單與小幫手都從**同一個固定版本**下載（不是 latest），避免下載途中正好發佈新版本而不一致；PowerShell 版不呼叫 `exit`（`irm | iex` 時會關掉使用者的視窗）。macOS 版只依賴系統內建的 `curl`、`shasum`、`sed`、`tr`、`awk`，不需要 jq 或 Python（macOS 的 python3 是會要求安裝開發工具的替身）。
 - **請規格方確認**。
+
+## 階段 8（T44–T47，擴充功能端）
+
+### Q61 提醒卡片的收合計時與「使用者在場」（T44、008 FR-28） — 已回答：同意，008 FR-28 已補充
+
+- **狀況**：plan 3.9 規定「在 visible 且收到 pointermove、keydown 或 wheel 後才開始計時」。若使用者在卡片出現時動了一下滑鼠就離開電腦，依字面計時會繼續，15 秒後卡片在使用者不在時收合，與 constitution 第 7c 點「使用者離開時不會自己消失」不一致。
+- **目前做法**：只有「最近 5 秒內有操作（移動滑鼠、按下滑鼠、按鍵、捲動）」的時間才累計；超過 5 秒沒有操作就暫停，等下一次操作再繼續；累計 15 秒才收合。分頁切到背景後回到前景，也要等使用者再次操作才繼續。滑鼠停在卡片上、卡片暫時被面板或編輯模式擋住時暫停。因此一直不動滑鼠看影片時，卡片會留著（不遮影片），直到使用者有操作累計 15 秒或按 ✕。
+- **請規格方確認**這個解讀，或改為「有操作後就連續計時」。
+
+### Q62 「每天最多一次」與「隔天」的判斷（T44、008 FR-28） — 已回答：同意以本機日期判斷
+
+- **目前做法**：以使用者電腦的本機日期判斷：同一版本的卡片在同一個日期只出現一次，日期改變（過了午夜）就算隔天；查詢仍以 24 小時為間隔（FR-27）。
+- **請規格方確認**（另一種做法是卡片上次出現後滿 24 小時）。
+
+### Q63 卡片的其他顯示條件（T44、008 FR-28） — 已回答：同意（疊在標題列右側、不推動版面）
+
+- **目前做法**：除 FR-28 列出的條件外，另外要求**工具列在畫面中**（以 IntersectionObserver 判斷，例如使用者已捲到留言區時延後），避免卡片在看不到的地方出現；卡片位置靠右對齊工具列（「更多」按鈕下方），以絕對定位疊在標題列右側（不推動頁面版面），z-index 低於面板與浮動播放器。卡片顯示中展開面板、編輯工具列、全螢幕、子母畫面或焦點移到輸入框時，卡片暫時隱藏並暫停計時，結束後回來。
+- **請規格方確認**；若希望卡片不疊在標題列上，可以改為佔據版面的一列（會使標題往下移）。
+
+### Q64 「跳過這個版本」與圖示標記、工具列關閉時的查詢（T44、008 FR-29a、FR-29b） — 已回答：同意，008 FR-29a 已補充
+
+- **目前做法**：
+  1. 圖示的「NEW」標記與「更多」上的小圓點同一個條件：有尚未處理的新版本（未跳過、未選「前往下載」、未選「不再提醒」）。因此「跳過這個版本」與「不再提醒」也會清除標記（FR-29a 只寫了「前往下載」與更新後）。
+  2. 工具列被關閉時，打開影片頁仍會請背景腳本查詢（每 24 小時最多一次），只更新圖示標記，不顯示卡片；工具列再次出現時依 FR-28 顯示卡片。
+  3. 設定頁「關於」區只要最新版本比目前版本新，就顯示「前往下載」（即使已跳過或已點過）。設定頁本身不查詢。
+  4. Firefox／Zen 簽署版（installType 不是 development）的「關於」區顯示「由瀏覽器自動更新」，不顯示最新版本。
+- **請規格方確認**。
+
+### Q65 與小幫手銜接的格式細節（T45、T46，plan 4.9） — 已回答：與甲方實作相符（lastCheck 為 ISO 字串或 null；components 多 found 欄位，可忽略）
+
+- **狀況**：plan 4.9 的通訊協定表格沒有規定以下細節；擴充功能端先採寬鬆的解讀，小幫手端（T42）定案後若不同再調整。
+- **目前做法**：
+  1. `update.lastCheck`：接受 ISO 8601 字串（建議）、毫秒或秒的數字。
+  2. `components`：只接受 `helper`、`yt-dlp`、`deno`、`ffmpeg`、`ffprobe` 與 `bundled`、`homebrew`、`winget`、`path`；其他值忽略。設定頁列出小幫手、yt-dlp、ffmpeg、deno 與擴充功能（FR-24），ffprobe 不另列一行；路徑在滑鼠停留時顯示。
+  3. `setAutoUpdate` 的回應內容不使用（成功後重新讀取 `status`）；`checkUpdates` 只讀 `started`；`update.running` 為 true 時設定頁每 3 秒重新讀取 `status`，直到結束。
+  4. `stage: "updating-ytdlp"` 的進度事件：可以只帶 `jobId`（plan 4.9 的寫法），也可以是帶完整欄位的進度事件。下一個一般的進度事件清除這個狀態。
+  5. `uninstall` 成功後，擴充功能主動關閉這次的原生訊息連線（瀏覽器會結束正在執行的小幫手），3 秒後重新檢查；因此實際刪除檔案必須由分離的程序執行（plan 已如此規定）。
+  6. 小幫手未安裝時，影片／MP3 面板與設定頁一律顯示一行安裝指令；缺少 yt-dlp、ffmpeg 或 deno 時也顯示同一個指令（FR-13：可以重複執行），不再使用 `status.installCommand`。
+- **請規格方與甲方確認**；若格式不同，擴充功能端只需修改 `utils/native-protocol.ts` 的整理函式。
+
+### Q66 「這個指令會做什麼？」中 Windows 的 ffmpeg 來源（T45、008 FR-11） — 已回答：甲方定案為 yt-dlp/FFmpeg-Builds，與目前常數相同
+
+- **狀況**：plan 4.9 寫 Windows 的 ffmpeg 優先使用 `github.com/yt-dlp/FFmpeg-Builds`，沒有固定版本網址時改用 `github.com/BtbN/FFmpeg-Builds`，實際來源由甲方記錄在 `specs/notes/ffmpeg-source.md`（本次交付時還沒有）。
+- **目前做法**：說明中 Windows 寫 `github.com/yt-dlp/FFmpeg-Builds`、macOS 寫 `ffmpeg.martin-riedl.de`（常數在 `features/downloads/install-guide.ts`）。
+- **請規格方**在甲方定案後確認；若改用 BtbN，只需修改該常數。
+
+### Q67 小幫手「自動更新連續失敗」提示的關閉與重新開啟（T46、008 FR-25、FR-29c、constitution 第 7c 點） — 已回答：同意
+
+- **目前做法**：下載面板的一行提示（附「開啟設定頁」）可以按 ✕ 關閉；關閉時記下當時「最近一次檢查」的時間，之後再有新的失敗（檢查時間改變）才再顯示。設定頁「更新」區一律顯示連續失敗次數，並在提示被關閉時提供「在下載面板重新顯示提示」。提示只在使用者打開影片／MP3 面板時看到，不另外以卡片出現。
+- **請規格方確認**。另外，介面上的「橋接程式」已依 008「名詞」一節改稱「小幫手」（擴充功能端的字串）。
