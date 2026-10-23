@@ -17,4 +17,4 @@ step build:firefox; npm run --silent build:firefox > /dev/null && echo ok
 step build:host; npm run --silent build:host 2>&1 | tail -3
 step "go vet"; (cd host && go vet ./... && echo ok)
 step "go test"; (cd host && go test ./... 2>&1 | grep -vE "no test files")
-step "web-ext lint"; npx web-ext lint -s .output/firefox-mv3 --output json 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s);console.log(JSON.stringify(r.summary), r.warnings.map(w=>w.code+' '+w.file).join('; '))})"
+step "web-ext lint"; npx web-ext lint --self-hosted -s .output/firefox-mv3 --output json 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s);console.log(JSON.stringify(r.summary), r.warnings.map(w=>w.code+' '+w.file).join('; '))})"

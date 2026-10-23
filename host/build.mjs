@@ -2,7 +2,8 @@
 //
 // 產出 host/dist/ 下的單一執行檔：
 //   yte-host-darwin-arm64、yte-host-darwin-amd64、yte-host-windows-amd64.exe
-// 並組出可以直接交給使用者的安裝資料夾（執行檔＋安裝／解除安裝腳本＋原生訊息設定檔範本）：
+// 並組出「手動安裝」用的資料夾（008 FR-16；執行檔＋安裝／解除安裝腳本，
+// 原生訊息設定檔由小幫手的 --install --offline 寫入）：
 //   youtube-extension-host-macos/、youtube-extension-host-windows/
 // 以 Node 撰寫，在 macOS、Windows、Linux 上都能執行；需要已安裝 Go。
 import { execFileSync } from 'node:child_process';
@@ -27,12 +28,24 @@ mkdirSync(distDir, { recursive: true });
 
 const binaryName = ({ goos, goarch }) => `yte-host-${goos}-${goarch}${goos === 'windows' ? '.exe' : ''}`;
 
+// npm run release:dry 以臨時產生的測試公鑰建置（plan 4.10），讓產出的小幫手能驗證同一次產生的
+// components.json.sig。正式版本不設定這個環境變數，一律使用 host/internal/release/pubkey.go 的公鑰。
+const dryRunPubkey = process.env.YTE_DRY_RUN_PUBKEY ?? '';
+if (dryRunPubkey && !/^[A-Za-z0-9+/]{43}=$/.test(dryRunPubkey)) {
+  throw new Error('YTE_DRY_RUN_PUBKEY must be a base64-encoded Ed25519 public key');
+}
+let ldflags = `-s -w -X main.version=${version}`;
+if (dryRunPubkey) {
+  ldflags += ` -X github.com/chidi0716/youtube-extension/host/internal/release.PublicKeyBase64=${dryRunPubkey}`;
+  console.log('(dry run: using a temporary public key)');
+}
+
 for (const target of targets) {
   const out = join(distDir, binaryName(target));
   console.log(`building ${target.goos}/${target.goarch} -> ${out}`);
   execFileSync(
     'go',
-    ['build', '-trimpath', '-ldflags', `-s -w -X main.version=${version}`, '-o', out, './cmd/yte-host'],
+    ['build', '-trimpath', '-ldflags', ldflags, '-o', out, './cmd/yte-host'],
     {
       cwd: hostDir,
       stdio: 'inherit',
@@ -57,7 +70,7 @@ const packages = [
 
 for (const pkg of packages) {
   const dir = join(distDir, pkg.name);
-  mkdirSync(join(dir, 'manifests'), { recursive: true });
+  mkdirSync(dir, { recursive: true });
   for (const target of targets.filter((t) => t.goos === pkg.os)) {
     copyFileSync(join(distDir, binaryName(target)), join(dir, binaryName(target)));
   }
@@ -65,9 +78,6 @@ for (const pkg of packages) {
     const dest = join(dir, script.split(/[\\/]/).pop());
     copyFileSync(join(installDir, script), dest);
     if (dest.endsWith('.sh')) chmodSync(dest, 0o755);
-  }
-  for (const manifest of ['chrome.json', 'firefox.json']) {
-    copyFileSync(join(installDir, 'manifests', manifest), join(dir, 'manifests', manifest));
   }
   console.log(`package -> ${dir}`);
 }

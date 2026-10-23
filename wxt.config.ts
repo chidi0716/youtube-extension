@@ -8,6 +8,10 @@ const CHROME_PUBLIC_KEY =
 // Firefox：固定的附加元件 ID（plan 3.3）。
 const GECKO_ID = 'youtube-extension@chidi0716';
 
+// Firefox：簽署版由瀏覽器依這個網址自動更新（plan 4.10、008 FR-23）。網址會轉址到最新正式版本
+// （不含預先發行版本）的 updates.json，由發佈流程產生。
+const GECKO_UPDATE_URL = 'https://github.com/chidi0716/youtube-extension/releases/latest/download/updates.json';
+
 // See https://wxt.dev/api/reference/wxt/interfaces/inlineconfig.html
 export default defineConfig({
   // Chrome 與 Firefox 都輸出 Manifest V3（plan 第 2 節、T00 結論）。
@@ -40,6 +44,7 @@ export default defineConfig({
               strict_min_version: '140.0',
               // 不收集任何資料（constitution 第 2 點）。
               data_collection_permissions: { required: ['none'] },
+              update_url: GECKO_UPDATE_URL,
             },
           },
         }

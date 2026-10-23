@@ -1,6 +1,8 @@
 # web-ext lint 可接受的警告
 
-`npx web-ext lint --source-dir .output/firefox-mv3` 必須是 0 個錯誤；下表以外的警告都要修正。
+`npx web-ext lint --self-hosted --source-dir .output/firefox-mv3` 必須是 0 個錯誤；下表以外的警告都要修正。
+
+T43 起 Firefox 版 manifest 有 `browser_specific_settings.gecko.update_url`（自行發佈、由瀏覽器自動更新，plan 4.10）。不加 `--self-hosted` 時 web-ext lint 會把它當成 AMO 上架版本而回報錯誤 `MANIFEST_UPDATE_URL`（「"update_url" is not allowed.」）；本專案以 AMO 不公開頻道簽署後自行發佈，所以一律以 `--self-hosted` 檢查（`scripts/release.mjs` 與 `spikes/stage4/final-check.sh` 都已加上，見 QUESTIONS Q57）。
 新增例外前要先經規格方同意（見 `specs/QUESTIONS.md`）。
 
 | 警告代碼 | 檔案 | 理由 | 依據 |

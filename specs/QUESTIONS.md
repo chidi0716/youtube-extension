@@ -402,3 +402,27 @@
 - **狀況**：簽章私鑰只能由專案擁有者產生並存到 GitHub Secret，實作方不能產生後提交。
 - **目前做法**：`host/internal/release/pubkey.go` 的 `PublicKeyBase64` 先留空字串。留空時小幫手的 `--install` 與自動更新一律以 `SIGNATURE_INVALID` 拒絕清單；發佈流程第一步以 `yte-release check-key` 確認 Secret 的私鑰與這個公鑰相符，不相符（或尚未設定）時停止發佈。`npm run release:dry` 以 `-ldflags -X` 換成臨時產生的測試公鑰。
 - **請專案擁有者**依 README「維護者」章節產生金鑰、提交公鑰並設定 Secret。
+
+### Q57 Firefox 的 update_url 與 web-ext lint（T43、plan 4.10）
+
+- **狀況**：加入 `browser_specific_settings.gecko.update_url` 後，`web-ext lint` 回報錯誤 `MANIFEST_UPDATE_URL`（「"update_url" is not allowed.」），因為預設以 AMO 上架版本檢查。
+- **目前做法**：本專案以 AMO 不公開（unlisted）頻道簽署後自行發佈，所以改以 `web-ext lint --self-hosted` 檢查（0 個錯誤，警告與之前相同）；`scripts/release.mjs`、`spikes/stage4/final-check.sh` 與 `specs/notes/lint-exceptions.md` 都已更新。AMO 的不公開頻道接受 `update_url` 是依公開文件判斷，無法在本環境送簽署確認。
+- **請規格方確認**，並在 tasks 的完成條件中把「`web-ext lint`」改為「`web-ext lint --self-hosted`」；第一次正式發佈時請專案擁有者確認簽署成功（e2e-checklist 第 10 節）。
+
+### Q58 Firefox 是否跟隨 update_url 的轉址、預先發行版本的版本號（T43）
+
+- **狀況**：plan 4.10 的 `update_url` 是 `releases/latest/download/updates.json`，GitHub 會轉址兩次（到固定版本，再到 `release-assets.githubusercontent.com`）。Mozilla 的文件沒有說明更新檢查是否跟隨轉址。另外 WXT 會把 `package.json` 版本中的預先發行標記（例如 `-beta.1`）從 manifest 的 `version` 去掉，AMO 也只接受數字的版本號。
+- **目前做法**：依 plan 使用 latest 網址；`updates.json` 的 `version` 取自建置出的 Firefox manifest（與 `.xpi` 完全一致）。預先發行版本不會成為 latest，所以不會被正式版的使用者取得；但同一個數字版本不能在 AMO 簽署兩次，例如先發 `v0.2.0-beta.1` 再發 `v0.2.0` 時，後者的 Firefox 版會簽署失敗。
+- **請專案擁有者**在第一次發佈後依 e2e-checklist 第 10 節確認 Firefox／Zen 會自動更新；若不跟隨轉址，改為由發佈流程把 `updates.json` 放在固定網址（例如 GitHub Pages 或 repo 的 raw 檔案）。**請規格方決定**預先發行版本的版本號規則（例如預先發行用 `0.2.0.1` 這種四段數字，或預先發行不送 Firefox 簽署）。
+
+### Q59 Windows 上移除下載功能留下的暫存複本（T41、008 FR-30）
+
+- **狀況**：Windows 無法刪除執行中的檔案。`uninstall` 指令執行時，瀏覽器啟動的小幫手（安裝資料夾中的 `yte-host.exe`）還在執行。
+- **目前做法**：`yte-host --uninstall` 從安裝資料夾執行時，先把自己複製到 `%TEMP%\yte-uninstall-<時間>.exe`，以分離的方式執行複本，由複本在 2 秒後刪除安裝資料夾（失敗時重試最多 2 分鐘，等瀏覽器的小幫手結束）與登錄機碼。複本本身（約 7 MB）留在暫存資料夾，由 Windows 的暫存檔清理移除。擴充功能在 `uninstall` 回應後應中斷與小幫手的連線，讓它盡快結束。
+- **請規格方確認**這個做法，並告知擴充功能端（乙）在 `uninstall` 成功後關閉原生訊息連線。
+
+### Q60 引導腳本沒有驗證 components.json 的簽章，只驗證小幫手的 SHA256（T41、plan 4.9 信任鏈）
+
+- **狀況**：與 plan 4.9 的信任鏈相同：引導腳本以 HTTPS 從同一個 Release 下載清單與小幫手，核對小幫手的 SHA256；小幫手再以內建公鑰驗證清單簽章後才下載其他元件。
+- **補充做法**：引導腳本由發佈流程代入版本標籤，清單與小幫手都從**同一個固定版本**下載（不是 latest），避免下載途中正好發佈新版本而不一致；PowerShell 版不呼叫 `exit`（`irm | iex` 時會關掉使用者的視窗）。macOS 版只依賴系統內建的 `curl`、`shasum`、`sed`、`tr`、`awk`，不需要 jq 或 Python（macOS 的 python3 是會要求安裝開發工具的替身）。
+- **請規格方確認**。
