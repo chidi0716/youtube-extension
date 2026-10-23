@@ -212,16 +212,12 @@
     "description": "Download panels: shown for live and upcoming videos."
   },
   "hostMissingTitle": {
-    "message": "尚未連接下載工具",
-    "description": "Video and MP3 panels: heading when the helper program is not available."
-  },
-  "hostMissingIntro": {
-    "message": "影片與 MP3 由你電腦上的 yt-dlp 與 ffmpeg 下載，透過一支小型的橋接程式連接。需要：",
-    "description": "Video and MP3 panels: explanation before the list of components."
+    "message": "尚未安裝下載功能",
+    "description": "Video/MP3 panel title when the helper isn't installed."
   },
   "hostComponentHelper": {
-    "message": "橋接程式",
-    "description": "Name of the native helper program component."
+    "message": "小幫手",
+    "description": "Name of this project's helper program in the interface (008)."
   },
   "hostComponentYtDlp": {
     "message": "yt-dlp",
@@ -236,8 +232,8 @@
     "description": "Status of the helper program when it cannot be reached."
   },
   "hostStatusUnknown": {
-    "message": "需要橋接程式才能確認",
-    "description": "Status of yt-dlp or ffmpeg when the helper is not connected."
+    "message": "需要小幫手才能確認",
+    "description": "Tool status when the helper isn't installed."
   },
   "hostStepsTitleMac": {
     "message": "在 macOS 上安裝",
@@ -251,29 +247,9 @@
     "message": "安裝",
     "description": "Heading of the installation steps on other systems."
   },
-  "hostStepPackagesMac": {
-    "message": "在「終端機」以 Homebrew 安裝需要的工具：",
-    "description": "macOS installation step 1."
-  },
-  "hostStepPackagesWindows": {
-    "message": "在 PowerShell 以 winget 安裝需要的工具：",
-    "description": "Windows installation step 1."
-  },
-  "hostStepScriptMac": {
-    "message": "下載橋接程式，執行其中的安裝腳本：",
-    "description": "macOS installation step 2."
-  },
-  "hostStepScriptWindows": {
-    "message": "下載橋接程式，執行其中的安裝腳本：",
-    "description": "Windows installation step 2."
-  },
-  "hostStepRecheck": {
-    "message": "重新啟動瀏覽器，再按「重新檢查」。",
-    "description": "Last installation step."
-  },
   "hostOtherOs": {
-    "message": "橋接程式提供 macOS 與 Windows 版本。",
-    "description": "Shown on systems other than macOS and Windows."
+    "message": "小幫手提供 macOS 與 Windows 版本。",
+    "description": "Shown on other operating systems."
   },
   "hostInstallGuide": {
     "message": "安裝說明",
@@ -313,13 +289,9 @@
       }
     }
   },
-  "hostStepRecheckOnly": {
-    "message": "再按「重新檢查」。",
-    "description": "Last installation step when the helper is already installed."
-  },
   "hostDenoHint": {
-    "message": "尚未安裝 deno。沒有 deno 時，yt-dlp 可能取得不到部分 YouTube 格式。安裝指令：",
-    "description": "Hint shown when only deno is missing."
+    "message": "尚未安裝 deno。沒有 deno 時，yt-dlp 可能取得不到部分 YouTube 格式。再執行一次安裝指令即可補上：",
+    "description": "Hint when only deno is missing."
   },
   "clipTitle": {
     "message": "時間範圍",
@@ -408,8 +380,8 @@
     "description": "Button that shows the downloaded file in Finder or File Explorer."
   },
   "errMissingTools": {
-    "message": "缺少橋接程式、yt-dlp 或 ffmpeg，請參考安裝說明。",
-    "description": "Download error: missing components."
+    "message": "缺少小幫手、yt-dlp 或 ffmpeg，請參考安裝說明。",
+    "description": "Download error message."
   },
   "errOutdated": {
     "message": "YouTube 有變動，請更新 yt-dlp。",
@@ -1120,5 +1092,85 @@
   "aboutReenable": {
     "message": "重新開啟新版本提醒",
     "description": "About section button (008 FR-29)."
+  },
+  "installIntro": {
+    "message": "下載影片與 MP3 需要在你的電腦上安裝 yt-dlp（下載影片的開源工具）、ffmpeg（合併影音與轉 MP3）與 deno（yt-dlp 需要的執行環境），以及本專案的小幫手（讓瀏覽器能使用它們）。全部約 150 MB，只裝在你的帳號下，可以隨時移除。",
+    "description": "Install guide introduction (008 FR-1)."
+  },
+  "hostStatusNotInstalled": {
+    "message": "尚未安裝",
+    "description": "Status of the helper when the browser can't reach it."
+  },
+  "installCopy": {
+    "message": "複製",
+    "description": "Copies the install command."
+  },
+  "installCopied": {
+    "message": "已複製",
+    "description": "Shown after copying the install command."
+  },
+  "installCopyFailed": {
+    "message": "無法自動複製。指令已選取，請按 Ctrl+C（Mac 為 ⌘C）複製。",
+    "description": "Shown when the clipboard can't be written."
+  },
+  "installStepMacOpen": {
+    "message": "按 ⌘＋空白鍵，輸入「終端機」並按 Enter。",
+    "description": "Install step 1 on macOS (008 FR-1)."
+  },
+  "installStepMacPaste": {
+    "message": "貼上指令並按 Enter。",
+    "description": "Install step 2 on macOS."
+  },
+  "installStepWindowsOpen": {
+    "message": "按開始鍵，輸入「PowerShell」並開啟。",
+    "description": "Install step 1 on Windows (008 FR-1)."
+  },
+  "installStepWindowsPaste": {
+    "message": "貼上指令並按 Enter。",
+    "description": "Install step 2 on Windows."
+  },
+  "installStepDone": {
+    "message": "看到「完成」後回到這裡。",
+    "description": "Install step 3."
+  },
+  "installAutoDetect": {
+    "message": "安裝完成後，這裡會自動切換成可以下載的畫面。",
+    "description": "Shown under the install steps; the panel checks every few seconds (008 FR-1)."
+  },
+  "installWhatTitle": {
+    "message": "這個指令會做什麼？",
+    "description": "Expandable section with the install steps and sources (008 FR-1, FR-11)."
+  },
+  "installDetailHelper": {
+    "message": "從本專案 GitHub 的正式版本下載適合你電腦的小幫手，並驗證簽章：",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailYtDlp": {
+    "message": "從 yt-dlp 官方 GitHub 正式版本下載 yt-dlp，並驗證官方檢查碼：",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailDeno": {
+    "message": "從 deno 官方 GitHub 正式版本下載 deno，並驗證官方檢查碼：",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailFfmpeg": {
+    "message": "下載 ffmpeg 與 ffprobe 並驗證檢查碼（已經有可用的 ffmpeg 時跳過）：",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailFolder": {
+    "message": "全部放在你帳號內的一個專屬資料夾，並為 Chrome 與 Firefox（含 Zen）註冊小幫手：",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailDone": {
+    "message": "印出「完成！回到瀏覽器即可下載」。",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installWhatNote": {
+    "message": "不需要系統管理員密碼，不會修改資料夾以外的地方或 PATH，也不會動到你自己安裝的工具（例如 Homebrew 裝的）。再執行一次只會更新或修復需要的部分。",
+    "description": "Install guide note (008 FR-12, FR-13, FR-15)."
+  },
+  "installReview": {
+    "message": "想先檢視腳本內容：先下載、開啟檢視，再執行：",
+    "description": "Install guide: how to review the script before running it (008 FR-1)."
   }
 }

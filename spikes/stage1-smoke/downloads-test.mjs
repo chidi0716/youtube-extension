@@ -7,7 +7,7 @@
 //   ONLY=T17 … # 只跑某個任務
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { EXT_ID, WATCH, button, captionRequests, launch, openWatch, reporter, root, shot, spaNavigate, thumbnailRequests } from './lib.mjs';
+import { EXT_ID, WATCH, button, captionRequests, extensionWorker, launch, openWatch, reporter, root, shot, spaNavigate, thumbnailRequests } from './lib.mjs';
 
 const { check, skip, summary } = reporter();
 const only = process.env.ONLY;
@@ -331,9 +331,9 @@ const setupState = (page) =>
     return {
       title: setup.querySelector('.yte-setup-title')?.textContent,
       components: [...setup.querySelectorAll('.yte-setup-components li')].map((li) => `${li.dataset.component}:${li.querySelector('.yte-setup-state').textContent}`),
-      os: setup.querySelector('.yte-setup-steps')?.dataset.os ?? 'other',
+      os: setup.querySelector('.yte-install')?.dataset.os ?? 'other',
       osTitle: setup.querySelector('.yte-setup-os-title')?.textContent,
-      commands: [...setup.querySelectorAll('.yte-code')].map((c) => c.textContent),
+      commands: [...setup.querySelectorAll('.yte-command-text')].map((c) => c.textContent),
       link: link ? { href: link.getAttribute('href'), target: link.getAttribute('target'), rel: link.getAttribute('rel') } : null,
       recheck: setup.querySelector('.yte-setup-actions .yte-button-primary')?.textContent,
     };
@@ -352,21 +352,26 @@ for (const [task, ua, os] of [
 ]) {
   await section(
     task,
-    async (page) => {
+    async (page, context) => {
+      // 008（T45）：作業系統以 runtime.getPlatformInfo 判斷；測試環境是 Linux，改為回報 mac／win。
+      await (await extensionWorker(context)).evaluate((o) => {
+        chrome.runtime.getPlatformInfo = async () => ({ os: o, arch: 'x86-64', nacl_arch: 'x86-64' });
+      }, os === 'mac' ? 'mac' : 'win');
       await openPanel(page, 'video');
       const s = await setupState(page);
       check(
-        `${os}：影片面板列出需要的元件（橋接程式無法連線、yt-dlp、ffmpeg 與 deno 無法確認）（FR-2、T15a）`,
-        s?.title === "The download helper isn't connected" &&
-          s.components.join('|') === "host:Not connected|ytDlp:Can't check without the helper|ffmpeg:Can't check without the helper|deno:Can't check without the helper",
+        `${os}：影片面板列出需要的元件（小幫手未安裝、yt-dlp、ffmpeg 與 deno 無法確認）（FR-2、T15a）`,
+        s?.title === "Downloads aren't set up yet" &&
+          s.components.join('|') === "host:Not installed|ytDlp:Can't check without the helper|ffmpeg:Can't check without the helper|deno:Can't check without the helper",
         JSON.stringify(s?.components),
       );
       check(
-        `${os}：依作業系統顯示對應的安裝步驟（FR-2）`,
+        `${os}：依作業系統顯示對應的一行安裝指令（FR-2、008 FR-1）`,
         s.os === os &&
+          s.commands.length === 1 &&
           (os === 'mac'
-            ? s.osTitle === 'Install on macOS' && s.commands[0] === 'brew install yt-dlp ffmpeg deno' && s.commands[1] === 'sh host/dist/youtube-extension-host-macos/install.sh'
-            : s.osTitle === 'Install on Windows' && s.commands[0] === 'winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno' && /install\.ps1$/.test(s.commands[1])),
+            ? s.osTitle === 'Install on macOS' && s.commands[0] === 'curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh | sh'
+            : s.osTitle === 'Install on Windows' && s.commands[0] === 'irm https://github.com/chidi0716/youtube-extension/releases/latest/download/install.ps1 | iex'),
         `${s.osTitle}: ${s.commands.join(' / ')}`,
       );
       check(
@@ -383,12 +388,12 @@ for (const [task, ua, os] of [
           .then(() => 'Checking…', () => 'not shown');
         await page.waitForTimeout(700);
         const after = await setupState(page);
-        check('「重新檢查」按鈕：檢查中顯示「Checking…」，完成後更新狀態（FR-2）', during === 'Checking…' && after.recheck === 'Check again' && after.components[0] === 'host:Not connected', `${during} → ${after.recheck}`);
+        check('「重新檢查」按鈕：檢查中顯示「Checking…」，完成後更新狀態（FR-2）', during === 'Checking…' && after.recheck === 'Check again' && after.components[0] === 'host:Not installed', `${during} → ${after.recheck}`);
         await page.keyboard.press('Escape');
         // MP3 面板相同
         await openPanel(page, 'mp3');
         const mp3 = await setupState(page);
-        check('MP3 面板同樣顯示未連線狀態（FR-2）', mp3?.title === "The download helper isn't connected" && mp3.os === 'mac');
+        check('MP3 面板同樣顯示未連線狀態（FR-2）', mp3?.title === "Downloads aren't set up yet" && mp3.os === 'mac');
         await page.keyboard.press('Escape');
         // 縮圖仍可使用（未連線狀態下）
         await openPanel(page, 'thumbnail');
@@ -419,10 +424,13 @@ for (const [task, ua, os] of [
 
 await section(
   'T22a-zh',
-  async (page) => {
+  async (page, context) => {
+    await (await extensionWorker(context)).evaluate(() => {
+      chrome.runtime.getPlatformInfo = async () => ({ os: 'win', arch: 'x86-64', nacl_arch: 'x86-64' });
+    });
     await openPanel(page, 'video');
     const s = await setupState(page);
-    check('繁體中文的未連線說明（NFR-4）', s?.title === '尚未連接下載工具' && s.osTitle === '在 Windows 上安裝' && s.recheck === '重新檢查', JSON.stringify(s));
+    check('繁體中文的未連線說明（NFR-4）', s?.title === '尚未安裝下載功能' && s.osTitle === '在 Windows 上安裝' && s.recheck === '重新檢查', JSON.stringify(s));
     await shot(page, 'T22a-video-panel-zh-TW.png');
   },
   { lang: 'zh-TW', userAgent: WIN_UA, viewport: { width: 1280, height: 1250 } },

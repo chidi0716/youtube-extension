@@ -570,14 +570,15 @@ await session(
       `const setup = root.querySelector('.yte-setup');
        return setup && { state: setup.dataset.state, title: setup.querySelector('.yte-setup-title').textContent,
          components: [...setup.querySelectorAll('.yte-setup-components li')].map((li) => li.dataset.component + ':' + li.querySelector('.yte-setup-state').textContent),
-         commands: [...setup.querySelectorAll('.yte-code')].map((c) => c.textContent) }`,
+         commands: [...setup.querySelectorAll('.yte-command-text')].map((c) => c.textContent) }`,
     );
     check(
       'T16/T22：已連線但缺 yt-dlp：標題「Some download tools are missing」，列出各元件狀態（FR-2）',
       s?.state === 'connected' && s.title === 'Some download tools are missing' && s.components[0] === 'host:Installed (dev)' && s.components[1] === 'ytDlp:Not installed' && /^ffmpeg:Installed/.test(s.components[2]) && /^deno:Installed/.test(s.components[3]),
       JSON.stringify(s),
     );
-    check('T16：安裝指令使用橋接程式回報的 installCommand，不顯示安裝腳本', s?.commands.length === 1, JSON.stringify(s?.commands));
+    // 008（T45）：缺少元件時也顯示一行安裝指令（可以重複執行，已安裝的部分會跳過）；Linux 上沒有指令（只有說明）。
+    check('T16/T45：缺少元件時不顯示套件管理工具的指令或舊的安裝腳本', s?.commands.length === 0, JSON.stringify(s?.commands));
     await shot(page, 'T22-tools-missing.png');
   },
   { tools: 'tools-noytdlp' },

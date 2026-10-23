@@ -26,7 +26,7 @@ const isLiveInfo = (info: HostInfo) => info.isLive || info.liveStatus === 'is_li
 function DownloadGate({ videoId, children }: { videoId: string; children: (title: string) => ComponentChildren }) {
   const [attempt, setAttempt] = useState(0);
   const video = useVideoData(videoId, attempt);
-  const host = useHostState();
+  const host = useHostState({ pollWhileMissing: true });
   if (video.status === 'loading' || host.state === null) return <PanelLoading />;
   if (video.status === 'error') return <PanelError onRetry={() => setAttempt((n) => n + 1)} />;
   if (isLiveOrUpcoming(video.data)) return <p class="yte-muted yte-live-unavailable">{t('liveUnavailable')}</p>;

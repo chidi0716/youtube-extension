@@ -1,10 +1,12 @@
 // 設定頁的「下載」區（002 FR-60、004 FR-11，tasks T23）：連線狀態（橋接程式、yt-dlp、ffmpeg、deno）、
 // 更新 yt-dlp、下載資料夾、檔名格式、嵌入資訊開關。設定改變時立即寫入；背景腳本在下次下載時讀取。
 import { checkHostStatus, HostError, pickFolder, updateYtDlp } from '@/features/downloads/host-client';
-import { componentState, componentVersion, HOST_COMPONENTS, INSTALL_GUIDE_URL, installCommand, type HostComponent, type HostState } from '@/features/downloads/host-status';
-import { detectOs } from '@/features/downloads/logic';
+import { componentState, componentVersion, HOST_COMPONENTS, INSTALL_GUIDE_URL, type HostComponent, type HostState } from '@/features/downloads/host-status';
+import { INSTALL_POLL_MS } from '@/features/downloads/install-guide';
+import type { HostOs } from '@/features/downloads/logic';
 import { t, type MessageKey } from '@/utils/i18n';
 import { downloadDir, embedInfo, namePreset } from '@/utils/settings';
+import { installGuide, platformOs } from './install-guide';
 
 const COMPONENT_LABELS: Record<HostComponent, MessageKey> = {
   host: 'hostComponentHelper',
@@ -36,14 +38,12 @@ function group(id: string, title: MessageKey): HTMLFieldSetElement {
   return fieldset;
 }
 
-const os = () => {
-  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
-  return detectOs(nav.userAgentData?.platform || navigator.platform || '', navigator.userAgent);
-};
-
 /** 繪製下載區；回傳的函式取消監聽（介面語言改變時重新繪製，007 FR-3）。 */
 export function renderDownloads(root: HTMLElement): () => void {
   let state: HostState | null = null;
+  let os: HostOs | null = null;
+  let pollTimer: ReturnType<typeof setInterval> | undefined;
+  let disposed = false;
 
   // ---- 連線狀態 ----
   const connection = group('connection', 'optionsConnection');
@@ -92,24 +92,25 @@ export function renderDownloads(root: HTMLElement): () => void {
       const version = componentVersion(state, c);
       const text =
         ok === null
-          ? t(c === 'host' ? 'hostStatusUnreachable' : 'hostStatusUnknown')
+          ? t(c === 'host' ? 'hostStatusNotInstalled' : 'hostStatusUnknown')
           : ok
             ? version
               ? t('hostStatusVersion', version)
               : t('hostStatusFound')
-            : t(c === 'host' ? 'hostStatusUnreachable' : 'hostStatusMissing');
+            : t(c === 'host' ? 'hostStatusNotInstalled' : 'hostStatusMissing');
       list.append(
         el('div', { className: 'status-row', dataset: { component: c, ok: String(ok === true) } }, el('span', { textContent: t(COMPONENT_LABELS[c]) }), el('span', { className: 'option-desc', textContent: text })),
       );
     }
     install.replaceChildren();
+    // 小幫手未安裝或缺少元件：與面板相同的安裝說明（008 FR-2）；安裝期間每 3 秒自動檢查。
     const missing = state.state === 'unreachable' || !state.status.complete;
-    if (missing) {
-      const command = installCommand(state, os());
-      if (command) install.append(el('code', { className: 'code', textContent: command }));
+    if (missing && os) {
+      install.append(el('p', { className: 'option-desc', textContent: t('installIntro') }), installGuide(os, 'downloads-install'));
       const link = el('a', { href: INSTALL_GUIDE_URL, target: '_blank', rel: 'noopener noreferrer', textContent: t('hostInstallGuide') });
       install.append(link);
     }
+    setPolling(missing);
     const connected = state.state === 'connected';
     update.disabled = !connected || componentState(state, 'ytDlp') !== true;
     choose.disabled = !connected;
@@ -135,6 +136,25 @@ export function renderDownloads(root: HTMLElement): () => void {
     );
     select.value = presets.some((p) => p.id === current) ? current : 'title-id';
   };
+
+  function setPolling(on: boolean) {
+    if (!on || disposed) {
+      clearInterval(pollTimer);
+      pollTimer = undefined;
+      return;
+    }
+    if (pollTimer !== undefined) return;
+    let busy = false;
+    pollTimer = setInterval(async () => {
+      if (busy || document.visibilityState !== 'visible') return;
+      busy = true;
+      const next = await checkHostStatus(true);
+      busy = false;
+      if (disposed || JSON.stringify(next) === JSON.stringify(state)) return;
+      state = next;
+      renderStatus();
+    }, INSTALL_POLL_MS);
+  }
 
   const check = async (refresh: boolean) => {
     recheck.disabled = true;
@@ -184,6 +204,14 @@ export function renderDownloads(root: HTMLElement): () => void {
   const unwatch = downloadDir.watch(() => void renderFolder());
 
   renderStatus();
+  void platformOs().then((value) => {
+    os = value;
+    if (!disposed && state) renderStatus();
+  });
   void check(false);
-  return unwatch;
+  return () => {
+    disposed = true;
+    setPolling(false);
+    unwatch();
+  };
 }

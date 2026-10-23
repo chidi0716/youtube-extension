@@ -40,6 +40,8 @@ export type ContentMessage =
   | { type: 'pickFolder' }
   /** 更新 yt-dlp（002 FR-6a、FR-60）。 */
   | { type: 'updateYtDlp' }
+  /** 作業系統（runtime.getPlatformInfo，內容腳本不能直接呼叫；安裝說明用，plan 3.10）。 */
+  | { type: 'platformInfo' }
   // ---- 新版本提醒（008 FR-26 至 FR-29b）----
   /** 影片頁載入完成：到了該查詢的時間就查詢，回傳提醒的狀態。 */
   | { type: 'updateCheck' }
@@ -149,6 +151,7 @@ export function isContentMessage(value: unknown): value is ContentMessage {
     case 'updateYtDlp':
     case 'updateCheck':
     case 'updateStatus':
+    case 'platformInfo':
       return true;
     case 'updateAction':
       return (

@@ -15,6 +15,12 @@ export default defineBackground(() => {
       case 'openOptions':
         void browser.runtime.openOptionsPage();
         return;
+      case 'platformInfo':
+        browser.runtime.getPlatformInfo().then(
+          (info) => sendResponse({ ok: true, os: info.os }),
+          () => sendResponse({ ok: false, error: 'UNKNOWN' }),
+        );
+        return true;
       case 'updateCheck':
       case 'updateStatus':
       case 'updateAction': {

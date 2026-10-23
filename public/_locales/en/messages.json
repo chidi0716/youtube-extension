@@ -212,16 +212,12 @@
     "description": "Download panels: shown for live and upcoming videos."
   },
   "hostMissingTitle": {
-    "message": "The download helper isn't connected",
-    "description": "Video and MP3 panels: heading when the helper program is not available."
-  },
-  "hostMissingIntro": {
-    "message": "Videos and MP3 are downloaded by yt-dlp and ffmpeg on your computer, through a small helper program. You need:",
-    "description": "Video and MP3 panels: explanation before the list of components."
+    "message": "Downloads aren't set up yet",
+    "description": "Video/MP3 panel title when the helper isn't installed."
   },
   "hostComponentHelper": {
-    "message": "Helper program",
-    "description": "Name of the native helper program component."
+    "message": "Helper",
+    "description": "Name of this project's helper program in the interface (008)."
   },
   "hostComponentYtDlp": {
     "message": "yt-dlp",
@@ -237,7 +233,7 @@
   },
   "hostStatusUnknown": {
     "message": "Can't check without the helper",
-    "description": "Status of yt-dlp or ffmpeg when the helper is not connected."
+    "description": "Tool status when the helper isn't installed."
   },
   "hostStepsTitleMac": {
     "message": "Install on macOS",
@@ -251,29 +247,9 @@
     "message": "Installation",
     "description": "Heading of the installation steps on other systems."
   },
-  "hostStepPackagesMac": {
-    "message": "Install the tools with Homebrew in Terminal:",
-    "description": "macOS installation step 1."
-  },
-  "hostStepPackagesWindows": {
-    "message": "Install the tools with winget in PowerShell:",
-    "description": "Windows installation step 1."
-  },
-  "hostStepScriptMac": {
-    "message": "Download the helper and run its install script:",
-    "description": "macOS installation step 2."
-  },
-  "hostStepScriptWindows": {
-    "message": "Download the helper and run its install script:",
-    "description": "Windows installation step 2."
-  },
-  "hostStepRecheck": {
-    "message": "Restart the browser, then press “Check again”.",
-    "description": "Last installation step."
-  },
   "hostOtherOs": {
-    "message": "The helper program is available for macOS and Windows.",
-    "description": "Shown on systems other than macOS and Windows."
+    "message": "The helper is available for macOS and Windows.",
+    "description": "Shown on other operating systems."
   },
   "hostInstallGuide": {
     "message": "Installation guide",
@@ -313,13 +289,9 @@
       }
     }
   },
-  "hostStepRecheckOnly": {
-    "message": "Then press “Check again”.",
-    "description": "Last installation step when the helper is already installed."
-  },
   "hostDenoHint": {
-    "message": "deno is not installed. yt-dlp may miss some YouTube formats without it. Install it with:",
-    "description": "Hint shown when only deno is missing."
+    "message": "deno is not installed. yt-dlp may miss some YouTube formats without it. Run the install command again to add it:",
+    "description": "Hint when only deno is missing."
   },
   "clipTitle": {
     "message": "Time range",
@@ -409,7 +381,7 @@
   },
   "errMissingTools": {
     "message": "The helper, yt-dlp or ffmpeg is missing. See the installation guide.",
-    "description": "Download error: missing components."
+    "description": "Download error message."
   },
   "errOutdated": {
     "message": "YouTube has changed. Please update yt-dlp.",
@@ -1120,5 +1092,85 @@
   "aboutReenable": {
     "message": "Turn new version reminders back on",
     "description": "About section button (008 FR-29)."
+  },
+  "installIntro": {
+    "message": "Downloading videos and MP3 needs yt-dlp (the open-source tool that downloads videos), ffmpeg (joins video and audio, converts to MP3) and deno (a runtime yt-dlp needs) on your computer, plus this project's helper (lets the browser use them). About 150 MB in total, installed only for your user account, and you can remove it at any time.",
+    "description": "Install guide introduction (008 FR-1)."
+  },
+  "hostStatusNotInstalled": {
+    "message": "Not installed",
+    "description": "Status of the helper when the browser can't reach it."
+  },
+  "installCopy": {
+    "message": "Copy",
+    "description": "Copies the install command."
+  },
+  "installCopied": {
+    "message": "Copied",
+    "description": "Shown after copying the install command."
+  },
+  "installCopyFailed": {
+    "message": "Couldn't copy automatically. The command is selected; press Ctrl+C (⌘C on Mac) to copy it.",
+    "description": "Shown when the clipboard can't be written."
+  },
+  "installStepMacOpen": {
+    "message": "Press ⌘ + Space, type “Terminal” and press Return.",
+    "description": "Install step 1 on macOS (008 FR-1)."
+  },
+  "installStepMacPaste": {
+    "message": "Paste the command and press Return.",
+    "description": "Install step 2 on macOS."
+  },
+  "installStepWindowsOpen": {
+    "message": "Press the Start key, type “PowerShell” and open it.",
+    "description": "Install step 1 on Windows (008 FR-1)."
+  },
+  "installStepWindowsPaste": {
+    "message": "Paste the command and press Enter.",
+    "description": "Install step 2 on Windows."
+  },
+  "installStepDone": {
+    "message": "When you see “Done”, come back here.",
+    "description": "Install step 3."
+  },
+  "installAutoDetect": {
+    "message": "This panel switches to downloads automatically once the installation finishes.",
+    "description": "Shown under the install steps; the panel checks every few seconds (008 FR-1)."
+  },
+  "installWhatTitle": {
+    "message": "What does this command do?",
+    "description": "Expandable section with the install steps and sources (008 FR-1, FR-11)."
+  },
+  "installDetailHelper": {
+    "message": "Downloads this project's helper for your system from this project's GitHub releases and verifies its signature:",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailYtDlp": {
+    "message": "Downloads yt-dlp from its official GitHub releases and verifies the official checksum:",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailDeno": {
+    "message": "Downloads deno from its official GitHub releases and verifies the official checksum:",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailFfmpeg": {
+    "message": "Downloads ffmpeg and ffprobe and verifies their checksums (skipped if you already have them):",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailFolder": {
+    "message": "Puts everything in one folder in your user account and registers the helper with Chrome and Firefox (including Zen):",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installDetailDone": {
+    "message": "Prints “Done! Go back to your browser”.",
+    "description": "Install step description (008 FR-11)."
+  },
+  "installWhatNote": {
+    "message": "No administrator password is needed. Nothing outside that folder is changed, PATH is not modified, and tools you installed yourself (for example with Homebrew) are left alone. Running the command again only updates or repairs what's needed.",
+    "description": "Install guide note (008 FR-12, FR-13, FR-15)."
+  },
+  "installReview": {
+    "message": "Want to read the script first? Download it, open it, then run it:",
+    "description": "Install guide: how to review the script before running it (008 FR-1)."
   }
 }

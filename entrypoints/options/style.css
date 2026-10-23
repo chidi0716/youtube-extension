@@ -399,3 +399,65 @@ h2 {
 #about-note:empty {
   display: none;
 }
+
+/* ---------- 安裝說明（008 FR-2） ---------- */
+
+.install-title {
+  display: block;
+  margin: 8px 0 4px;
+}
+
+.command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.command .command-text {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.command .button,
+.button.with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.command-status {
+  flex-basis: 100%;
+}
+
+.command-status:empty {
+  display: none;
+}
+
+.install-steps,
+.install-details ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.install-steps li + li,
+.install-details li + li {
+  margin-top: 4px;
+}
+
+.install-details summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.inline-code {
+  display: block;
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.review-code {
+  white-space: pre-wrap;
+}
