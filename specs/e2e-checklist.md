@@ -197,3 +197,65 @@
 | 8.11 | 外觀選「深色」「淺色」「跟隨系統」時各自正確，且不受 YouTube 主題影響；「跟隨系統」時改變系統的深色模式，已開啟的設定頁立即跟著變。 | ✔ | ☐ | ☐ | ☐ | ☐ |
 | 8.12 | 外觀設定不影響 YouTube 上的工具列與面板（仍跟隨 YouTube 的主題）；外觀設定跟著帳號同步，記下的 YouTube 主題只在本機。 | ✔（同步除外） | ☐ | ☐ | — | — |
 | 8.13 | 深色外觀時設定頁的下拉選單展開後也是深色、文字清楚。 | — | ☐ | ☐ | ☐ | ☐ |
+
+## 10. 安裝與發佈（維護者／實機，008、plan 4.9、4.10）
+
+容器中已驗證的部分見 `specs/notes/T40-T43-install-and-release.md` 的「驗證紀錄」（安裝流程以本機假伺服器測試、引導腳本以模擬環境與 PowerShell for Linux 測試）。以下只能由專案擁有者在真正的 GitHub、Mozilla、macOS 與 Windows 上確認。
+
+### 10.1 第一次發佈（維護者）
+
+| # | 項目 | 自動化 | 結果 |
+|---|---|---|---|
+| 10.1.1 | 依 README「Releases (maintainers)」以 `yte-release keygen` 產生金鑰，把公鑰貼到 `host/internal/release/pubkey.go` 並 commit；私鑰存到 Secret `RELEASE_SIGNING_KEY`；另設定 `AMO_JWT_ISSUER`、`AMO_JWT_SECRET`。私鑰檔案沒有出現在 repo 中。 | — | ☐ |
+| 10.1.2 | 本機 `npm run release:dry` 成功，`release/dist/upload/` 有 15 個檔案，`release/dist/.tools/` 中沒有留下私鑰。 | ✔ | ☐ |
+| 10.1.3 | 先推送一個預先發行標籤（例如 `v0.2.0-beta.1`，注意 Q58 的版本號問題）：Actions 成功，Release 標示為 Pre-release，`releases/latest` 不指向它。 | — | ☐ |
+| 10.1.4 | 推送正式標籤：Actions 的 `lock-check -download` 對每個第三方檔案印出「matches the official checksum」與「downloaded and verified」；`check-key` 印出 ok。 | — | ☐ |
+| 10.1.5 | Firefox 版送 Mozilla 簽署成功（manifest 有 `update_url`，不公開頻道應接受，Q57），Release 附有 `.xpi`。 | — | ☐ |
+| 10.1.6 | Release 有：`install.sh`、`install.ps1`、`uninstall.sh`、`uninstall.ps1`、三種 `yte-host-*`、兩個手動安裝 zip、`components.json(.sig)`、Chrome zip、`.xpi`、`updates.json`、`SHA256SUMS`；說明文字含各瀏覽器的更新步驟。下載後 `shasum -a 256 -c SHA256SUMS` 全部 OK。 | — | ☐ |
+| 10.1.7 | `https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh` 下載到的腳本中 `TAG=` 是這個版本；`install.ps1` 是純 ASCII（沒有 BOM）。 | ✔（release:dry） | ☐ |
+| 10.1.8 | 簽章私鑰與 `pubkey.go` 不符時（例如暫時改錯 Secret 再重跑），流程在 `check-key` 停止，不建立 Release。 | — | ☐ |
+
+### 10.2 一行指令安裝（實機）
+
+| # | 項目 | 自動化 | macOS | Windows |
+|---|---|---|---|---|
+| 10.2.1 | 全新的電腦（沒有 Homebrew／winget 的 yt-dlp、ffmpeg、deno）：照面板說明貼上一行指令，逐步印出中英文說明與來源網址，最後「完成！回到瀏覽器即可下載」；全程沒有 Gatekeeper、SmartScreen 或系統管理員提示。 | 部分（模擬） | ☐ | ☐ |
+| 10.2.2 | macOS：Apple Silicon（含在 Rosetta 的終端機中執行）安裝 arm64 版，Intel 安裝 amd64 版（`file ~/Library/Application\ Support/youtube-extension-host/yte-host`）。 | ✔（模擬） | ☐ | — |
+| 10.2.3 | Windows：在 Windows PowerShell 5.1（不是 PowerShell 7）執行，中文訊息正確顯示，執行完 PowerShell 視窗沒有被關閉。 | ✔（PowerShell for Linux 模擬） | — | ☐ |
+| 10.2.4 | 安裝後面板在幾秒內自動切換成可下載畫面；成功下載 1080p 影片與 MP3。 | — | ☐ | ☐ |
+| 10.2.5 | 設定頁「下載」區顯示五個元件（小幫手、yt-dlp、deno、ffmpeg、ffprobe）的版本與來源，來源為安裝資料夾。 | ✔（假 status） | ☐ | ☐ |
+| 10.2.6 | 已用 Homebrew 安裝 ffmpeg 的 Mac：安裝時印出沿用系統的 ffmpeg，不下載；Homebrew 的 yt-dlp 不受影響（`brew list --versions yt-dlp` 不變），設定頁的 yt-dlp 來源為安裝資料夾。 | ✔（假伺服器） | ☐ | — |
+| 10.2.7 | 再執行一次指令：每一步顯示「已是最新版本，略過」（yt-dlp 為「已安裝，略過」），不重新下載。 | ✔ | ☐ | ☐ |
+| 10.2.8 | 下載途中中斷網路：印出網路錯誤與「再執行一次」的說明；恢復後再執行，從失敗處繼續完成。 | ✔（假伺服器） | ☐ | ☐ |
+| 10.2.9 | 用 `sudo` 執行 macOS 指令：被拒絕並說明原因。 | ✔ | ☐ | — |
+| 10.2.10 | 安裝後使用者資料夾以外沒有新增檔案；PATH 沒有改變（重新開一個終端機，`which yt-dlp` 結果與安裝前相同）。 | — | ☐ | ☐ |
+| 10.2.11 | 竄改測試：把 `components.json` 改一個字元後以 `yte-host --install --manifest … --signature …` 執行，顯示簽章驗證失敗、不下載任何東西；把下載的小幫手改一個位元組後執行引導腳本的核對，顯示 SHA256 不符並停止。 | ✔ | ☐ | ☐ |
+| 10.2.12 | Zen：一行指令安裝後（不另外設定）Zen 找得到小幫手（Q41）。 | — | ☐ | ☐ |
+| 10.2.13 | README 的「手動安裝」：下載 `youtube-extension-host-macos.zip`／`-windows.zip`，以自己安裝的 yt-dlp、ffmpeg、deno 執行 `install.sh`／`install.ps1`，可以下載。 | ✔（Linux e2e） | ☐ | ☐ |
+
+### 10.3 自動更新（實機）
+
+| # | 項目 | 自動化 | macOS | Windows |
+|---|---|---|---|---|
+| 10.3.1 | 發佈新版本後，第一次下載時背景啟動更新（`host.log` 出現 `update` 的紀錄），下載本身沒有變慢；下載結束後小幫手、deno 被替換，設定頁顯示新版本與最近一次檢查。 | ✔（假伺服器） | ☐ | ☐ |
+| 10.3.2 | 一天內多次下載只檢查一次（`host.log` 只有一次 update）；沒有下載的日子不連網（例如以防火牆紀錄確認）。 | ✔ | ☐ | ☐ |
+| 10.3.3 | 把安裝資料夾中的 yt-dlp 換成舊版並觸發 `YTDLP_OUTDATED`：面板顯示「正在更新 yt-dlp…」，之後自動重試成功。 | ✔（假 yt-dlp） | ☐ | ☐ |
+| 10.3.4 | Windows：小幫手自我更新時瀏覽器正在使用舊版本，替換成功（舊檔改名為 `yte-host.exe.old`，下次啟動後消失）。 | — | — | ☐ |
+| 10.3.5 | 設定頁關閉自動更新後，超過 24 小時再下載也不檢查；「立即檢查更新」不受 24 小時限制。 | ✔ | ☐ | ☐ |
+| 10.3.6 | 斷網時下載三天（或調整系統時間）：連續失敗 3 次以上後，下載面板出現一行提示；恢復網路並成功更新後提示消失。 | ✔（失敗計數） | ☐ | ☐ |
+
+### 10.4 移除（實機）
+
+| # | 項目 | 自動化 | macOS | Windows |
+|---|---|---|---|---|
+| 10.4.1 | 設定頁「移除下載功能」：有下載進行中時顯示說明、不移除；沒有下載時，幾秒後專屬資料夾、記錄檔、註冊（macOS 的兩個設定檔；Windows 的兩個登錄機碼）都被刪除，已下載的影片還在。 | ✔（Linux e2e） | ☐ | ☐ |
+| 10.4.2 | Windows：移除後 `%TEMP%` 中留下一個 `yte-uninstall-*.exe`（Q59），其餘都已刪除。 | — | — | ☐ |
+| 10.4.3 | 擴充功能已移除時，README 的一行移除指令刪除上述所有項目；Windows 版以 `irm … \| iex` 執行，中文正常、視窗沒有被關閉。 | ✔（語法） | ☐ | ☐ |
+
+### 10.5 擴充功能的自動更新
+
+| # | 項目 | 自動化 | 結果 |
+|---|---|---|---|
+| 10.5.1 | Firefox：安裝 Release 的 `.xpi`（簽署版）。發佈更新的版本後，`about:addons` → 齒輪 →「檢查更新」會更新到新版本（確認 Firefox 會跟隨 `releases/latest/download/updates.json` 的轉址，Q58）。 | — | ☐ |
+| 10.5.2 | Zen 同上。 | — | ☐ |
+| 10.5.3 | Chrome 依 Release 說明的步驟（解壓覆蓋原資料夾、重新載入）更新後，設定保留、擴充功能 ID 不變。 | — | ☐ |
