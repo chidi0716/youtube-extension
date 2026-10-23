@@ -577,8 +577,12 @@ await session(
       s?.state === 'connected' && s.title === 'Some download tools are missing' && s.components[0] === 'host:Installed (dev)' && s.components[1] === 'ytDlp:Not installed' && /^ffmpeg:Installed/.test(s.components[2]) && /^deno:Installed/.test(s.components[3]),
       JSON.stringify(s),
     );
-    // 008（T45）：缺少元件時也顯示一行安裝指令（可以重複執行，已安裝的部分會跳過）；Linux 上沒有指令（只有說明）。
-    check('T16/T45：缺少元件時不顯示套件管理工具的指令或舊的安裝腳本', s?.commands.length === 0, JSON.stringify(s?.commands));
+    // 008（T45）：缺少元件時也顯示一行安裝指令（可以重複執行，已安裝的部分會跳過）。作業系統以 runtime.getPlatformInfo 為準，
+    // 測試環境是 Linux，所以沒有指令（只有說明）；不會依 user agent 顯示 macOS 的指令。
+    await page.waitForTimeout(500);
+    const commands = await inToolbar(page, `return [...root.querySelectorAll('.yte-setup .yte-command-text')].map((c) => c.textContent)`);
+    const other = await inToolbar(page, `return root.querySelector('.yte-setup-os')?.textContent ?? null`);
+    check('T16/T45：缺少元件時不顯示套件管理工具的指令或舊的安裝腳本（Linux：只有說明）', commands.length === 0 && /macOS/.test(other ?? ''), JSON.stringify({ commands, other }));
     await shot(page, 'T22-tools-missing.png');
   },
   { tools: 'tools-noytdlp' },
@@ -718,7 +722,7 @@ await session(
     await page.goto(`chrome-extension://${EXT_ID}/options.html`);
     await page.waitForFunction(() => document.querySelector('#downloads-groups .status-row[data-component="deno"]')?.dataset.ok === 'true', null, { timeout: 10_000 });
     const legends = await page.evaluate(() => [...document.querySelectorAll('#downloads-groups legend')].map((l) => l.textContent));
-    check('T23：繁體中文的設定頁下載區', legends.join('|') === '連線狀態|下載資料夾|下載的檔案', legends.join('|'));
+    check('T23：繁體中文的設定頁下載區', legends.join('|') === '連線狀態|更新|移除下載功能|下載資料夾|下載的檔案', legends.join('|'));
     const box = await page.locator('#downloads').boundingBox();
     await page.screenshot({ path: join(shots, 'T23-options-downloads-zh-TW.png'), clip: { x: 0, y: box.y - 16, width: 1280, height: box.height + 32 }, fullPage: true });
   },

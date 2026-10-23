@@ -358,6 +358,8 @@ for (const [task, ua, os] of [
         chrome.runtime.getPlatformInfo = async () => ({ os: o, arch: 'x86-64', nacl_arch: 'x86-64' });
       }, os === 'mac' ? 'mac' : 'win');
       await openPanel(page, 'video');
+      // 作業系統（runtime.getPlatformInfo）取得後才顯示安裝指令。
+      await page.waitForSelector('yte-toolbar .yte-setup-os-title');
       const s = await setupState(page);
       check(
         `${os}：影片面板列出需要的元件（小幫手未安裝、yt-dlp、ffmpeg 與 deno 無法確認）（FR-2、T15a）`,
@@ -429,6 +431,7 @@ await section(
       chrome.runtime.getPlatformInfo = async () => ({ os: 'win', arch: 'x86-64', nacl_arch: 'x86-64' });
     });
     await openPanel(page, 'video');
+    await page.waitForSelector('yte-toolbar .yte-setup-os-title');
     const s = await setupState(page);
     check('繁體中文的未連線說明（NFR-4）', s?.title === '尚未安裝下載功能' && s.osTitle === '在 Windows 上安裝' && s.recheck === '重新檢查', JSON.stringify(s));
     await shot(page, 'T22a-video-panel-zh-TW.png');

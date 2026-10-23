@@ -10,5 +10,5 @@
 
 ## 最近一次檢查
 
-- 日期：2026-10-23（T37）
-- 結果：0 個錯誤、2 個警告（即上表兩項：`manifest.json`、`content-scripts/youtube.js`）、0 個 notice。`background.js`（含原生訊息與通知）、`options.html` 的腳本（設定頁的工具列區與下載區以 DOM API 建立元素與圖示，沒有 innerHTML，也不含 Preact）、`content-scripts/tidy.js` 沒有警告。
+- 日期：2026-10-23（T47，階段 8 擴充功能端）
+- 結果：0 個錯誤、2 個警告（即上表兩項：`manifest.json`、`content-scripts/youtube.js`）、0 個 notice。`background.js`（含原生訊息、通知與新版本查詢）、`options.html` 的腳本（設定頁的工具列區、下載區、安裝說明、更新與移除區、關於區都以 DOM API 建立元素與圖示，沒有 innerHTML，也不含 Preact）、`content-scripts/tidy.js` 沒有警告。
