@@ -41,6 +41,7 @@ type Event struct {
 	ETA      *float64    `json:"eta,omitempty"`
 	Part     int         `json:"part,omitempty"`
 	Parts    int         `json:"parts,omitempty"`
+	Stage    string      `json:"stage,omitempty"` // "updating-ytdlp"（008 FR-22）
 	Path     string      `json:"path,omitempty"`
 	FileName string      `json:"fileName,omitempty"`
 	Error    *errs.Error `json:"error,omitempty"`
@@ -228,12 +229,12 @@ func (m *Manager) check(id string) {
 	}
 	m.Emit(&Event{
 		Event: "progress", JobID: st.JobID, VideoID: st.VideoID, Kind: st.Kind, State: st.State,
-		Percent: st.Percent, Speed: st.Speed, ETA: st.ETA, Part: st.Part, Parts: st.Parts,
+		Percent: st.Percent, Speed: st.Speed, ETA: st.ETA, Part: st.Part, Parts: st.Parts, Stage: st.Stage,
 	})
 }
 
 func sameProgress(a, b *Status) bool {
-	return a.State == b.State && reflect.DeepEqual(a.Percent, b.Percent) &&
+	return a.State == b.State && a.Stage == b.Stage && reflect.DeepEqual(a.Percent, b.Percent) &&
 		reflect.DeepEqual(a.Speed, b.Speed) && reflect.DeepEqual(a.ETA, b.ETA) && a.Part == b.Part
 }
 

@@ -8,6 +8,7 @@
 //   - --install [--manifest <components.json> --signature <components.json.sig>] | --install --offline：
 //     一行指令的安裝（plan 4.9）或手動安裝（只註冊小幫手）；
 //   - --uninstall [--delay <秒>]：移除下載功能（008 FR-30）；
+//   - --update：自動更新（plan 4.9，由 download 或 checkUpdates 以脫離的方式啟動）；
 //   - --version。
 package main
 
@@ -80,6 +81,10 @@ func main() {
 			os.Exit(runInstall(args[1:]))
 		case "--uninstall":
 			os.Exit(runUninstall(args[1:]))
+		case "--update":
+			if len(args) == 1 {
+				os.Exit(runUpdate())
+			}
 		}
 	}
 	client, ok := identifyCaller(args)
@@ -109,7 +114,9 @@ func serve(client string) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	go m.Run(ctx)
 
-	d := &commands.Dispatcher{Backend: app.New(version, m), Log: log}
+	a := app.New(version, m)
+	a.Log = log
+	d := &commands.Dispatcher{Backend: a, Log: log}
 	err := commands.Serve(ctx, os.Stdin, w, d)
 	w.Close()
 	cancel()
@@ -130,7 +137,8 @@ func runJob(id string) int {
 		log.Printf("run-job rejected: invalid id")
 		return 2
 	}
-	r := &jobs.Runner{Store: store(), Tools: ytdlp.Locate(ytdlp.SystemEnv()), Log: log}
+	tools := ytdlp.Locate(ytdlp.SystemEnv())
+	r := &jobs.Runner{Store: store(), Tools: tools, Log: log, UpdateYtDlp: ytDlpUpdater(tools)}
 	st, err := r.Run(id)
 	if err != nil {
 		log.Printf("job %s: %v", id, err)

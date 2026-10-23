@@ -53,18 +53,20 @@ type Spec struct {
 
 // Status 是工作的狀態，也是 jobs 指令回傳的每一筆資料。
 type Status struct {
-	JobID      string      `json:"jobId"`
-	Client     string      `json:"-"`
-	VideoID    string      `json:"videoId"`
-	Kind       string      `json:"kind"`
-	State      string      `json:"state"`
-	Percent    *float64    `json:"percent"`
-	Speed      *float64    `json:"speed"`
-	ETA        *float64    `json:"eta"`
-	Downloaded *float64    `json:"downloaded"`
-	Total      *float64    `json:"total"`
-	Part       int         `json:"part,omitempty"`
-	Parts      int         `json:"parts,omitempty"`
+	JobID      string   `json:"jobId"`
+	Client     string   `json:"-"`
+	VideoID    string   `json:"videoId"`
+	Kind       string   `json:"kind"`
+	State      string   `json:"state"`
+	Percent    *float64 `json:"percent"`
+	Speed      *float64 `json:"speed"`
+	ETA        *float64 `json:"eta"`
+	Downloaded *float64 `json:"downloaded"`
+	Total      *float64 `json:"total"`
+	Part       int      `json:"part,omitempty"`
+	Parts      int      `json:"parts,omitempty"`
+	// Stage 是下載以外的步驟；目前只有 "updating-ytdlp"（008 FR-22：自動更新 yt-dlp 後重試）。
+	Stage      string      `json:"stage,omitempty"`
 	Path       string      `json:"path,omitempty"`
 	FileName   string      `json:"fileName,omitempty"`
 	Error      *errs.Error `json:"error,omitempty"`

@@ -30,6 +30,8 @@ type harness struct {
 	events   []*Event
 	failEmit bool
 	runs     sync.WaitGroup
+	// updateYtDlp 傳給 Runner.UpdateYtDlp（008 FR-22 的測試使用）。
+	updateYtDlp func(ctx context.Context) (bool, error)
 }
 
 func newHarness(t *testing.T) *harness {
@@ -48,7 +50,7 @@ func newHarness(t *testing.T) *harness {
 			h.runs.Add(1)
 			go func() {
 				defer h.runs.Done()
-				r := &Runner{Store: h.store, Tools: h.tools}
+				r := &Runner{Store: h.store, Tools: h.tools, UpdateYtDlp: h.updateYtDlp}
 				r.Run(id)
 			}()
 			return os.Getpid(), nil

@@ -67,6 +67,10 @@ func PlatformKey(goos, goarch string) string {
 
 // LoadManifest 驗證簽章後解析清單。manifest 為 nil 時從 ManifestBase 下載清單與簽章。
 func (in *Installer) LoadManifest(ctx context.Context, manifest, sig []byte) (*release.Manifest, error) {
+	// 沒有內建公鑰時不必連網：任何清單都無法通過驗證。
+	if len(in.PublicKey) == 0 {
+		return nil, errs.New(errs.SignatureInvalid, "%v", release.ErrNoPublicKey)
+	}
 	if manifest == nil {
 		base := in.ManifestBase
 		if base == "" {
@@ -80,9 +84,6 @@ func (in *Installer) LoadManifest(ctx context.Context, manifest, sig []byte) (*r
 		if sig, err = in.Fetcher.Get(ctx, base+release.SignatureName); err != nil {
 			return nil, classify(err)
 		}
-	}
-	if len(in.PublicKey) == 0 {
-		return nil, errs.New(errs.SignatureInvalid, "%v", release.ErrNoPublicKey)
 	}
 	m, err := release.VerifyAndParse(in.PublicKey, manifest, sig, in.Fetcher.Allow)
 	if err != nil {

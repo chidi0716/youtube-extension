@@ -50,6 +50,17 @@ type Runner struct {
 	// Now 與 MaxDuration 可在測試中替換。
 	Now         func() time.Time
 	MaxDuration time.Duration
+	// UpdateYtDlp 在下載遇到 YTDLP_OUTDATED 或 VERIFICATION_REQUIRED 時執行 yt-dlp -U
+	// （008 FR-22），回傳是否安裝了新版本；nil 代表不自動更新（yt-dlp 不在安裝資料夾中）。
+	UpdateYtDlp func(ctx context.Context) (bool, error)
+}
+
+// StageUpdatingYtDlp 是自動更新 yt-dlp 時的 stage（plan 4.9）。
+const StageUpdatingYtDlp = "updating-ytdlp"
+
+// retryAfterUpdate 回傳這個錯誤是否值得更新 yt-dlp 後重試。
+func retryAfterUpdate(e *errs.Error) bool {
+	return e != nil && (e.Code == errs.YtDlpOutdated || e.Code == errs.VerificationRequired)
 }
 
 // Run 執行工作直到結束，回傳最後的狀態。只在 --run-job 模式中呼叫。
@@ -127,6 +138,30 @@ func (r *Runner) Run(id string) (*Status, error) {
 
 	r.Log.Printf("job %s start: %s", id, d.Kind)
 	path, e := r.download(id, st, d, tmp)
+	if retryAfterUpdate(e) && r.UpdateYtDlp != nil && !r.Store.CancelRequested(id) {
+		// 008 FR-22：同一個工作內更新 yt-dlp（不受 24 小時限制，只試一次），成功後重新下載一次。
+		r.Log.Printf("job %s %s: updating yt-dlp", id, e.Code)
+		st.Stage, st.State, st.Percent, st.Speed, st.ETA, st.UpdatedAt = StageUpdatingYtDlp, StateDownloading, nil, nil, nil, r.Now()
+		r.Store.WriteStatus(st)
+		updated, err := r.UpdateYtDlp(context.Background())
+		st.Stage, st.UpdatedAt = "", r.Now()
+		r.Store.WriteStatus(st)
+		switch {
+		case err != nil:
+			r.Log.Printf("job %s yt-dlp update failed: %v", id, err)
+		case !updated:
+			r.Log.Printf("job %s yt-dlp is already up to date", id)
+		case r.Store.CancelRequested(id):
+			return finish(StateCancelled, nil)
+		default:
+			removeAllRetry(tmp)
+			if err := os.MkdirAll(tmp, 0o700); err != nil {
+				return finish(StateFailed, errs.New(errs.PermissionDenied, "could not create a temporary folder in the download folder"))
+			}
+			r.Log.Printf("job %s retrying after the yt-dlp update", id)
+			path, e = r.download(id, st, d, tmp)
+		}
+	}
 	if e != nil {
 		if e.Code == "CANCELLED" {
 			return finish(StateCancelled, nil)
