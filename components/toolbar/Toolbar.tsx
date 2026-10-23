@@ -2,11 +2,15 @@
 // 目前展開的面板；以及編輯模式（006 FR-1、FR-3 至 FR-5）。
 import type { ComponentChildren } from 'preact';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'preact/hooks';
+import type { UpdateReminder } from '@/features/update/content';
+import type { ReminderState } from '@/features/update/reminder';
+import { createStore } from '@/features/viewing/store';
 import { t } from '@/utils/i18n';
 import { defaultLayout, splitLayout, type ToolbarLayout, type ToolId } from '@/utils/toolbar-layout';
 import { Icon } from '../icons';
 import { useLocale } from '../useLocale';
 import { ComingSoon } from '../panels/PanelStatus';
+import { useStore } from '../panels/useStore';
 import { FIXED, TOOLS, getButton, isToolOngoing, type ButtonDef, type ButtonId } from './buttons';
 import { OtherTools } from './OtherTools';
 import { initialPanelState, panelReducer } from './panel-state';
@@ -14,6 +18,7 @@ import { PanelHost } from './PanelHost';
 import type { HorizontalRange } from './position';
 import { ToolbarButton } from './ToolbarButton';
 import { ToolbarEditor } from './ToolbarEditor';
+import { UpdateCard, UpdateNotice } from './UpdateCard';
 
 /** 切換按鈕背後的功能（003 由各功能模組提供）。 */
 export interface ToggleFeature {
@@ -46,7 +51,11 @@ export interface ToolbarProps {
   layout?: ToolbarLayout;
   /** 編輯模式按「完成」時儲存設定（006 FR-4）。 */
   onSaveLayout?: (layout: ToolbarLayout) => void;
+  /** 新版本提醒（008 FR-28、FR-29b）：工具列下方的卡片、「更多」上的小圓點與選單頂端的提醒。 */
+  reminder?: UpdateReminder;
 }
+
+const NO_REMINDER = createStore<ReminderState>({ phase: 'none', view: null, cardVisible: false });
 
 const COMING_SOON_MS = 1500;
 
@@ -61,8 +70,10 @@ export function Toolbar({
   progress,
   layout = defaultLayout(),
   onSaveLayout,
+  reminder,
 }: ToolbarProps) {
   useLocale();
+  const reminderState = useStore(reminder?.controller.state ?? NO_REMINDER);
   const [state, dispatch] = useReducer(panelReducer<ButtonId>, initialPanelState<ButtonId>());
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef(new Map<ButtonId, HTMLButtonElement>());
@@ -134,6 +145,14 @@ export function Toolbar({
     return () => document.removeEventListener('keydown', onKeyDown, true);
   }, [editing]);
 
+  // 新版本提醒：工具列掛載時才可能出現卡片（工具列被關閉時不顯示，FR-29b）；展開面板或編輯工具列時延後（constitution 第 7c 點）。
+  useEffect(() => {
+    if (!reminder) return;
+    reminder.attach(host);
+    return () => reminder.attach(null);
+  }, [reminder, host]);
+  useEffect(() => reminder?.setToolbarBlocked(state.openId !== null || editing), [reminder, state.openId, editing]);
+
   const handleClick = (def: ButtonDef) => {
     if (def.kind === 'panel') {
       dispatch({ type: 'toggle', id: def.id });
@@ -149,17 +168,20 @@ export function Toolbar({
   const { left, right, hidden } = splitLayout(layout);
   /** 隱藏的工具有進行中的狀態（下載、循環、浮動等）：「更多」按鈕顯示提示圓點（006 FR-17）。 */
   const hiddenOngoing = hidden.some((id) => isToolOngoing(id, { progress, activePanels, toggles }));
+  /** 提醒卡片收合後，「更多」上的小圓點保留到使用者處理為止（FR-28）。 */
+  const updateDot = reminderState.phase === 'collapsed';
 
   const renderButton = (def: ButtonDef, align: 'start' | 'center' | 'end') => {
     const label = t(def.label);
     const disabledReason = toggles[def.id]?.disabledReason;
     const toggleNotice = toggles[def.id]?.notice;
-    const dot = def.id === 'more' && hiddenOngoing;
+    const dot = def.id === 'more' && (hiddenOngoing || updateDot);
+    const dotNotes = def.id === 'more' ? [hiddenOngoing && t('moreHiddenActive'), updateDot && t('updateReminderDot')].filter(Boolean) : [];
     return (
       <ToolbarButton
         key={def.id}
         def={def}
-        label={dot ? `${label} (${t('moreHiddenActive')})` : label}
+        label={dotNotes.length ? `${label} (${dotNotes.join(', ')})` : label}
         tooltip={
           toggleNotice ?? (notice === def.id ? t('comingSoon') : disabledReason ? `${label}: ${disabledReason}` : label)
         }
@@ -205,6 +227,7 @@ export function Toolbar({
     // 「更多」面板：上方為隱藏的工具（006 FR-15、FR-16），最下方為「編輯工具列」（006 FR-1）。
     return (
       <>
+        {reminder && reminderState.view?.pending && <UpdateNotice view={reminderState.view} reminder={reminder} />}
         <OtherTools
           hidden={hidden}
           toggles={toggles}
@@ -229,6 +252,7 @@ export function Toolbar({
       <div class="yte-group" data-group="right">
         {rightDefs.map((def, i) => renderButton(def, i === rightDefs.length - 1 ? 'end' : 'center'))}
       </div>
+      {reminder && reminderState.cardVisible && reminderState.view && <UpdateCard view={reminderState.view} reminder={reminder} />}
       {openDef && openButton && containerRef.current && (
         <PanelHost
           key={openDef.id}

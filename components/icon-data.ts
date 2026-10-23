@@ -46,6 +46,8 @@ import edit from '@material-symbols/svg-400/outlined/edit.svg?raw';
 import arrowUpward from '@material-symbols/svg-400/outlined/arrow_upward.svg?raw';
 import arrowDownward from '@material-symbols/svg-400/outlined/arrow_downward.svg?raw';
 import restartAlt from '@material-symbols/svg-400/outlined/restart_alt.svg?raw';
+import upgrade from '@material-symbols/svg-400/outlined/upgrade.svg?raw';
+import deleteIcon from '@material-symbols/svg-400/outlined/delete.svg?raw';
 
 const SOURCES = {
   autoplay: autoplay,
@@ -62,6 +64,7 @@ const SOURCES = {
   check,
   close,
   content_copy: contentCopy,
+  delete: deleteIcon,
   dark_mode: darkMode,
   download,
   drag_indicator: dragIndicator,
@@ -91,6 +94,7 @@ const SOURCES = {
   restart_alt: restartAlt,
   settings,
   subtitles,
+  upgrade,
   visibility,
   visibility_off: visibilityOff,
 } as const;

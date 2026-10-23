@@ -3,6 +3,7 @@ import { TIDY_CATEGORIES, type TidyOption } from '@/features/tidy/options';
 import { applyI18n, initI18n, onLocaleChange, resolveLocale, setLocale, t, UI_LANGUAGES } from '@/utils/i18n';
 import { applyPageTheme, PAGE_THEME_VALUES, type PageThemePreference } from '@/utils/page-theme';
 import { pageTheme, UI_LANGUAGE_VALUES, uiLanguage, type UiLanguagePreference } from '@/utils/settings';
+import { renderAbout } from './about';
 import { renderDownloads } from './downloads';
 import { renderToolbarSettings } from './toolbar';
 
@@ -169,6 +170,8 @@ function renderPage(focusId?: string): () => void {
   }
   // 下載（T23）
   cleanups.push(renderDownloads(container('#downloads-groups')));
+  // 關於（T44）
+  cleanups.push(renderAbout(container('#about-groups')));
   return () => cleanups.forEach((c) => c());
 }
 

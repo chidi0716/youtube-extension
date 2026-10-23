@@ -1026,5 +1026,99 @@
   "darkModeUnavailableHint": {
     "message": "找不到 YouTube 的外觀選項。若安裝了會改變主題的擴充功能（例如氛圍光），請將其主題設定改為跟隨 YouTube。",
     "description": "Dark mode button: shown for about 6 seconds when YouTube's Appearance menu or option could not be found or used, e.g. because another extension controls the theme (spec 003 FR-15)."
+  },
+  "updateReminderTitle": {
+    "message": "新版本 $VERSION$ 可以更新了",
+    "description": "New version reminder card heading (008 FR-28).",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.0"
+      }
+    }
+  },
+  "updateReminderOpen": {
+    "message": "前往下載",
+    "description": "Opens the GitHub page of the new version in a new tab."
+  },
+  "updateReminderSkip": {
+    "message": "跳過這個版本",
+    "description": "Do not remind about this version again (008 FR-29)."
+  },
+  "updateReminderDisable": {
+    "message": "不再提醒",
+    "description": "Turn off new version reminders and checks (008 FR-29)."
+  },
+  "updateReminderClose": {
+    "message": "這次先關閉",
+    "description": "Accessible label of the ✕ on the reminder card; the reminder stays as a dot on More."
+  },
+  "updateReminderDot": {
+    "message": "有新版本",
+    "description": "Added to the More button label while the reminder dot is shown."
+  },
+  "optionsAboutTitle": {
+    "message": "關於",
+    "description": "Options page section heading."
+  },
+  "optionsAboutDesc": {
+    "message": "版本資訊與新版本提醒。",
+    "description": "Options page About section description."
+  },
+  "aboutCurrentVersion": {
+    "message": "目前版本",
+    "description": "Label in the About section."
+  },
+  "aboutLatestVersion": {
+    "message": "最新版本",
+    "description": "Label in the About section."
+  },
+  "aboutLastChecked": {
+    "message": "最近一次查詢",
+    "description": "Label in the About section."
+  },
+  "aboutNotChecked": {
+    "message": "尚未查詢",
+    "description": "Shown when the latest version has never been checked."
+  },
+  "aboutCheckFailed": {
+    "message": "$TIME$（無法連到 GitHub，之後會再試）",
+    "description": "Last check time when the check failed.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "2026/10/23 14:05"
+      }
+    }
+  },
+  "aboutUpToDate": {
+    "message": "已是最新版本。",
+    "description": "About section status."
+  },
+  "aboutNewAvailable": {
+    "message": "新版本 $VERSION$ 可以更新了。",
+    "description": "About section status.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.0"
+      }
+    }
+  },
+  "aboutAutoUpdated": {
+    "message": "這個安裝方式由瀏覽器自動更新，擴充功能不會自己查詢新版本。",
+    "description": "About section note for signed Firefox installs (008 FR-26)."
+  },
+  "aboutCheckNote": {
+    "message": "開啟影片頁時，擴充功能每天最多一次向本專案的 GitHub 查詢最新正式版本，只讀取版本號、標題與網址，不送出任何關於你的資料。",
+    "description": "About section explanation of the update check (constitution 2)."
+  },
+  "aboutRemindersOff": {
+    "message": "已關閉新版本提醒，擴充功能不再查詢新版本。",
+    "description": "About section status after choosing Don't remind me."
+  },
+  "aboutReenable": {
+    "message": "重新開啟新版本提醒",
+    "description": "About section button (008 FR-29)."
   }
 }

@@ -3,6 +3,7 @@
 import { MP3_BITRATES, type DownloadRequest, type JobRecord } from '@/features/downloads/jobs';
 import { CAPTION_FORMATS, type CaptionFormat } from './filename';
 import type { HostErrorCode } from './native-protocol';
+import { normalizeVersion, REMINDER_ACTIONS, type ReminderAction } from './update-check';
 import { CAPTION_LANGUAGE_PATTERN, isThumbnailKey, validateCaptionUrl, type ThumbnailKey } from './youtube/dom';
 import { isValidVideoId } from './youtube/page';
 
@@ -38,7 +39,14 @@ export type ContentMessage =
   /** 設定頁：選擇下載資料夾（002 FR-60）。 */
   | { type: 'pickFolder' }
   /** 更新 yt-dlp（002 FR-6a、FR-60）。 */
-  | { type: 'updateYtDlp' };
+  | { type: 'updateYtDlp' }
+  // ---- 新版本提醒（008 FR-26 至 FR-29b）----
+  /** 影片頁載入完成：到了該查詢的時間就查詢，回傳提醒的狀態。 */
+  | { type: 'updateCheck' }
+  /** 提醒的狀態（不查詢；設定頁與其他分頁處理提醒後使用）。 */
+  | { type: 'updateStatus' }
+  /** 卡片、「更多」選單或設定頁的操作。 */
+  | { type: 'updateAction'; action: ReminderAction; version: string | null };
 
 /** 背景腳本 → 內容腳本：下載工作改變（002 FR-3、FR-4）。 */
 export type BackgroundMessage = { type: 'jobsChanged'; jobs: JobRecord[] };
@@ -139,7 +147,14 @@ export function isContentMessage(value: unknown): value is ContentMessage {
     case 'getJobs':
     case 'pickFolder':
     case 'updateYtDlp':
+    case 'updateCheck':
+    case 'updateStatus':
       return true;
+    case 'updateAction':
+      return (
+        (REMINDER_ACTIONS as readonly unknown[]).includes(m.action) &&
+        (m.version === null || (typeof m.version === 'string' && normalizeVersion(m.version) === m.version))
+      );
     default:
       return false;
   }

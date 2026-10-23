@@ -364,3 +364,38 @@ h2 {
   background: var(--accent);
   pointer-events: none;
 }
+
+/* ---------- 主要按鈕（008：前往下載、移除下載功能的確認） ---------- */
+
+.button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+:root[data-theme='dark'] .button.primary {
+  color: #0f0f0f;
+}
+
+.button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.1);
+}
+
+/* ---------- 關於（008 FR-29、FR-29a） ---------- */
+
+.about-status {
+  margin: 8px 0 0;
+}
+
+.about-status:empty {
+  display: none;
+}
+
+#about-note {
+  margin: 8px 0 0;
+}
+
+#about-note:empty {
+  display: none;
+}

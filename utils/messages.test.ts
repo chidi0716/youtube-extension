@@ -102,6 +102,29 @@ describe('經由橋接程式的訊息（階段 4）', () => {
     }
   });
 
+  it('新版本提醒的訊息（008）：操作只接受白名單，版本號必須是正規化的格式', () => {
+    for (const m of [
+      { type: 'updateCheck' },
+      { type: 'updateStatus' },
+      { type: 'updateAction', action: 'open', version: '0.2.0' },
+      { type: 'updateAction', action: 'skip', version: '0.10.1' },
+      { type: 'updateAction', action: 'disable', version: null },
+      { type: 'updateAction', action: 'enable', version: null },
+      { type: 'updateAction', action: 'cardShown', version: '1.0.0' },
+    ]) {
+      expect(isContentMessage(m), JSON.stringify(m)).toBe(true);
+    }
+    for (const m of [
+      { type: 'updateAction', action: 'open', version: 'v0.2.0' },
+      { type: 'updateAction', action: 'open', version: '0.2.0-beta' },
+      { type: 'updateAction', action: 'open' },
+      { type: 'updateAction', action: 'fetch', version: '0.2.0' },
+      { type: 'updateAction', action: 'open', version: 'https://evil.example/' },
+    ]) {
+      expect(isContentMessage(m), JSON.stringify(m)).toBe(false);
+    }
+  });
+
   it('isBackgroundMessage 只接受 jobsChanged', () => {
     expect(isBackgroundMessage({ type: 'jobsChanged', jobs: [] })).toBe(true);
     expect(isBackgroundMessage({ type: 'jobsChanged' })).toBe(false);

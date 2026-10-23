@@ -1026,5 +1026,99 @@
   "darkModeUnavailableHint": {
     "message": "Couldn't find YouTube's Appearance option. If you use an extension that changes the theme (for example, an ambient light extension), set its theme to follow YouTube.",
     "description": "Dark mode button: shown for about 6 seconds when YouTube's Appearance menu or option could not be found or used, e.g. because another extension controls the theme (spec 003 FR-15)."
+  },
+  "updateReminderTitle": {
+    "message": "Version $VERSION$ is available",
+    "description": "New version reminder card heading (008 FR-28).",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.0"
+      }
+    }
+  },
+  "updateReminderOpen": {
+    "message": "Go to download",
+    "description": "Opens the GitHub page of the new version in a new tab."
+  },
+  "updateReminderSkip": {
+    "message": "Skip this version",
+    "description": "Do not remind about this version again (008 FR-29)."
+  },
+  "updateReminderDisable": {
+    "message": "Don't remind me",
+    "description": "Turn off new version reminders and checks (008 FR-29)."
+  },
+  "updateReminderClose": {
+    "message": "Close for now",
+    "description": "Accessible label of the ✕ on the reminder card; the reminder stays as a dot on More."
+  },
+  "updateReminderDot": {
+    "message": "new version available",
+    "description": "Added to the More button label while the reminder dot is shown."
+  },
+  "optionsAboutTitle": {
+    "message": "About",
+    "description": "Options page section heading."
+  },
+  "optionsAboutDesc": {
+    "message": "Version information and new version reminders.",
+    "description": "Options page About section description."
+  },
+  "aboutCurrentVersion": {
+    "message": "Current version",
+    "description": "Label in the About section."
+  },
+  "aboutLatestVersion": {
+    "message": "Latest version",
+    "description": "Label in the About section."
+  },
+  "aboutLastChecked": {
+    "message": "Last checked",
+    "description": "Label in the About section."
+  },
+  "aboutNotChecked": {
+    "message": "Not checked yet",
+    "description": "Shown when the latest version has never been checked."
+  },
+  "aboutCheckFailed": {
+    "message": "$TIME$ (couldn't reach GitHub; will try again later)",
+    "description": "Last check time when the check failed.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "2026/10/23 14:05"
+      }
+    }
+  },
+  "aboutUpToDate": {
+    "message": "You're using the latest version.",
+    "description": "About section status."
+  },
+  "aboutNewAvailable": {
+    "message": "Version $VERSION$ is available.",
+    "description": "About section status.",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.0"
+      }
+    }
+  },
+  "aboutAutoUpdated": {
+    "message": "This installation is updated automatically by the browser, so the extension doesn't check for new versions itself.",
+    "description": "About section note for signed Firefox installs (008 FR-26)."
+  },
+  "aboutCheckNote": {
+    "message": "When you open a video, the extension checks this project's GitHub for the latest release at most once a day. Only the version number, title and link are read; nothing about you is sent.",
+    "description": "About section explanation of the update check (constitution 2)."
+  },
+  "aboutRemindersOff": {
+    "message": "New version reminders are off, and the extension no longer checks for new versions.",
+    "description": "About section status after choosing Don't remind me."
+  },
+  "aboutReenable": {
+    "message": "Turn new version reminders back on",
+    "description": "About section button (008 FR-29)."
   }
 }

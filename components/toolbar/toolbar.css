@@ -568,3 +568,95 @@
   font-size: 12px;
   line-height: 16px;
 }
+
+/* ---------- 新版本提醒（008 FR-28、constitution 第 7c 點） ---------- */
+
+/*
+ * 卡片在工具列下方、靠右（收合後成為「更多」上的小圓點），不疊在播放器上。
+ * z-index 低於面板（2100）與浮動播放器（2151），不會蓋住浮動中的影片。
+ */
+.yte-update-card {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 2050;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 400px;
+  max-width: 100%;
+  padding: 12px 8px 14px 16px;
+  border-radius: 12px;
+  background: var(--yte-menu-background);
+  color: var(--yte-text-primary);
+  box-shadow: 0 4px 32px 0 var(--yte-shadow);
+  animation: yte-update-in 0.4s ease-out;
+}
+
+@keyframes yte-update-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yte-update-card {
+    animation: none;
+  }
+}
+
+.yte-update-icon {
+  display: flex;
+  padding-top: 2px;
+  color: var(--yte-call-to-action);
+}
+
+.yte-update-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.yte-update-text p {
+  margin: 0;
+}
+
+.yte-update-heading {
+  font-weight: 500;
+}
+
+.yte-update-release {
+  overflow: hidden;
+  color: var(--yte-text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.yte-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.yte-update-close {
+  flex: none;
+  margin-top: -6px;
+}
+
+/* 「更多」選單頂端的同一則提醒。 */
+.yte-update-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 440px;
+  margin: 0 0 12px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--yte-outline);
+}
