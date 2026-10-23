@@ -43,9 +43,14 @@ func (r *recorder) Jobs(context.Context) (any, error)                { return r.
 func (r *recorder) Reveal(_ context.Context, id string) (any, error) { return r.add("reveal " + id) }
 func (r *recorder) PickFolder(context.Context) (any, error)          { return r.add("pickFolder") }
 func (r *recorder) UpdateYtDlp(context.Context) (any, error)         { return r.add("updateYtDlp") }
+func (r *recorder) SetAutoUpdate(_ context.Context, enabled bool) (any, error) {
+	return r.add(fmt.Sprintf("setAutoUpdate %v", enabled))
+}
+func (r *recorder) CheckUpdates(context.Context) (any, error) { return r.add("checkUpdates") }
+func (r *recorder) Uninstall(context.Context) (any, error)    { return r.add("uninstall") }
 
 func TestNames(t *testing.T) {
-	want := "cancel download getInfo jobs pickFolder reveal status updateYtDlp"
+	want := "cancel checkUpdates download getInfo jobs pickFolder reveal setAutoUpdate status uninstall updateYtDlp"
 	if got := strings.Join(Names(), " "); got != want {
 		t.Fatalf("commands = %s", got)
 	}
@@ -64,6 +69,10 @@ func TestHandle(t *testing.T) {
 		{`{"id":"7","cmd":"reveal","args":{"jobId":"0123456789abcdef"}}`, "reveal 0123456789abcdef"},
 		{`{"id":"8","cmd":"pickFolder"}`, "pickFolder"},
 		{`{"id":"9","cmd":"updateYtDlp"}`, "updateYtDlp"},
+		{`{"id":"10","cmd":"setAutoUpdate","args":{"enabled":false}}`, "setAutoUpdate false"},
+		{`{"id":"11","cmd":"setAutoUpdate","args":{"enabled":true}}`, "setAutoUpdate true"},
+		{`{"id":"12","cmd":"checkUpdates"}`, "checkUpdates"},
+		{`{"id":"13","cmd":"uninstall","args":{}}`, "uninstall"},
 	}
 	for _, c := range ok {
 		rec := &recorder{}
@@ -90,6 +99,16 @@ func TestHandle(t *testing.T) {
 		{`{"id":"x","cmd":"pickFolder","args":{"initial":"/etc"}}`, "x", errs.InvalidArgs},
 		{`{"id":"x","cmd":"updateYtDlp","args":{"channel":"nightly"}}`, "x", errs.InvalidArgs},
 		{`{"id":"x","cmd":"getInfo"}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"setAutoUpdate"}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"setAutoUpdate","args":{}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"setAutoUpdate","args":{"enabled":"false"}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"setAutoUpdate","args":{"enabled":1}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"setAutoUpdate","args":{"enabled":null}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"setAutoUpdate","args":{"enabled":true,"interval":1}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"checkUpdates","args":{"url":"https://example.com/components.json"}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"uninstall","args":{"dir":"/"}}`, "x", errs.InvalidArgs},
+		{`{"id":"x","cmd":"install"}`, "x", errs.UnknownCommand},
+		{`{"id":"x","cmd":"update"}`, "x", errs.UnknownCommand},
 		{`{"id":"x","cmd":"getInfo","args":{"videoId":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}}`, "x", errs.InvalidArgs},
 		{`{"id":"x","cmd":"getInfo","args":{"videoId":"dQw4w9WgXcQ","url":"https://example.com"}}`, "x", errs.InvalidArgs},
 		{`{"id":"x","cmd":"getInfo","args":{"videoId":"--exec=ls"}}`, "x", errs.InvalidArgs},

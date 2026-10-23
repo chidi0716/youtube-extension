@@ -1,0 +1,72 @@
+# 發佈流程（plan 4.10、008 FR-50、FR-51）：推送 v* 標籤時建立 GitHub Release。
+#
+# 需要的 Secrets（Settings → Secrets and variables → Actions，見 README「維護者」章節）：
+#   RELEASE_SIGNING_KEY  簽署 components.json 的 Ed25519 私鑰（yte-release keygen 產生）
+#   AMO_JWT_ISSUER       Mozilla 附加元件 API 金鑰（JWT issuer）
+#   AMO_JWT_SECRET       Mozilla 附加元件 API 金鑰（JWT secret）
+# 標籤含「-」（例如 v0.2.0-beta.1）時建立為預先發行版本，不會成為 releases/latest，
+# 因此不會觸發新版本提醒、小幫手自動更新與 Firefox 自動更新。
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write # 建立 Release 與上傳檔案
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: host/go.mod
+          cache-dependency-path: host/go.sum
+
+      # 1. 安裝與測試
+      - run: npm ci
+      - run: npm test
+      - run: npm run compile
+      - name: go test
+        working-directory: host
+        run: go vet ./... && go test ./...
+
+      # 2–6. 建置擴充功能與小幫手、比對第三方工具的官方檢查碼、產生並簽署 components.json、
+      #      送 Mozilla 簽署 Firefox 版、產生 updates.json、SHA256SUMS 與 Release 說明。
+      - name: Build and sign release files
+        run: node scripts/release.mjs --tag "$GITHUB_REF_NAME" --skip-tests
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=""
+          case "$GITHUB_REF_NAME" in
+            *-*) prerelease="--prerelease" ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" release/dist/upload/* \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release/dist/release-notes.md \
+            --verify-tag $prerelease

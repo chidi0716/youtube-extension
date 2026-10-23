@@ -12,6 +12,7 @@
     "build:host": "node host/build.mjs",
     "test:host": "cd host && go vet ./... && go test ./...",
     "sign:firefox": "wxt build -b firefox && node scripts/sign-firefox.mjs",
+    "release:dry": "node scripts/release.mjs --dry",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",

@@ -41,6 +41,7 @@ type Event struct {
 	ETA      *float64    `json:"eta,omitempty"`
 	Part     int         `json:"part,omitempty"`
 	Parts    int         `json:"parts,omitempty"`
+	Stage    string      `json:"stage,omitempty"` // "updating-ytdlp"（008 FR-22）
 	Path     string      `json:"path,omitempty"`
 	FileName string      `json:"fileName,omitempty"`
 	Error    *errs.Error `json:"error,omitempty"`
@@ -228,12 +229,12 @@ func (m *Manager) check(id string) {
 	}
 	m.Emit(&Event{
 		Event: "progress", JobID: st.JobID, VideoID: st.VideoID, Kind: st.Kind, State: st.State,
-		Percent: st.Percent, Speed: st.Speed, ETA: st.ETA, Part: st.Part, Parts: st.Parts,
+		Percent: st.Percent, Speed: st.Speed, ETA: st.ETA, Part: st.Part, Parts: st.Parts, Stage: st.Stage,
 	})
 }
 
 func sameProgress(a, b *Status) bool {
-	return a.State == b.State && reflect.DeepEqual(a.Percent, b.Percent) &&
+	return a.State == b.State && a.Stage == b.Stage && reflect.DeepEqual(a.Percent, b.Percent) &&
 		reflect.DeepEqual(a.Speed, b.Speed) && reflect.DeepEqual(a.ETA, b.ETA) && a.Part == b.Part
 }
 
@@ -376,6 +377,34 @@ func SpawnSelf(id string) (int, error) {
 		return 0, err
 	}
 	return spawnDetached(exe, []string{RunJobFlag, id})
+}
+
+// SpawnDetached 以脫離瀏覽器的方式啟動 exe（與 --run-job 相同的方式），
+// 給 --update 與 --uninstall 使用。回傳 PID。
+func SpawnDetached(exe string, args ...string) (int, error) { return spawnDetached(exe, args) }
+
+// ProcessAlive 回傳 PID 對應的程序是否還在。
+func ProcessAlive(pid int) bool { return processAlive(pid) }
+
+// ActiveCount 回傳所有瀏覽器進行中的下載數量（不含執行程序已經不在的工作）。
+// 自動更新等到沒有進行中的下載才替換工具（008 FR-21），移除下載功能時也用來判斷 JOBS_RUNNING。
+func (s *Store) ActiveCount(now time.Time) int {
+	n := 0
+	for _, id := range s.List() {
+		st, err := s.ReadStatus(id)
+		if err != nil || Final(st.State) {
+			continue
+		}
+		age := now.Sub(st.UpdatedAt)
+		if st.State == StateQueued && age > QueuedStaleAfter {
+			continue
+		}
+		if st.State != StateQueued && age > StaleAfter && !processAlive(st.RunnerPID) {
+			continue
+		}
+		n++
+	}
+	return n
 }
 
 // Wait 等待這個程序建立的工作全部結束，最長 max（plan 4.6：瀏覽器關閉連線後最多等 6 小時）。

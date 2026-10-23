@@ -38,7 +38,8 @@ Video and MP3 downloads use [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg]
 
 ## Privacy and security
 
-- No analytics or tracking. The extension only talks to YouTube and to the local helper program.
+- No analytics or tracking. The extension only talks to YouTube and to the local helper program. When it is loaded unpacked (Chrome) or as a temporary add-on, it also asks this project's GitHub for the latest version number, at most once a day and without any identifying information, so it can remind you to update; you can turn the reminder off.
+- The helper and its installer only connect to this project's GitHub releases, the official yt-dlp and deno releases, and the ffmpeg build sites listed in [what gets installed](./docs/what-gets-installed.md); yt-dlp connects to YouTube.
 - No remote code: everything is bundled; no CDN scripts, no `eval`.
 - Minimal permissions; content scripts run on `youtube.com` only.
 - Video processing happens locally. Nothing is uploaded to third-party services.
@@ -53,87 +54,118 @@ Browser extensions cannot run yt-dlp directly, so a small helper program (writte
 Toolbar on YouTube  →  extension background  →  local helper  →  yt-dlp  →  ffmpeg
 ```
 
-Install it once with the scripts described in [Install the helper](#install-the-helper). Thumbnails, screenshots, subtitles and all viewing tools work without the helper.
+Install it once with one command (see [Install the helper](#install-the-helper)); after that it keeps itself, yt-dlp and deno up to date. Thumbnails, screenshots, subtitles and all viewing tools work without the helper.
 
 ## Install the helper
 
-Video and MP3 downloads (and subtitles, when the direct download fails) need four programs on your computer: the **helper** from this project, [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org) and [deno](https://deno.com) (the JavaScript runtime yt-dlp needs to get all YouTube formats). Thumbnails, screenshots, subtitles and all viewing tools work without them. Everything is installed for the current user only; no administrator rights or `sudo` are needed.
+Video and MP3 downloads (and subtitles, when the direct download fails) need four programs on your computer: the **helper** from this project, [yt-dlp](https://github.com/yt-dlp/yt-dlp) (the open-source video downloader), [ffmpeg](https://ffmpeg.org) (merges video and audio, converts to MP3) and [deno](https://deno.com) (the JavaScript runtime yt-dlp needs). Thumbnails, screenshots, subtitles and all viewing tools work without them.
 
-### 1. Build the helper
+One command installs everything, about 150 MB (about 300 MB on Windows), in a single folder in your user account. No administrator rights, `sudo` or developer tools are needed, nothing outside your user folder is changed, and you can remove it at any time. See [what gets installed](./docs/what-gets-installed.md) for every file, download source and network connection.
 
-There are no prebuilt downloads yet. With [Go](https://go.dev/dl/) 1.24 or later and Node.js installed, run in this repository:
+### macOS (Apple Silicon and Intel)
+
+1. Press ⌘ + Space, type **Terminal** and press Enter.
+2. Paste this line and press Enter:
+   ```bash
+   curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh | sh
+   ```
+3. When you see **Done!**, go back to the browser. The Video and MP3 panels switch to the download view by themselves.
+
+### Windows 10/11 (x64)
+
+1. Press the Start key, type **PowerShell** and open it.
+2. Paste this line and press Enter:
+   ```powershell
+   irm https://github.com/chidi0716/youtube-extension/releases/latest/download/install.ps1 | iex
+   ```
+3. When you see **Done!**, go back to the browser. The Video and MP3 panels switch to the download view by themselves.
+
+The same command and steps are shown in the extension's Video and MP3 panels and in the settings page.
+
+### What does the command do?
+
+1. Downloads the helper for your system from this project's [GitHub releases](https://github.com/chidi0716/youtube-extension/releases) and checks its SHA-256 against the release list (`components.json`).
+2. The helper checks the **signature** of the release list with the project key built into it, then downloads:
+   - yt-dlp from the [official yt-dlp releases](https://github.com/yt-dlp/yt-dlp/releases), checked against the official checksums;
+   - deno from the [official deno releases](https://github.com/denoland/deno/releases), checked against the official checksums;
+   - ffmpeg and ffprobe from [Martin Riedl's FFmpeg build server](https://ffmpeg.martin-riedl.de) (macOS) or [yt-dlp/FFmpeg-Builds](https://github.com/yt-dlp/FFmpeg-Builds) (Windows), checked against the checksums recorded when the release was made. If ffmpeg and ffprobe are already on your computer (for example from Homebrew), they are used instead.
+3. Puts everything in `~/Library/Application Support/youtube-extension-host/` (macOS) or `%LOCALAPPDATA%\youtube-extension-host\` (Windows) and registers the helper for Chrome and Firefox (including Zen).
+
+Every step is printed as it happens. Running the command again only repairs or updates what is needed; if a step fails, it prints the reason and running the same command again continues from there. Programs you installed yourself (for example yt-dlp from Homebrew) are never changed; the helper prefers its own copies, and the settings page shows which copy is used.
+
+**Prefer to read the script first?** Download it, read it, then run it:
 
 ```bash
-npm run build:host
-```
-
-This creates two ready-to-use folders: `host/dist/youtube-extension-host-macos/` and `host/dist/youtube-extension-host-windows/` (the helper, the install and uninstall scripts, and the native messaging manifest templates).
-
-### 2a. macOS (Apple Silicon and Intel)
-
-1. Install yt-dlp, ffmpeg and deno with [Homebrew](https://brew.sh):
-   ```bash
-   brew install yt-dlp ffmpeg deno
-   ```
-2. Run the installer (do not use `sudo`):
-   ```bash
-   sh host/dist/youtube-extension-host-macos/install.sh
-   ```
-   It copies the helper to `~/Library/Application Support/youtube-extension-host/`, removes the quarantine attribute so Gatekeeper does not block it, registers it for Chrome (`~/Library/Application Support/Google/Chrome/NativeMessagingHosts/`) and Firefox (`~/Library/Application Support/Mozilla/NativeMessagingHosts/`), and checks for yt-dlp, ffmpeg and deno.
-3. Restart Chrome or Firefox, open a YouTube video and click **Check again** in the Video or MP3 panel.
-
-### 2b. Windows 10/11 (x64)
-
-1. Install yt-dlp, ffmpeg and deno with [winget](https://learn.microsoft.com/windows/package-manager/winget/):
-   ```powershell
-   winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno
-   ```
-2. Run the installer in PowerShell (`-ExecutionPolicy Bypass` allows this one script to run without changing your settings):
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File host\dist\youtube-extension-host-windows\install.ps1
-   ```
-   It copies the helper to `%LOCALAPPDATA%\youtube-extension-host\`, writes the native messaging manifests there, creates the registry keys `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.chidi0716.youtube_extension` and `HKCU\Software\Mozilla\NativeMessagingHosts\com.chidi0716.youtube_extension`, and checks for yt-dlp, ffmpeg and deno.
-3. Restart Chrome or Firefox, open a YouTube video and click **Check again** in the Video or MP3 panel.
-
-If you open a terminal in a different folder, pass the full path of the script. You can also run `install/macos/install.sh` or `install/windows/install.ps1` straight from the repository after `npm run build:host`.
-
-### Updating
-
-- **yt-dlp:** YouTube changes often, so keep yt-dlp up to date. Use **Update yt-dlp** in the extension's settings page. If yt-dlp was installed with Homebrew or winget, the button shows the command to run instead (`brew upgrade yt-dlp` or `winget upgrade --id yt-dlp.yt-dlp`).
-- **The helper:** build it again and run the installer again; it replaces the old version. Close the browser first if a download is running.
-
-### Uninstall
-
-```bash
-sh host/dist/youtube-extension-host-macos/uninstall.sh
+curl -fsSL -o install.sh https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh
+less install.sh
+sh install.sh
 ```
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File host\dist\youtube-extension-host-windows\uninstall.ps1
+irm https://github.com/chidi0716/youtube-extension/releases/latest/download/install.ps1 -OutFile install.ps1
+notepad install.ps1
+powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-This removes the helper, its manifests and registry keys, its state and its logs. Your downloaded files, yt-dlp and ffmpeg are not touched.
+### Automatic updates
+
+- **yt-dlp, deno and the helper** update themselves in the background when you start a download, at most once a day (no download, no check). The download you started is not delayed; replacements happen after downloads finish, and the old version is kept if anything fails. yt-dlp is updated with its own `yt-dlp -U`, everything else is checked against the signed release list.
+- When YouTube changes and a download fails with “Please update yt-dlp”, the helper updates yt-dlp right away and retries the download once.
+- ffmpeg is not updated automatically (it rarely needs to be); a new helper release can bring a newer one.
+- You can turn automatic updates off, check now, and see the version and source of every component in the settings page (**Downloads**).
+
+### Uninstall
+
+Use **Remove download feature** in the settings page (**Downloads**). It removes the folder above (helper, yt-dlp, deno, ffmpeg, logs) and the browser registration. Your downloaded files are not touched.
+
+If the extension is already gone, run:
+
+```bash
+curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/uninstall.sh | sh
+```
+
+```powershell
+irm https://github.com/chidi0716/youtube-extension/releases/latest/download/uninstall.ps1 | iex
+```
+
+### Manual install
+
+If you prefer to install yt-dlp, ffmpeg and deno yourself, or to build the helper from source:
+
+1. Install the tools, for example with [Homebrew](https://brew.sh) (`brew install yt-dlp ffmpeg deno`) or [winget](https://learn.microsoft.com/windows/package-manager/winget/) (`winget install yt-dlp.yt-dlp Gyan.FFmpeg DenoLand.Deno`).
+2. Get the helper: download `youtube-extension-host-macos.zip` or `youtube-extension-host-windows.zip` from the [releases page](https://github.com/chidi0716/youtube-extension/releases) and unzip it, or build it with [Go](https://go.dev/dl/) 1.24+ and Node.js: `npm run build:host` (output in `host/dist/`).
+3. Run the script in that folder (no `sudo`):
+   ```bash
+   sh install.sh
+   ```
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File install.ps1
+   ```
+   It runs `yte-host --install --offline`: the helper copies itself to the folder above and registers itself for Chrome and Firefox, without downloading anything, and lists which of yt-dlp, ffmpeg and deno it found.
+4. Restart the browser and click **Check again** in the Video or MP3 panel.
+
+To remove a manual install, run `uninstall.sh` or `uninstall.ps1` from the same folder (or the one-line commands above).
 
 ### Troubleshooting
 
-- **"Check again" still says the helper is missing:** restart the browser after installing. Firefox-based browsers such as Zen use the Firefox registration.
-- **"yt-dlp is out of date" or some qualities are missing:** update yt-dlp (see above) and make sure deno is installed (the settings page shows whether it was found).
-- **macOS says the helper cannot be opened:** run the installer again; it removes the quarantine attribute. You can also build the helper from source yourself.
+- **The panel still says the helper is missing:** restart the browser after installing. Firefox-based browsers such as Zen use the Firefox registration.
+- **The command stops with “Failed”:** read the reason it prints (network, disk space, a file that did not match its checksum). Fix it if needed and run the same command again; it continues where it stopped.
+- **“yt-dlp is out of date” or some qualities are missing:** the helper updates yt-dlp automatically; you can also click **Check for updates now** in the settings page. If you use your own yt-dlp (Homebrew or winget), update it with `brew upgrade yt-dlp` or `winget upgrade --id yt-dlp.yt-dlp`.
 - **Logs:** `~/Library/Logs/youtube-extension-host/host.log` (macOS) or `%LOCALAPPDATA%\youtube-extension-host\logs\host.log` (Windows). They contain command names and error messages only, never cookies or account data.
 - Downloads keep running if you close the YouTube tab or the browser. Unfinished files are kept in a hidden `.yte-tmp-…` folder inside the download folder and are removed when the download finishes, fails or is cancelled.
 
-**What the helper can do:** only the fixed commands the extension needs (check status, read video info, download, cancel, list downloads, show a file, choose a folder, update yt-dlp). Only this extension may start it (`allowed_origins` / `allowed_extensions` in the manifests). It accepts a YouTube video ID, never a URL or command-line options, opens no network ports, and only yt-dlp talks to YouTube (and to GitHub when you update yt-dlp).
+**What the helper can do:** only the fixed commands the extension needs (check status, read video info, download, cancel, list downloads, show a file, choose a folder, update, uninstall). Only this extension may start it (`allowed_origins` / `allowed_extensions` in the registration). It accepts a YouTube video ID, never a URL or command-line options, and opens no network ports. yt-dlp talks to YouTube; the helper itself only connects to GitHub and the ffmpeg build site listed above, to install and update.
 
 ## FAQ
 
 **Downloads suddenly fail with “YouTube has changed. Please update yt-dlp.”**
-YouTube changes often and yt-dlp follows quickly. Click **Update yt-dlp** in the panel or in the settings page. If yt-dlp was installed with Homebrew or winget, run the command it shows (`brew upgrade yt-dlp` or `winget upgrade --id yt-dlp.yt-dlp`).
+YouTube changes often and yt-dlp follows quickly. With the one-line install, the helper updates yt-dlp and retries automatically; if it still fails, click **Update yt-dlp** in the panel or in the settings page. If you use your own yt-dlp from Homebrew or winget, run the command it shows (`brew upgrade yt-dlp` or `winget upgrade --id yt-dlp.yt-dlp`).
 
 **The panel says only deno is missing. Can I still download?**
-Yes. Without deno, yt-dlp may not see some YouTube formats (often the highest qualities). Install it with `brew install deno` or `winget install DenoLand.Deno`, then click **Check again**.
+Yes. Without deno, yt-dlp may not see some YouTube formats (often the highest qualities). Run the [one-line install command](#install-the-helper) again (it adds what is missing), or install it yourself with `brew install deno` or `winget install DenoLand.Deno`, then click **Check again**.
 
 **macOS says the helper “cannot be opened” or is from an unidentified developer (Gatekeeper).**
-Run the installer again (`sh host/dist/youtube-extension-host-macos/install.sh`); it removes the quarantine attribute that Gatekeeper checks. Do not use `sudo`. If it still happens, build the helper yourself with `npm run build:host` and install again.
+Files downloaded by `curl` in Terminal are not marked as coming from the internet, so the one-line install does not trigger this. If you installed manually from a zip downloaded in the browser, run `sh install.sh` from that folder again (it removes the quarantine attribute), or use the one-line install. Do not use `sudo`.
 
 **Zen (or another Firefox-based browser) cannot find the helper.**
 The installer registers the helper for Firefox, which Zen normally reads. Restart Zen completely after installing and click **Check again**. If it still says the helper isn't connected, please open an issue with your Zen version, your macOS or Windows version, and whether `~/Library/Application Support/Mozilla/NativeMessagingHosts/com.chidi0716.youtube_extension.json` (macOS) exists. Messages starting with `[youtube-extension]` in the extension's console (open `about:debugging`, find the extension, click **Inspect**) also help.
@@ -142,7 +174,7 @@ The installer registers the helper for Firefox, which Zen normally reads. Restar
 The folder chosen in the settings page was moved or deleted, the disk is full, or the folder isn't writable. Choose another folder or click **Use default** in the settings page. On macOS, folders such as Desktop or Documents may need permission: if a prompt asks to allow access, allow it.
 
 **The extension disappeared from Firefox after a restart.**
-Add-ons loaded from `about:debugging` are temporary and are removed when Firefox restarts. Install the signed `.xpi` instead (see [Load the extension manually](#load-the-extension-manually)).
+Add-ons loaded from `about:debugging` are temporary and are removed when Firefox restarts. Install the signed `.xpi` from the [releases page](https://github.com/chidi0716/youtube-extension/releases) instead (see [Load the extension manually](#load-the-extension-manually)); it also updates itself.
 
 ## Development
 
@@ -163,13 +195,16 @@ npm run build:host      # local helper → host/dist/ (macOS arm64/amd64, Window
 npm run zip
 npm run zip:firefox
 npm run sign:firefox    # Firefox → signed .xpi in .output/firefox-signed (see below)
+npm run release:dry     # all release files with a temporary key → release/dist (see Releases)
 ```
 
 ## Load the extension manually
 
-- **Chrome:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose `.output/chrome-mv3`.
+Ready-made packages are on the [releases page](https://github.com/chidi0716/youtube-extension/releases): `youtube-extension-<version>-chrome.zip` and `youtube-extension-<version>-firefox.xpi`. To use your own build, use `.output/chrome-mv3` or `.output/firefox-mv3` instead.
+
+- **Chrome:** unzip the Chrome package to a folder you keep, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose that folder (or `.output/chrome-mv3`). Chrome cannot update it by itself; when a new version is out the extension shows a reminder. To update, unzip the new package over the same folder and click the reload button in `chrome://extensions`.
 - **Firefox (development):** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `.output/firefox-mv3/manifest.json`. Temporary add-ons are removed when Firefox restarts.
-- **Firefox (permanent, Firefox 140 or later, including Zen):** release builds of Firefox only install add-ons signed by Mozilla, so the extension is signed through the *unlisted* channel of addons.mozilla.org (it is not published on the AMO website). Open the signed `.xpi` file in Firefox (or drag it onto a Firefox window) and confirm the install prompt.
+- **Firefox (permanent, Firefox 140 or later, including Zen):** release builds of Firefox only install add-ons signed by Mozilla, so the extension is signed through the *unlisted* channel of addons.mozilla.org (it is not published on the AMO website). Open the signed `.xpi` file in Firefox (or drag it onto a Firefox window) and confirm the install prompt. Signed releases update themselves (`about:addons` → gear icon → **Check for Updates** to update now).
 
 ### Signing the Firefox build (maintainers)
 
@@ -180,6 +215,31 @@ npm run sign:firefox    # Firefox → signed .xpi in .output/firefox-signed (see
    export WEB_EXT_API_SECRET=...
    ```
 3. Commit your changes, then run `npm run sign:firefox`. It builds `.output/firefox-mv3`, packs the source code of the current commit into `.output/firefox-sources.zip` with `git archive` (without `node_modules`, `.output`, `host/dist` and `spikes`), and runs `web-ext sign --channel unlisted --upload-source-code`. The signed `.xpi` is saved to `.output/firefox-signed/`. Add `-- --dry-run` to create the source archive and print the command without submitting.
+
+### Releases (maintainers)
+
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](./.github/workflows/release.yml). It runs the tests, builds the extension and the three helpers, checks every third-party file against [`release/components.lock.json`](./release/components.lock.json) and the official checksums, builds and signs `components.json`, sends the Firefox build to Mozilla for signing (unlisted channel), writes `updates.json` (Firefox auto-update), and creates the GitHub release with the install scripts, helpers, `components.json(.sig)`, the Chrome zip, the `.xpi`, `updates.json` and `SHA256SUMS`. Tags with a `-` (for example `v0.2.0-beta.1`) become prereleases, which are never “latest”, so they trigger no update reminders or automatic updates.
+
+#### First-time setup
+
+1. **Release signing key.** On your own computer (never in the repository):
+   ```bash
+   cd host && go run ./cmd/yte-release keygen -out ~/yte-release-signing.key
+   ```
+   It prints the public key. Paste it into `PublicKeyBase64` in [`host/internal/release/pubkey.go`](./host/internal/release/pubkey.go) and commit. Until this is done, helpers refuse every release list.
+2. **GitHub secrets** (repository **Settings → Secrets and variables → Actions → New repository secret**):
+   - `RELEASE_SIGNING_KEY`: the content of the key file from step 1. Then keep the file offline (for example in a password manager) or delete it.
+   - `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`: the API key from <https://addons.mozilla.org/developers/addon/api/key/> (“JWT issuer” and “JWT secret”).
+
+   The workflow stops if the signing key does not match the public key in `pubkey.go`.
+3. Try everything locally without secrets: `npm run release:dry` (uses a temporary key that is deleted afterwards; output in `release/dist/`, the Firefox package is not signed).
+
+#### Making a release
+
+1. Update `version` in `package.json` (for example `0.2.0`) and commit.
+2. Optionally update the pinned third-party versions in `release/components.lock.json` (see [`specs/notes/ffmpeg-source.md`](./specs/notes/ffmpeg-source.md)) and check them with `cd host && go run ./cmd/yte-release lock-check -download`.
+3. Tag and push: `git tag v0.2.0 && git push origin v0.2.0`. The tag must match `package.json`.
+4. After the workflow finishes, check the release page. Firefox/Zen users get the new version automatically; Chrome users get a reminder in the extension with a link to the release.
 
 ### Building from source (for add-on reviewers)
 
@@ -208,6 +268,8 @@ This project follows spec-driven development and a clean-room process:
 | [`specs/005-page-tidy`](./specs/005-page-tidy/spec.md) | Page tidy options in the settings page |
 | [`specs/006-toolbar-customization`](./specs/006-toolbar-customization/spec.md) | Customize which tools the toolbar shows and their order |
 | [`specs/007-ui-language`](./specs/007-ui-language/spec.md) | Choose the interface language in the settings page |
+| [`specs/008-install-and-update`](./specs/008-install-and-update/spec.md) | One-line install, automatic updates and update reminders |
+| [`docs/what-gets-installed.md`](./docs/what-gets-installed.md) | What the download helper installs, where, and what it connects to |
 | [`specs/plan.md`](./specs/plan.md) / [`specs/tasks.md`](./specs/tasks.md) | Technical plan and tasks |
 | [`specs/ROADMAP.md`](./specs/ROADMAP.md) | Future directions |
 | [`specs/BACKLOG.md`](./specs/BACKLOG.md) | Feature ideas not yet specified |
@@ -218,3 +280,9 @@ Specs are written in Traditional Chinese.
 ## Disclaimer
 
 Downloading YouTube content may violate YouTube's Terms of Service. Use this extension only for content you have the right to download, for personal use. Because Chrome Web Store does not allow YouTube downloaders, the extension is meant to be loaded manually.
+
+## License
+
+[MIT](./LICENSE) © chidi0716.
+
+The download helper installs third-party programs from their official sources: yt-dlp ([Unlicense](https://github.com/yt-dlp/yt-dlp/blob/master/LICENSE); the standalone executables are GPLv3+), deno ([MIT](https://github.com/denoland/deno/blob/main/LICENSE.md)) and ffmpeg ([GPL builds](https://ffmpeg.org/legal.html)). They are not part of this project and keep their own licenses. See [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) for these programs and for the open-source code bundled in the extension and the helper.

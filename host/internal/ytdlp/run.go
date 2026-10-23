@@ -29,15 +29,16 @@ const (
 // deno 是 yt-dlp 取得 YouTube 完整格式所需的 JavaScript 執行環境（002 FR-2、Q39），
 // 橋接程式本身不執行它，只把它所在的資料夾加進 yt-dlp 的 PATH，並在 status 回報。
 type Tools struct {
-	Env    Env
-	YtDlp  string
-	FFmpeg string
-	Deno   string
+	Env     Env
+	YtDlp   string
+	FFmpeg  string
+	FFprobe string
+	Deno    string
 }
 
 // Locate 尋找 yt-dlp 與 ffmpeg。
 func Locate(env Env) *Tools {
-	return &Tools{Env: env, YtDlp: env.Find("yt-dlp"), FFmpeg: env.Find("ffmpeg"), Deno: env.Find("deno")}
+	return &Tools{Env: env, YtDlp: env.Find("yt-dlp"), FFmpeg: env.Find("ffmpeg"), FFprobe: env.Find("ffprobe"), Deno: env.Find("deno")}
 }
 
 // ChildEnv 回傳 yt-dlp 子程序的環境變數：補上 PATH，並要求 Python 以 UTF-8 輸出
@@ -162,6 +163,27 @@ func (t *Tools) FFmpegVersion(ctx context.Context) (string, error) {
 		}
 	}
 	if m := ffmpegVersionRe.FindStringSubmatch(firstLine(string(out))); m != nil {
+		return m[1], nil
+	}
+	return strings.TrimSpace(firstLine(string(out))), nil
+}
+
+var ffprobeVersionRe = regexp.MustCompile(`(?i)^ffprobe version (\S+)`)
+
+// FFprobeVersion 執行 ffprobe -version，回傳版本字串。
+func (t *Tools) FFprobeVersion(ctx context.Context) (string, error) {
+	if t.FFprobe == "" {
+		return "", errs.New(errs.FFmpegNotFound, "ffprobe was not found")
+	}
+	ctx, cancel := context.WithTimeout(ctx, VersionTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, t.FFprobe, "-version")
+	platform.HideConsole(cmd)
+	out, err := cmd.Output()
+	if err != nil {
+		return "", errs.New(errs.FFmpegNotFound, "could not run ffprobe: %v", err)
+	}
+	if m := ffprobeVersionRe.FindStringSubmatch(firstLine(string(out))); m != nil {
 		return m[1], nil
 	}
 	return strings.TrimSpace(firstLine(string(out))), nil

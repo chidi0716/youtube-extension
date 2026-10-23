@@ -6,7 +6,9 @@
 // 環境變數：
 //
 //	FAKE_YTDLP_SCENARIO  ok（預設）、slow、login、bot、network、diskfull、outdated、
-//	                     format、nosubs、unavailable、live、crash
+//	                     format、nosubs、unavailable、live、crash、
+//	                     outdated-once、bot-once（FAKE_YTDLP_MARKER 存在後正常；-U 會建立它）
+//	FAKE_YTDLP_MARKER    -U 時建立這個檔案並回報已更新
 //	FAKE_YTDLP_LOG       每次執行時把參數以 JSON 一行附加到這個檔案
 //	FAKE_YTDLP_CHILD_PID slow 情境中，模擬 ffmpeg 的子程序 PID 寫到這個檔案
 //	FAKE_YTDLP_VERSION   --version 的輸出（預設 2026.10.21）
@@ -38,6 +40,9 @@ func main() {
 	args := os.Args[1:]
 	// 同一個執行檔複製成 ffmpeg 或 deno 時，模擬 ffmpeg -version 與 deno --version。
 	switch base := strings.ToLower(filepath.Base(os.Args[0])); {
+	case strings.HasPrefix(base, "ffprobe"):
+		fmt.Println("ffprobe version 7.1-fake Copyright (c) 2007-2024 the FFmpeg developers")
+		return
 	case strings.HasPrefix(base, "ffmpeg"):
 		fmt.Println("ffmpeg version 7.1-fake Copyright (c) 2000-2024 the FFmpeg developers")
 		return
@@ -72,6 +77,13 @@ func main() {
 		fmt.Println(v)
 		return
 	case opts.has("-U"):
+		if marker := os.Getenv("FAKE_YTDLP_MARKER"); marker != "" {
+			// outdated-once：-U 之後就不再回報過舊。
+			os.WriteFile(marker, []byte("updated"), 0o644)
+			fmt.Println("Latest version: stable@2026.11.01 from yt-dlp/yt-dlp")
+			fmt.Println("Updated yt-dlp to stable@2026.11.01 from yt-dlp/yt-dlp")
+			return
+		}
 		fmt.Println("Latest version: stable@2026.10.21 from yt-dlp/yt-dlp")
 		fmt.Println("yt-dlp is up to date (stable@2026.10.21 from yt-dlp/yt-dlp)")
 		return
@@ -89,6 +101,14 @@ func main() {
 		fail("ERROR: [youtube] " + id + ": Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication.")
 	case "network":
 		fail("ERROR: [youtube] " + id + ": Unable to download webpage: <urlopen error [Errno 8] nodename nor servname provided, or not known>")
+	case "outdated-once", "bot-once":
+		// 執行過 -U（FAKE_YTDLP_MARKER 存在）之前回報過舊或要求驗證，之後正常下載（008 FR-22）。
+		if _, err := os.Stat(os.Getenv("FAKE_YTDLP_MARKER")); err != nil && !strings.Contains(strings.Join(args, " "), "-J") {
+			if scenario == "bot-once" {
+				fail("ERROR: [youtube] " + id + ": Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication.")
+			}
+			fail("ERROR: [youtube] " + id + ": Signature extraction failed: Some formats may be missing; please report this issue on https://github.com/yt-dlp/yt-dlp/issues")
+		}
 	case "outdated":
 		fail("ERROR: [youtube] " + id + ": Signature extraction failed: Some formats may be missing; please report this issue on https://github.com/yt-dlp/yt-dlp/issues")
 	case "unavailable":

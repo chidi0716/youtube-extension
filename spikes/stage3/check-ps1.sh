@@ -17,7 +17,8 @@ if [ ! -x "$pwsh" ]; then
 fi
 
 "$pwsh" -NoProfile -NonInteractive -File "$here/parse-ps1.ps1" \
-  "$repo/install/windows/install.ps1" "$repo/install/windows/uninstall.ps1"
+  "$repo/install/windows/install.ps1" "$repo/install/windows/uninstall.ps1" \
+  "$repo/install/bootstrap/install.ps1"
 
 # 選擇資料夾的 PowerShell 腳本（內嵌在 host/internal/platform/actions.go）也解析一次。
 script=$(sed -n '/^const winPickFolderScript = `/,/^`$/p' "$repo/host/internal/platform/actions.go" | sed '1s/^const winPickFolderScript = `//; $d')

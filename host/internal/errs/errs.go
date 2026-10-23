@@ -47,6 +47,11 @@ const (
 	Busy           Code = "BUSY"        // 例如已經有一個選擇資料夾視窗開著
 	Interrupted    Code = "INTERRUPTED" // 執行下載的程序意外結束
 
+	// 安裝與自動更新（plan 4.9）
+	JobsRunning      Code = "JOBS_RUNNING"      // 有進行中的下載，不能移除下載功能
+	SignatureInvalid Code = "SIGNATURE_INVALID" // components.json 的簽章不正確（或小幫手沒有內建公鑰）
+	ChecksumMismatch Code = "CHECKSUM_MISMATCH" // 下載的檔案與清單中的 SHA256 不符
+
 	Unknown Code = "UNKNOWN"
 )
 
@@ -57,6 +62,7 @@ var All = []Code{
 	YtDlpOutdated, LoginRequired, VerificationRequired, VideoUnavailable, LiveNotSupported,
 	FormatUnavailable, NoSubtitles, Network, DiskFull, PermissionDenied, Timeout, UpdateFailed,
 	JobNotFound, JobNotFinished, FileNotFound, TooManyJobs, Busy, Interrupted,
+	JobsRunning, SignatureInvalid, ChecksumMismatch,
 	Unknown,
 }
 

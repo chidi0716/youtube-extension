@@ -25,6 +25,10 @@ type Backend interface {
 	Reveal(ctx context.Context, jobID string) (any, error)
 	PickFolder(ctx context.Context) (any, error)
 	UpdateYtDlp(ctx context.Context) (any, error)
+	// 008（plan 4.9）
+	SetAutoUpdate(ctx context.Context, enabled bool) (any, error)
+	CheckUpdates(ctx context.Context) (any, error)
+	Uninstall(ctx context.Context) (any, error)
 }
 
 // Logger 記錄指令名稱與錯誤代碼（plan 4.7，不記錄參數內容）。
@@ -36,6 +40,10 @@ type handler func(ctx context.Context, b Backend, args json.RawMessage) (any, er
 
 type videoIDArgs struct {
 	VideoID *string `json:"videoId"`
+}
+
+type enabledArgs struct {
+	Enabled *bool `json:"enabled"`
 }
 
 type jobIDArgs struct {
@@ -132,6 +140,28 @@ var handlers = map[string]handler{
 			return nil, err
 		}
 		return b.UpdateYtDlp(ctx)
+	},
+	"setAutoUpdate": func(ctx context.Context, b Backend, args json.RawMessage) (any, error) {
+		var a enabledArgs
+		if err := decodeArgs(args, &a); err != nil {
+			return nil, err
+		}
+		if a.Enabled == nil {
+			return nil, errs.New(errs.InvalidArgs, "enabled: is required")
+		}
+		return b.SetAutoUpdate(ctx, *a.Enabled)
+	},
+	"checkUpdates": func(ctx context.Context, b Backend, args json.RawMessage) (any, error) {
+		if err := validate.NoArgs(args); err != nil {
+			return nil, err
+		}
+		return b.CheckUpdates(ctx)
+	},
+	"uninstall": func(ctx context.Context, b Backend, args json.RawMessage) (any, error) {
+		if err := validate.NoArgs(args); err != nil {
+			return nil, err
+		}
+		return b.Uninstall(ctx)
 	},
 }
 

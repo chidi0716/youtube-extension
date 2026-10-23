@@ -3,14 +3,18 @@ package app
 
 import (
 	"context"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/chidi0716/youtube-extension/host/internal/errs"
 	"github.com/chidi0716/youtube-extension/host/internal/jobs"
 	"github.com/chidi0716/youtube-extension/host/internal/platform"
 	"github.com/chidi0716/youtube-extension/host/internal/protocol"
+	"github.com/chidi0716/youtube-extension/host/internal/release"
+	"github.com/chidi0716/youtube-extension/host/internal/updater"
 	"github.com/chidi0716/youtube-extension/host/internal/validate"
 	"github.com/chidi0716/youtube-extension/host/internal/ytdlp"
 )
@@ -21,6 +25,15 @@ type App struct {
 	Env     ytdlp.Env
 	Manager *jobs.Manager
 	Actions *platform.Actions
+	// Layout 是安裝資料夾等位置；InstallDir 為空時使用目前使用者的位置。
+	Layout platform.Layout
+	// SelfPath 是目前執行中的小幫手（status 的 helper 元件）。
+	SelfPath string
+	// SpawnSelf 以脫離的方式啟動小幫手自己（--update、--uninstall），回傳 PID。
+	SpawnSelf func(args ...string) (int, error)
+	// Now 可在測試中替換。
+	Now func() time.Time
+	Log Logger
 
 	updateMu sync.Mutex
 
@@ -29,9 +42,45 @@ type App struct {
 	infoSem  chan struct{}
 }
 
+// Logger 是記錄檔介面。
+type Logger interface {
+	Printf(format string, a ...any)
+}
+
 // New 建立 App。
 func New(version string, m *jobs.Manager) *App {
-	return &App{Version: version, Env: ytdlp.SystemEnv(), Manager: m, Actions: platform.NewActions()}
+	self, _ := os.Executable()
+	return &App{
+		Version: version, Env: ytdlp.SystemEnv(), Manager: m, Actions: platform.NewActions(),
+		Layout: platform.CurrentLayout(), SelfPath: self,
+		SpawnSelf: func(args ...string) (int, error) {
+			exe, err := os.Executable()
+			if err != nil {
+				return 0, err
+			}
+			return jobs.SpawnDetached(exe, args...)
+		},
+	}
+}
+
+func (a *App) layout() platform.Layout {
+	if a.Layout.InstallDir == "" {
+		return platform.CurrentLayout()
+	}
+	return a.Layout
+}
+
+func (a *App) now() time.Time {
+	if a.Now != nil {
+		return a.Now()
+	}
+	return time.Now()
+}
+
+func (a *App) logf(format string, args ...any) {
+	if a.Log != nil {
+		a.Log.Printf(format, args...)
+	}
 }
 
 // tools 每次重新尋找 yt-dlp 與 ffmpeg，讓使用者安裝後按「重新檢查」就能生效。
@@ -72,6 +121,22 @@ type StatusResult struct {
 	InstallCommand string       `json:"installCommand"`
 	DefaultDir     string       `json:"defaultDir"`
 	NamePresets    []PresetInfo `json:"namePresets"`
+
+	// 008（plan 4.9）
+	InstallDir string       `json:"installDir"`
+	Components []Component  `json:"components"`
+	Update     updater.View `json:"update"`
+}
+
+// Component 是 status 中的一個元件（008 FR-24）：名稱、版本、路徑與來源。
+// Source 為 "bundled"（安裝資料夾）、"homebrew"、"winget" 或 "path"；找不到時 found 為 false，
+// 其他欄位為空字串。
+type Component struct {
+	Name    string `json:"name"` // helper、yt-dlp、deno、ffmpeg、ffprobe
+	Version string `json:"version"`
+	Path    string `json:"path"`
+	Source  string `json:"source"`
+	Found   bool   `json:"found"`
 }
 
 // Status 實作 status 指令。找不到 yt-dlp 或 ffmpeg 不算錯誤，以 found=false 表示。
@@ -125,7 +190,35 @@ func (a *App) Status(ctx context.Context) (any, error) {
 			res.Deno.Version = v
 		}()
 	}
+	var ffprobeVersion string
+	if t.FFprobe != "" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ffprobeVersion, _ = t.FFprobeVersion(ctx)
+		}()
+	}
 	wg.Wait()
+	l := a.layout()
+	res.InstallDir = l.InstallDir
+	res.Update = updater.ViewOf(l.InstallDir)
+	helper := Component{Name: "helper", Version: a.Version, Path: a.SelfPath, Source: "path", Found: a.SelfPath != ""}
+	if a.SelfPath != "" && platform.SameFile(a.SelfPath, l.HelperPath) {
+		helper.Source = "bundled"
+	}
+	res.Components = []Component{helper}
+	for _, c := range []struct{ name, path, version string }{
+		{"yt-dlp", t.YtDlp, res.YtDlp.Version},
+		{"deno", t.Deno, res.Deno.Version},
+		{"ffmpeg", t.FFmpeg, res.FFmpeg.Version},
+		{"ffprobe", t.FFprobe, ffprobeVersion},
+	} {
+		comp := Component{Name: c.name}
+		if c.path != "" {
+			comp = Component{Name: c.name, Version: c.version, Path: c.path, Source: a.Env.Source(c.path), Found: true}
+		}
+		res.Components = append(res.Components, comp)
+	}
 	res.Missing = []string{}
 	for _, c := range []struct {
 		name string
@@ -206,7 +299,86 @@ func (a *App) Download(ctx context.Context, d *validate.Download) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	a.maybeStartUpdate()
 	return &DownloadResult{JobID: st.JobID, State: st.State}, nil
+}
+
+// maybeStartUpdate 在開始下載時檢查是否該自動更新（008 FR-20）：自動更新開啟、距上次檢查超過
+// 24 小時、沒有正在執行的更新，就啟動分離的 yte-host --update，不等待、不延遲這次下載。
+// 開發版（版本不是 x.y.z）不自動更新。
+func (a *App) maybeStartUpdate() {
+	if _, ok := release.ParseVersion(a.Version); !ok || a.SpawnSelf == nil {
+		return
+	}
+	dir := a.layout().InstallDir
+	if !updater.ShouldCheck(updater.Load(dir), a.now()) || updater.Running(dir) {
+		return
+	}
+	if _, err := a.SpawnSelf(UpdateFlag); err != nil {
+		a.logf("could not start the update: %v", err)
+	}
+}
+
+// UpdateFlag 與 UninstallFlag 是小幫手啟動自己時的參數。
+const (
+	UpdateFlag    = "--update"
+	UninstallFlag = "--uninstall"
+)
+
+// SetAutoUpdateResult 是 setAutoUpdate 的結果。
+type SetAutoUpdateResult struct {
+	Auto bool `json:"auto"`
+}
+
+// SetAutoUpdate 實作 setAutoUpdate：寫入狀態檔（008 FR-24）。
+func (a *App) SetAutoUpdate(ctx context.Context, enabled bool) (any, error) {
+	if err := updater.SetAuto(a.layout().InstallDir, enabled); err != nil {
+		return nil, errs.New(errs.PermissionDenied, "could not save the setting: %v", err)
+	}
+	return &SetAutoUpdateResult{Auto: enabled}, nil
+}
+
+// CheckUpdatesResult 是 checkUpdates 的結果。
+type CheckUpdatesResult struct {
+	Started bool `json:"started"`
+}
+
+// CheckUpdates 實作 checkUpdates：立即啟動 --update（不受 24 小時限制）；
+// 已經在執行時回傳 started: false。
+func (a *App) CheckUpdates(ctx context.Context) (any, error) {
+	if updater.Running(a.layout().InstallDir) {
+		return &CheckUpdatesResult{Started: false}, nil
+	}
+	if a.SpawnSelf == nil {
+		return nil, errs.New(errs.Unknown, "cannot start the update")
+	}
+	if _, err := a.SpawnSelf(UpdateFlag); err != nil {
+		return nil, errs.New(errs.Unknown, "could not start the update: %v", err)
+	}
+	return &CheckUpdatesResult{Started: true}, nil
+}
+
+// UninstallResult 是 uninstall 的結果。
+type UninstallResult struct {
+	OK bool `json:"ok"`
+}
+
+// UninstallDelay 是移除前等待的秒數，讓這個回應先送達擴充功能。
+const UninstallDelay = "2"
+
+// Uninstall 實作 uninstall（008 FR-30）：有進行中的下載時回傳 JOBS_RUNNING；否則啟動分離的
+// yte-host --uninstall --delay 2 後回傳 {ok: true}。
+func (a *App) Uninstall(ctx context.Context) (any, error) {
+	if a.Manager != nil && a.Manager.Store != nil && a.Manager.Store.ActiveCount(a.now()) > 0 {
+		return nil, errs.New(errs.JobsRunning, "downloads are in progress")
+	}
+	if a.SpawnSelf == nil {
+		return nil, errs.New(errs.Unknown, "cannot start the uninstaller")
+	}
+	if _, err := a.SpawnSelf(UninstallFlag, "--delay", UninstallDelay); err != nil {
+		return nil, errs.New(errs.Unknown, "could not start the uninstaller: %v", err)
+	}
+	return &UninstallResult{OK: true}, nil
 }
 
 // Cancel 實作 cancel 指令。
