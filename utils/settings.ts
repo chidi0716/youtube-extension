@@ -1,12 +1,18 @@
 // 所有設定的 storage 定義集中於此（plan 3.1）。
 // 檔案位於 utils/，WXT 會自動匯入這裡的 export。
 // 設定都存在 sync 區：跨分頁、跨重新開機，並跟著使用者的瀏覽器帳號同步。
+import type { PageThemePreference, Theme } from './page-theme';
 import type { ToolbarLayout } from './toolbar-layout';
 
 /** 介面語言（007 FR-1、FR-4）：跟隨瀏覽器、繁體中文或英文。 */
 export type UiLanguagePreference = 'auto' | 'zh_TW' | 'en';
 export const UI_LANGUAGE_VALUES: readonly UiLanguagePreference[] = ['auto', 'zh_TW', 'en'];
 export const uiLanguage = storage.defineItem<UiLanguagePreference>('sync:uiLanguage', { fallback: 'auto' });
+
+/** 設定頁與彈出視窗的外觀（007 FR-20、FR-24）：跟隨 YouTube（預設）、跟隨系統、深色、淺色。 */
+export const pageTheme = storage.defineItem<PageThemePreference>('sync:pageTheme', { fallback: 'youtube' });
+/** 最近一次在 YouTube 上看到的主題（007 FR-21）；只存在本機。由 utils/page-theme.ts 讀寫。 */
+export const lastYouTubeTheme = storage.defineItem<Theme | null>('local:lastYouTubeTheme', { fallback: null });
 
 /** 工具列是否顯示（001 FR-15、FR-16）。 */
 export const enabled = storage.defineItem<boolean>('sync:enabled', {

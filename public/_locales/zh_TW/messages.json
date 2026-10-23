@@ -773,6 +773,30 @@
     "message": "擴充功能在瀏覽器擴充功能管理頁中的名稱與說明，以及擴充功能圖示的滑鼠提示由瀏覽器顯示，一律跟隨瀏覽器語言。",
     "description": "Settings page: note under the interface language dropdown (007 FR-5)."
   },
+  "optionsAppearance": {
+    "message": "外觀",
+    "description": "Settings page: label of the appearance dropdown (007 FR-20)."
+  },
+  "optionsAppearanceDesc": {
+    "message": "套用到這個設定頁與彈出視窗；YouTube 上的工具列一律跟隨 YouTube 自己的主題。",
+    "description": "Settings page: note under the appearance dropdown (007 FR-23)."
+  },
+  "optionsAppearanceYouTube": {
+    "message": "跟隨 YouTube",
+    "description": "Appearance option: the theme last seen on YouTube."
+  },
+  "optionsAppearanceSystem": {
+    "message": "跟隨系統",
+    "description": "Appearance option: the system's dark or light setting."
+  },
+  "optionsAppearanceDark": {
+    "message": "深色",
+    "description": "Appearance option."
+  },
+  "optionsAppearanceLight": {
+    "message": "淺色",
+    "description": "Appearance option."
+  },
   "optionsTidyTitle": {
     "message": "頁面整理",
     "description": "Settings page: heading of the page tidy section."

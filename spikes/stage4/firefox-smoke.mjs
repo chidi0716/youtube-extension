@@ -210,6 +210,22 @@ try {
   const zh = JSON.parse(await evaluate(`JSON.stringify({ h1: document.querySelector('h1').textContent, toolbar: document.querySelector('#toolbar-title').textContent, stored: null })`));
   const lang = await evaluate(`browser.storage.sync.get('uiLanguage').then((r) => String(r.uiLanguage))`);
   check('Firefox：設定頁選「繁體中文」後立即變成中文，並寫入 sync:uiLanguage（007 FR-3、FR-4）', zh.h1 === '設定' && zh.toolbar === '工具列' && lang === 'zh_TW', `${JSON.stringify(zh)} ${lang}`);
+
+  // 007 FR-20 至 FR-22：外觀（T37）
+  const pick = async (v) => {
+    await evaluate(`(() => { const s = document.querySelector('#page-theme'); s.value = '${v}'; s.dispatchEvent(new Event('change')); return true; })()`);
+    await sleep(500);
+    return evaluate(`document.documentElement.dataset.theme + ' ' + getComputedStyle(document.documentElement).backgroundColor`);
+  };
+  const darkTheme = await pick('dark');
+  const lightTheme = await pick('light');
+  await evaluate(`browser.storage.local.set({ lastYouTubeTheme: 'dark' }).then(() => true)`);
+  const followYouTube = await pick('youtube');
+  check(
+    'Firefox：設定頁的外觀選單（深色、淺色、跟隨 YouTube 的紀錄）立即套用（007 FR-20 至 FR-22）',
+    darkTheme === 'dark rgb(15, 15, 15)' && lightTheme === 'light rgb(255, 255, 255)' && followYouTube.startsWith('dark'),
+    `${darkTheme} / ${lightTheme} / ${followYouTube}`,
+  );
 } catch (err) {
   check('Firefox script', false, String(err));
 } finally {

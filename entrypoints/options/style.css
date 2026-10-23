@@ -10,8 +10,24 @@
   --accent: #065fd4;
 }
 
+/* 深色（007 FR-20 至 FR-22）：<html data-theme="dark">；套用前（沒有 data-theme）依系統設定。 */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  color: #f1f1f1;
+  background-color: #0f0f0f;
+  --text-secondary: #aaaaaa;
+  --outline: rgba(255, 255, 255, 0.2);
+  --group-background: rgba(255, 255, 255, 0.05);
+  --switch-track: #717171;
+  --accent: #3ea6ff;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     color: #f1f1f1;
     background-color: #0f0f0f;
     --text-secondary: #aaaaaa;
@@ -163,10 +179,8 @@ h2 {
   color: #c30027;
 }
 
-@media (prefers-color-scheme: dark) {
-  .status-row[data-ok='false'] .option-desc {
-    color: #ff4e45;
-  }
+:root[data-theme='dark'] .status-row[data-ok='false'] .option-desc {
+  color: #ff4e45;
 }
 
 .status-install {
@@ -244,7 +258,9 @@ h2 {
 }
 
 .select option {
-  color: #0f0f0f;
+  /* 系統色依 color-scheme（data-theme）變化，深色時下拉清單也是深色。 */
+  background: Canvas;
+  color: CanvasText;
 }
 
 /* 工具列區（006 FR-22） */

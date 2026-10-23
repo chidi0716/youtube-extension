@@ -1,7 +1,8 @@
 import './style.css';
 import { TIDY_CATEGORIES, type TidyOption } from '@/features/tidy/options';
 import { applyI18n, initI18n, onLocaleChange, resolveLocale, setLocale, t, UI_LANGUAGES } from '@/utils/i18n';
-import { UI_LANGUAGE_VALUES, uiLanguage, type UiLanguagePreference } from '@/utils/settings';
+import { applyPageTheme, PAGE_THEME_VALUES, type PageThemePreference } from '@/utils/page-theme';
+import { pageTheme, UI_LANGUAGE_VALUES, uiLanguage, type UiLanguagePreference } from '@/utils/settings';
 import { renderDownloads } from './downloads';
 import { renderToolbarSettings } from './toolbar';
 
@@ -53,7 +54,50 @@ function optionRow(option: TidyOption, cleanups: Array<() => void>): HTMLElement
 }
 
 /** 介面語言選單（007 FR-1、FR-5）。 */
-function renderLanguage(root: HTMLElement, focus: boolean): () => void {
+const PAGE_THEME_LABELS = {
+  youtube: 'optionsAppearanceYouTube',
+  system: 'optionsAppearanceSystem',
+  dark: 'optionsAppearanceDark',
+  light: 'optionsAppearanceLight',
+} as const satisfies Record<PageThemePreference, string>;
+
+/** 外觀選單（007 FR-20 至 FR-22）：選擇後立即寫入設定，applyPageTheme 監聽設定而立即套用。 */
+function appearanceRow(focus: boolean): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'option';
+  const label = document.createElement('label');
+  label.className = 'option-text';
+  label.htmlFor = 'page-theme';
+  const name = document.createElement('span');
+  name.className = 'option-name';
+  name.textContent = t('optionsAppearance');
+  const note = document.createElement('span');
+  note.className = 'option-desc';
+  note.id = 'page-theme-note';
+  note.textContent = t('optionsAppearanceDesc');
+  label.append(name, note);
+  const select = document.createElement('select');
+  select.id = 'page-theme';
+  select.className = 'select';
+  select.setAttribute('aria-describedby', note.id);
+  for (const value of PAGE_THEME_VALUES) {
+    const el = document.createElement('option');
+    el.value = value;
+    el.textContent = t(PAGE_THEME_LABELS[value]);
+    select.append(el);
+  }
+  select.disabled = true;
+  void pageTheme.getValue().then((value) => {
+    select.value = PAGE_THEME_VALUES.includes(value) ? value : 'youtube';
+    select.disabled = false;
+    if (focus) select.focus();
+  });
+  select.addEventListener('change', () => void pageTheme.setValue(select.value as PageThemePreference));
+  row.append(label, select);
+  return row;
+}
+
+function renderLanguage(root: HTMLElement, focus: string | undefined): () => void {
   const fieldset = document.createElement('fieldset');
   fieldset.className = 'group';
   fieldset.dataset.category = 'language';
@@ -86,7 +130,7 @@ function renderLanguage(root: HTMLElement, focus: boolean): () => void {
   void uiLanguage.getValue().then((value) => {
     select.value = UI_LANGUAGE_VALUES.includes(value) ? value : 'auto';
     select.disabled = false;
-    if (focus) select.focus();
+    if (focus === 'ui-language') select.focus();
   });
   select.addEventListener('change', async () => {
     const value = select.value as UiLanguagePreference;
@@ -95,7 +139,7 @@ function renderLanguage(root: HTMLElement, focus: boolean): () => void {
     setLocale(resolveLocale(value));
   });
   row.append(label, select);
-  fieldset.append(row);
+  fieldset.append(row, appearanceRow(focus === 'page-theme'));
   root.append(fieldset);
   return () => {};
 }
@@ -110,7 +154,7 @@ function renderPage(focusId?: string): () => void {
     el.replaceChildren();
     return el;
   };
-  cleanups.push(renderLanguage(container('#language-groups'), focusId === 'ui-language'));
+  cleanups.push(renderLanguage(container('#language-groups'), focusId));
   // 工具列（T34）
   cleanups.push(renderToolbarSettings(container('#toolbar-groups')));
   const groups = container('#tidy-groups');
@@ -128,11 +172,11 @@ function renderPage(focusId?: string): () => void {
   return () => cleanups.forEach((c) => c());
 }
 
-await initI18n();
+await Promise.all([initI18n(), applyPageTheme()]);
 let dispose = renderPage();
 onLocaleChange(() => {
   const focusedId = (document.activeElement as HTMLElement | null)?.id;
   dispose();
   dispose = renderPage(focusedId);
-  if (focusedId && focusedId !== 'ui-language') document.getElementById(focusedId)?.focus();
+  if (focusedId && focusedId !== 'ui-language' && focusedId !== 'page-theme') document.getElementById(focusedId)?.focus();
 });

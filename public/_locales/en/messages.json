@@ -773,6 +773,30 @@
     "message": "The extension's name and description on the browser's extensions page, and the tooltip of the extension's icon, are shown by the browser and always follow the browser language.",
     "description": "Settings page: note under the interface language dropdown (007 FR-5)."
   },
+  "optionsAppearance": {
+    "message": "Appearance",
+    "description": "Settings page: label of the appearance dropdown (007 FR-20)."
+  },
+  "optionsAppearanceDesc": {
+    "message": "For this settings page and the popup. The toolbar on YouTube always follows YouTube's own theme.",
+    "description": "Settings page: note under the appearance dropdown (007 FR-23)."
+  },
+  "optionsAppearanceYouTube": {
+    "message": "Follow YouTube",
+    "description": "Appearance option: the theme last seen on YouTube."
+  },
+  "optionsAppearanceSystem": {
+    "message": "Follow the system",
+    "description": "Appearance option: the system's dark or light setting."
+  },
+  "optionsAppearanceDark": {
+    "message": "Dark",
+    "description": "Appearance option."
+  },
+  "optionsAppearanceLight": {
+    "message": "Light",
+    "description": "Appearance option."
+  },
   "optionsTidyTitle": {
     "message": "Page tidy",
     "description": "Settings page: heading of the page tidy section."

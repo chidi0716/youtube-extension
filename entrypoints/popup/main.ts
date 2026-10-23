@@ -1,9 +1,11 @@
 import './style.css';
 import { applyI18n, initI18n, t } from '@/utils/i18n';
+import { applyPageTheme } from '@/utils/page-theme';
 import { enabled } from '@/utils/settings';
 
 // 介面文字依設定的介面語言（007 FR-3：彈出視窗在下次開啟時套用）。
-await initI18n();
+// 外觀（007 FR-20 至 FR-22：彈出視窗在開啟時套用）。
+await Promise.all([initI18n(), applyPageTheme()]);
 applyI18n(document);
 document.title = t('extName');
 

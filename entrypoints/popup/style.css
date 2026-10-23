@@ -5,8 +5,19 @@
   background-color: #ffffff;
 }
 
+/* 深色（007 FR-20 至 FR-22）：<html data-theme="dark">；套用前（沒有 data-theme）依系統設定。 */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  color: #f1f1f1;
+  background-color: #0f0f0f;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     color: #f1f1f1;
     background-color: #0f0f0f;
   }
