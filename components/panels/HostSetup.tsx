@@ -49,10 +49,13 @@ export const currentOs = (): HostOs => {
   return detectOs(nav.userAgentData?.platform || navigator.platform || '', navigator.userAgent);
 };
 
-/** 作業系統：以 runtime.getPlatformInfo 為準（plan 3.10，內容腳本經由背景腳本取得）。 */
+/**
+ * 作業系統：以 runtime.getPlatformInfo 為準（plan 3.10，內容腳本經由背景腳本取得）；取得前為 null，
+ * 不先以 user agent 猜測，避免顯示錯誤系統的指令。背景腳本沒有回應時才改用 user agent。
+ */
 let platformOs: Promise<HostOs> | null = null;
-export function usePlatformOs(): HostOs {
-  const [os, setOs] = useState<HostOs>(currentOs);
+export function usePlatformOs(): HostOs | null {
+  const [os, setOs] = useState<HostOs | null>(null);
   useEffect(() => {
     let current = true;
     platformOs ??= sendToBackground<{ os: string }>({ type: 'platformInfo' }).then((res) => (res.ok ? platformToOs(res.os) : currentOs()));
@@ -218,8 +221,8 @@ export function HostSetup({ state, checking, recheck }: { state: HostState; chec
           );
         })}
       </ul>
-      <p class="yte-setup-os-title">{t(INSTALL_TITLES[os])}</p>
-      {os === 'other' ? <p class="yte-muted yte-setup-os">{t('hostOtherOs')}</p> : <InstallGuide os={os} idPrefix="yte-install" />}
+      {os && <p class="yte-setup-os-title">{t(INSTALL_TITLES[os])}</p>}
+      {os === 'other' ? <p class="yte-muted yte-setup-os">{t('hostOtherOs')}</p> : os && <InstallGuide os={os} idPrefix="yte-install" />}
       <p class="yte-muted yte-install-auto" role="status">
         {t('installAutoDetect')}
       </p>
@@ -239,7 +242,8 @@ export function HostSetup({ state, checking, recheck }: { state: HostState; chec
 
 /** 只缺 deno 時的建議（可以下載，但部分格式可能缺少）：再執行一次安裝指令即可補上。 */
 export function DenoHint({ state }: { state: HostState }) {
-  const command = installCommand(state, usePlatformOs());
+  const os = usePlatformOs();
+  const command = os ? installCommand(state, os) : null;
   return (
     <div class="yte-hint yte-deno-hint" role="note">
       <Icon name="error" size={18} />
