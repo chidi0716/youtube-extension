@@ -203,6 +203,33 @@ host/                           橋接程式（Go），見第 4 節
 - **下載工作狀態**：背景腳本維護工作清單（ID、影片 ID、類型、進度、狀態），以 `storage.session` 保存，並推播給開著的 YouTube 分頁。
 - **通知**：完成時建立通知；點擊通知送出「在檔案總管中顯示」指令。
 
+### 3.9 新版本提醒（008 第三之一節）
+
+- 新模組 `utils/update-check.ts`（純邏輯：版本比較、是否該查詢、是否該顯示，要有單元測試）與背景腳本中的查詢。全專案只有這個模組可以出現 `api.github.com`（T26 檢查要更新）。
+- **是否需要提醒**：背景腳本以 `browser.management.getSelf()` 取得 `installType`（不需要 `management` 權限）；只有 `development` 才查詢與提醒（Chrome 載入未封裝、Firefox 臨時附加元件）。其他安裝類型一律不查詢。
+- **查詢**：`GET https://api.github.com/repos/chidi0716/youtube-extension/releases/latest`（只回傳正式版本，不含預先發行版本），不帶任何自訂標頭或 cookie（`credentials: 'omit'`）。只取 `tag_name`（去掉開頭的 `v`）、`name`、`html_url`；`html_url` 必須以 `https://github.com/chidi0716/youtube-extension/releases/` 開頭，否則丟棄。GitHub API 允許跨來源讀取，因此不需要新增主機權限。
+- **時機**：內容腳本在影片頁載入完成時送訊息給背景腳本；背景腳本檢查 `local:updateCheck.lastCheckedAt` 超過 24 小時、且沒有選擇「不再提醒」才查詢。失敗只記錄在 console，不重試。
+- **儲存**（`local:`，不同步）：`updateCheck = { lastCheckedAt, latest: {version, title, url} | null }`、`updateReminder = { skippedVersion, disabled, lastCardShownAt: {version, at}, handledVersion }`。
+- **卡片**：屬於工具列的 Shadow DOM，位置在工具列下方，不疊在播放器上。顯示條件、收合計時、小圓點、隔天再出現依 008 FR-28 至 FR-29b 與 constitution 第 7c 點。
+  - 「使用者有操作」：卡片顯示後，在 `document.visibilityState === 'visible'` 且收到 `pointermove`、`keydown` 或 `wheel` 後才開始計時；分頁切到背景時暫停。
+  - 不搶焦點（不呼叫 `focus()`），按鈕可用 Tab 到達；淡入動畫遵守 `prefers-reduced-motion`。
+  - 延後條件用既有的狀態判斷：全螢幕（`document.fullscreenElement`）、子母畫面、編輯工具列、面板展開、焦點在輸入框。
+- **圖示標記**：`action.setBadgeText({ text: 'NEW' })`；「前往下載」或目前版本 ≥ 最新版本時清除。
+- **設定頁「關於」區**：目前版本、最新版本、最近查詢時間、「前往下載」、「重新開啟新版本提醒」（只在選擇過「不再提醒」時顯示）。
+- 「前往下載」以 `window.open(url, '_blank', 'noopener')` 開啟，只會是通過檢查的 `html_url`。
+- 翻譯字串加入 `utils/i18n` 的兩種語言。
+
+### 3.10 安裝引導與下載區設定（008 第一、三、四節，擴充功能端）
+
+- **安裝指令**（常數集中在 `features/downloads/host-status.ts`）：
+  - macOS：`curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh | sh`
+  - Windows：`irm https://github.com/chidi0716/youtube-extension/releases/latest/download/install.ps1 | iex`
+  - 作業系統以 `runtime.getPlatformInfo()` 判斷（不需要權限）；其他系統顯示 README 連結。
+- **自動偵測**：影片／MP3 面板顯示安裝引導時，每 3 秒送一次 `status`，面板收起就停止；成功後切換成可下載畫面。
+- **設定頁「下載」區**：用 `status` 的 `components` 與 `update`（4.9 節）顯示各元件版本與來源；「自動更新」開關（`setAutoUpdate`）、「立即檢查更新」（`checkUpdates`）、最近一次檢查時間與結果；`update.consecutiveFailures >= 3` 時在下載面板顯示一行提示（008 FR-25）。
+- **移除下載功能**：確認對話框（在設定頁內，不是瀏覽器的 `confirm`）→ `uninstall`；有進行中的下載時顯示 `JOBS_RUNNING` 的說明。
+- **自動更新 yt-dlp 後重試**（008 FR-22）：下載進度事件出現 `stage: "updating-ytdlp"` 時，面板顯示「正在更新 yt-dlp…」。
+
 ## 4. 橋接程式（host/）
 
 ### 4.1 目錄結構
@@ -306,7 +333,105 @@ install/
     - `HKCU\Software\Mozilla\NativeMessagingHosts\com.chidi0716.youtube_extension`
   - 缺少 yt-dlp、ffmpeg 時提示 `winget install yt-dlp.yt-dlp Gyan.FFmpeg`。
 - 解除安裝腳本移除上述所有檔案與機碼。
-- 執行檔由 `npm run build:host` 在本機交叉編譯，產出 `darwin-arm64`、`darwin-amd64`、`windows-amd64`；之後可改由 GitHub Actions 發布到 Releases。
+- 執行檔由 `npm run build:host` 在本機交叉編譯，產出 `darwin-arm64`、`darwin-amd64`、`windows-amd64`；正式版本由 GitHub Actions 發布到 Releases（4.10 節）。
+- 008 之後，這兩個腳本改為「手動安裝」用途，一般使用者改用 4.9 節的一行指令。
+
+### 4.9 輕量安裝與自動更新（008）
+
+**整體做法**：一行指令只下載一個很小的引導腳本；腳本只負責下載對應系統的小幫手並核對檢查碼，然後執行 `yte-host --install`。所有實際工作（下載 yt-dlp、deno、ffmpeg、核對、解壓、註冊瀏覽器）都在 Go 裡完成，方便測試且 macOS／Windows 共用。
+
+**發佈清單 `components.json`**（每個 GitHub Release 都附上，並附 `components.json.sig`）：
+
+```json
+{
+  "schema": 1,
+  "version": "0.2.0",
+  "helper": { "darwin-arm64": {"url": "...", "sha256": "..."}, "darwin-amd64": {...}, "windows-amd64": {...} },
+  "tools": {
+    "yt-dlp": { "version": "2026.10.01", "darwin": {"url": "...", "sha256": "..."}, "windows": {...} },
+    "deno":   { "version": "2.x.y", "darwin-arm64": {...}, "darwin-amd64": {...}, "windows-amd64": {...}, "archive": "zip", "binary": "deno" },
+    "ffmpeg": { "version": "...", "darwin-arm64": {...}, "darwin-amd64": {...}, "windows-amd64": {...}, "archive": "zip", "binaries": ["ffmpeg", "ffprobe"] }
+  }
+}
+```
+
+- 第三方工具的網址一律指向**官方或指定來源的固定版本網址**（不使用會變動的 latest 網址），本專案不轉存第三方檔案。
+- 固定的版本記在 repo 的 `release/components.lock.json`；發佈流程下載每個檔案，**先與官方公布的檢查碼比對**，再把 sha256 寫入 `components.json`。
+- 來源：
+  - yt-dlp：`github.com/yt-dlp/yt-dlp` 正式版本（macOS 用 `yt-dlp_macos`，Windows 用 `yt-dlp.exe`），官方檢查碼 `SHA2-256SUMS`。
+  - deno：`github.com/denoland/deno` 正式版本，官方 `.sha256sum`。
+  - ffmpeg（含 ffprobe）：
+    - macOS：Martin Riedl 的 FFmpeg Build Server（`ffmpeg.martin-riedl.de`）正式版本（非 snapshot），arm64 與 amd64 各自的 zip，以網站公布的 SHA256 比對。
+    - Windows：`github.com/yt-dlp/FFmpeg-Builds`（yt-dlp 官方維護、專為 yt-dlp 調整）的固定版本 win64 GPL 版本；若沒有固定版本網址，改用 `github.com/BtbN/FFmpeg-Builds` 的固定版本。實作時確認並記錄在 `specs/notes/ffmpeg-source.md`。
+- **簽章**：Ed25519（Go 標準庫 `crypto/ed25519`）。`components.json.sig` 是對 `components.json` 原始位元組的簽章（base64）。公鑰內建在小幫手（`host/internal/release/pubkey.go`）。私鑰只存在 GitHub Secret `RELEASE_SIGNING_KEY`。新增 `host/cmd/yte-release`：`keygen`（印出公鑰、把私鑰寫到使用者指定的檔案）、`sign`、`verify`、`lock-check`。
+
+**信任鏈**：
+- 第一次安裝：引導腳本從同一個 Release 以 HTTPS 下載 `components.json`，核對小幫手的 sha256 後執行。這與「執行從 GitHub 下載的腳本」本身的信任來源相同（引導腳本無法在 macOS／Windows 內建工具中可靠地驗證 Ed25519）。
+- 小幫手執行 `--install` 與之後每一次更新，都先以內建公鑰驗證 `components.json.sig`，驗證失敗一律停止（008 SR-2）。
+- 小幫手自我更新時，新版本的檔案必須符合已驗證清單中的 sha256。
+
+**引導腳本**（`install/bootstrap/install.sh`、`install/bootstrap/install.ps1`，以發佈流程附在 Release）：
+- 偵測系統與晶片（Apple Silicon 在 Rosetta 下也選 arm64）。
+- 下載 `components.json` 與小幫手到暫存資料夾，核對 sha256；不符時停止。
+- 執行 `yte-host --install --manifest <components.json> --signature <components.json.sig>`，把輸出原樣顯示。
+- 腳本本身不需要 sudo／系統管理員，拒絕以 root 執行；PowerShell 版相容 Windows PowerShell 5.1（`Invoke-WebRequest -UseBasicParsing`、TLS 1.2）。
+- 舊的 `install/macos/install.sh`、`install/windows/install.ps1` 保留作為「手動安裝」（008 FR-16），改為呼叫 `--install --offline`（只註冊小幫手，沿用系統上已有的 yt-dlp／ffmpeg／deno）。
+
+**`yte-host --install`**（`host/internal/installer`）：
+- 依 008 FR-11 依序執行並印出中英文進度，每一步標明來源網址。
+- 安裝資料夾：macOS `~/Library/Application Support/youtube-extension-host/`，Windows `%LOCALAPPDATA%\youtube-extension-host\`；工具放在 `bin/`。
+- 下載到 `bin/.download-<隨機>`，核對 sha256、解壓、設定執行權限後原子性改名；macOS 移除隔離屬性。zip 解壓要防止路徑穿越（只取需要的檔名）。
+- ffmpeg：系統上已有可用的 ffmpeg 與 ffprobe（4.5 節的尋找規則）時跳過下載。
+- yt-dlp：已存在時不覆蓋（之後由 `yt-dlp -U` 自行更新）。
+- 註冊：沿用 4.8 節的位置與登錄機碼；Windows 用 `golang.org/x/sys/windows/registry`。
+- 可重複執行（FR-13）；失敗時印出原因與「再執行一次指令即可繼續」（FR-14）。
+- 完成時印出「完成！回到瀏覽器即可下載 / Done! Go back to your browser」。
+
+**尋找工具的順序改為**：安裝資料夾 `bin/` → 4.5 節的既有規則。`status` 回報每個工具的來源。
+
+**自動更新**（`host/internal/updater`，狀態檔 `update-state.json` 放在安裝資料夾）：
+- `download` 指令成功建立工作後，若自動更新開啟且距上次檢查超過 24 小時，啟動分離的 `yte-host --update` 程序（與 `--run-job` 相同的分離方式），立即返回，不延遲下載。
+- `--update`：
+  1. 下載 `https://github.com/chidi0716/youtube-extension/releases/latest/download/components.json` 與 `.sig`，驗證簽章。
+  2. 等到沒有進行中的工作（每 10 秒檢查一次，最多 6 小時）。
+  3. yt-dlp：執行 `yt-dlp -U`（只限安裝資料夾中的 yt-dlp；套件管理工具安裝的不動）。
+  4. deno、ffmpeg（只限安裝資料夾中的）：版本與清單不同時依清單下載替換。
+  5. 小幫手：清單版本比自己新時，下載、核對 sha256，把自己改名為 `yte-host.old`（Windows 可以改名執行中的檔案）再放入新版本；下次啟動時刪除 `.old`。
+  6. 寫入 `lastCheck`、結果、`consecutiveFailures`；用鎖檔避免同時執行兩個 `--update`。
+- 下載遇到 `YTDLP_OUTDATED`、`VERIFICATION_REQUIRED`（008 FR-22）：執行工作的程序在同一個工作內執行 `yt-dlp -U`（不受 24 小時限制，同一工作只試一次），發出 `{"event":"progress","jobId":...,"stage":"updating-ytdlp"}`，成功後重新下載一次。
+
+**通訊協定新增**（4.3 節）：
+
+| 指令 | 參數 | 說明 |
+|---|---|---|
+| `status`（擴充） | — | 新增 `installDir`、`components: [{name: "helper"|"yt-dlp"|"deno"|"ffmpeg"|"ffprobe", version, path, source: "bundled"|"homebrew"|"winget"|"path"}]`、`update: {auto, lastCheck, lastResult: "ok"|"updated"|"failed"|null, consecutiveFailures, running}` |
+| `setAutoUpdate` | `enabled`（布林） | 寫入狀態檔 |
+| `checkUpdates` | — | 立即啟動 `--update`（不受 24 小時限制），回傳 `{started: true}`；已在執行時回傳 `{started: false}` |
+| `uninstall` | — | 有進行中的工作時回傳錯誤 `JOBS_RUNNING`；否則啟動分離的 `yte-host --uninstall --delay 2` 後回傳 `{ok: true}`，2 秒後刪除安裝資料夾（含工具與記錄檔）、原生訊息設定檔與登錄機碼 |
+
+新錯誤代碼：`JOBS_RUNNING`、`SIGNATURE_INVALID`、`CHECKSUM_MISMATCH`（擴充功能要有對應的中英文訊息）。
+
+**移除指令**（README，008 FR-31）：
+- macOS：`curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/uninstall.sh | sh`
+- Windows：`irm https://github.com/chidi0716/youtube-extension/releases/latest/download/uninstall.ps1 | iex`
+
+這兩個腳本不需下載小幫手，直接刪除 4.8 節的位置。
+
+**網路連線範圍**（constitution 第 2 點）：小幫手與腳本只連 `github.com`／`objects.githubusercontent.com`（本專案、yt-dlp、deno、FFmpeg-Builds 的 Release）、`ffmpeg.martin-riedl.de`，以及 yt-dlp 自己連的 YouTube。網址以常數集中在一個檔案，測試確認沒有其他網域。
+
+### 4.10 發佈流程（008 第六節）
+
+- `.github/workflows/release.yml`，在推送 `v*` 標籤時執行：
+  1. `npm ci`、`npm test`、`npm run compile`、`go test ./...`。
+  2. 建置 Chrome 版 zip 與 Firefox 版；Firefox 以 `web-ext sign --channel unlisted` 送簽署（Secrets：`AMO_JWT_ISSUER`、`AMO_JWT_SECRET`，上傳原始碼同 3.3.1）。
+  3. 建置三種小幫手。
+  4. 依 `release/components.lock.json` 產生並驗證 `components.json`，以 `RELEASE_SIGNING_KEY` 簽署。
+  5. 產生 `updates.json`（Firefox 更新資訊，列出這個版本與 `.xpi` 的下載網址）。
+  6. 建立 GitHub Release，附上：引導腳本與移除腳本、三種小幫手、`components.json(.sig)`、Chrome zip、`.xpi`、`updates.json`、`SHA256SUMS`。說明文字以範本產生，包含各瀏覽器的更新步驟（Chrome：下載 zip、解壓覆蓋原資料夾、在擴充功能頁按重新載入）。
+- Firefox manifest 加入 `browser_specific_settings.gecko.update_url: "https://github.com/chidi0716/youtube-extension/releases/latest/download/updates.json"`（Firefox 會跟隨轉址；實作時確認）。
+- 新增 `npm run release:dry`：在本機完成第 1、3、4（用臨時產生的測試金鑰）、5 步，輸出到 `release/dist/`，方便沒有 Secrets 時驗證。
+- 預先發行版本（標籤含 `-`，例如 `v0.2.0-beta.1`）建立為 prerelease，不會被 `releases/latest` 取得，因此不觸發提醒與自動更新。
+- README「維護者」章節：產生簽章金鑰、設定三個 Secrets、建立第一個版本的步驟。
 
 ## 5. 測試策略
 

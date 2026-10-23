@@ -145,6 +145,21 @@ T11 可以和階段 1、2 同時進行。
 - **T37 設定頁外觀**（007 FR-20 至 FR-24，plan 3.7.4）：外觀選單、記錄 YouTube 主題、設定頁與彈出視窗的顏色變數化與即時切換；更新 e2e-checklist。
 - **完成條件**：007 驗收條件逐條自測；既有的所有測試全部通過（測試中依語言判斷的部分改為明確設定語言）。
 
+## 階段 8：輕量安裝與自動更新（008）
+
+兩個實作方並行：甲負責小幫手、腳本與發佈流程（T40–T43、T48），乙負責擴充功能（T44–T47）。雙方只透過 plan 4.9 的通訊協定銜接。
+
+- **T40 發佈清單與簽章**（甲）：`host/internal/release`（清單格式、Ed25519 驗證、內建公鑰）、`host/cmd/yte-release`（keygen／sign／verify／lock-check）、`release/components.lock.json`（填入目前的穩定版本）、`specs/notes/ffmpeg-source.md`。單元測試：簽章正確／錯誤、清單欄位缺漏、sha256 不符。
+- **T41 `--install`／`--uninstall` 與引導腳本**（甲）：plan 4.9；工具尋找順序改為安裝資料夾優先；舊腳本改為手動安裝用途；以本機假伺服器（`httptest`）測試整個安裝流程（下載、核對、解壓、防路徑穿越、重複執行、中途失敗再執行）。
+- **T42 自動更新與新指令**（甲）：`--update`、24 小時限制、等待工作結束、自我更新、鎖檔、`status` 擴充、`setAutoUpdate`、`checkUpdates`、`uninstall`、FR-22 的自動更新重試與 `stage` 事件；以假 yt-dlp 與假伺服器測試。
+- **T43 發佈流程**（甲）：`.github/workflows/release.yml`、`npm run release:dry`、`updates.json` 產生、Release 說明範本、Firefox `update_url`。
+- **T44 新版本提醒**（乙）：plan 3.9；`utils/update-check.ts` 單元測試（版本比較含 `0.10.0 > 0.9.0`、24 小時、跳過版本、不再提醒、隔天再出現、網址檢查）；卡片延後條件與收合計時的測試（假計時器）。
+- **T45 安裝引導**（乙）：plan 3.10 的安裝指令、三步驟說明、「這個指令會做什麼？」、自動偵測；設定頁「下載」區同樣的說明（008 FR-1、FR-2）。
+- **T46 設定頁下載區與移除**（乙）：元件版本與來源、自動更新開關、立即檢查、最近結果、連續失敗提示、移除下載功能、新錯誤代碼的訊息（008 FR-24、FR-25、FR-30）。開發時用假的 `status` 回應測試，不依賴甲的進度。
+- **T47 檢查更新**（乙）：T26 的檢查加入「`api.github.com` 只能出現在 `utils/update-check.ts`」；權限仍與 plan 3.2 完全一致；更新 `specs/e2e-checklist.md`（新增第 9 節：008 驗收條件）。
+- **T48 文件**（甲，最後做）：README（英文與繁中）的安裝章節改為一行指令、手動安裝、移除、維護者；白話說明文件 `docs/what-gets-installed.md` 與 `docs/what-gets-installed.zh-TW.md`（008 FR-40）；第三方授權列表。`LICENSE` 等專案擁有者決定 D-2 後由規格方加入。
+- **完成條件**：所有測試、`compile`、`build`、`build:firefox`、`build:host`、`release:dry`、`web-ext lint` 通過；008 驗收條件中能在容器內驗證的部分逐條自測，其餘列在 e2e-checklist。
+
 ## 階段 5：收尾
 
 - **T24 E2E 檢查清單**

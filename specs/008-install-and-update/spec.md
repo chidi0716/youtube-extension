@@ -1,6 +1,6 @@
 # 008 輕量安裝與自動更新
 
-狀態：草稿，待專案擁有者確認
+狀態：已確認（2026-10-23），實作見 plan 3.9、3.10、4.9、4.10 與 tasks 階段 8
 
 ## 目的
 
@@ -39,7 +39,7 @@
   1. 從本專案 GitHub 正式版本下載對應系統與晶片的小幫手，**驗證簽章**。
   2. 從 yt-dlp 官方 GitHub 正式版本下載 yt-dlp 單一執行檔，驗證官方檢查碼。
   3. 從 deno 官方 GitHub 正式版本下載 deno，驗證官方檢查碼。
-  4. 下載 ffmpeg（來源依 plan 決定，只使用公開、有檢查碼的來源；已有可用的 ffmpeg 時跳過並沿用）。
+  4. 下載 ffmpeg 與 ffprobe（來源見 plan 4.9，只使用公開、有檢查碼的來源；已有可用的 ffmpeg 時跳過並沿用）。
   5. 全部放在使用者資料夾內的一個專屬資料夾（macOS：`~/Library/Application Support/youtube-extension-host/`；Windows：`%LOCALAPPDATA%\youtube-extension-host\`），為 Chrome 與 Firefox（含 Zen）註冊。
   6. 印出「完成！回到瀏覽器即可下載」。
 - **FR-12**：不需要系統管理員權限或密碼，不修改系統設定、不安裝到使用者資料夾以外的地方、不修改 PATH。
