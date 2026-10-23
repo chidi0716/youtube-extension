@@ -376,3 +376,29 @@
 - **狀況**：plan 3.7.4 指定在深色模式功能既有的 `<html dark>` 觀察中記錄主題；觀看輔助功能只在工具列啟用時作用（003 FR-5），所以使用者按 ✕ 關閉工具列後，「跟隨 YouTube」會停在最後一次記錄的主題。
 - **目前做法**：依 plan 實作，工具列關閉時不記錄。
 - **請規格方**決定是否改為由頁面整理的內容腳本（工具列關閉時仍執行）記錄。
+
+## 階段 8（T40–T43、T48，實作方甲）
+
+### Q53 Windows 的 ffmpeg 下載比預估大（T40、008 FR-1）
+
+- **狀況**：008 FR-1 的說明寫「全部約 150 MB」。macOS 實際約 yt-dlp 35 MB＋deno 約 45 MB＋ffmpeg／ffprobe 各約 28 MB（壓縮後）＝約 140 MB，符合。Windows 的 yt-dlp/FFmpeg-Builds 只有 master 每日建置，靜態版 zip 約 189 MB（解壓後只保留 ffmpeg.exe、ffprobe.exe），加上 yt-dlp 與 deno，下載量約 270 MB。
+- **目前做法**：使用靜態版（`-win64-gpl.zip`），固定在每月月底的建置（月底的建置會長期保留，見 `specs/notes/ffmpeg-source.md`）。共用程式庫版（約 84 MB）需要一併複製所有 DLL，暫不採用。
+- **請規格方決定**：是否把 FR-1 的說明改為「約 150 MB（Windows 約 300 MB）」或「約 150–300 MB」；或改用共用程式庫版以縮小下載量。
+
+### Q54 GitHub Release 檔案的轉址網域（T40、plan 4.9）
+
+- **狀況**：plan 4.9 的網路連線範圍列了 `github.com`／`objects.githubusercontent.com`。實際下載 Release 檔案時，GitHub 轉址到 `release-assets.githubusercontent.com`。
+- **目前做法**：兩個轉址網域都在允許清單中（`host/internal/release/hosts.go`），而且只允許出現在轉址中的位置不受限制；`github.com` 只允許本專案、`yt-dlp/yt-dlp`、`denoland/deno`、`yt-dlp/FFmpeg-Builds`、`BtbN/FFmpeg-Builds` 的 `/releases/` 路徑，`ffmpeg.martin-riedl.de` 只允許 `/download/`。每一次轉址都重新檢查。
+- **請規格方確認**，並更新 plan 4.9 與 constitution 第 2 點的網域說明（若需要列出）。
+
+### Q55 components.json 的實際格式（T40、plan 4.9）
+
+- **狀況**：plan 4.9 的範例把平台鍵與 `version`、`archive`、`binaries` 放在同一層，且每個平台只有一個檔案。macOS 的 ffmpeg 與 ffprobe 是兩個獨立的 zip，而 Windows 的 ffmpeg 版本號與 macOS 不同。
+- **目前做法**：`tools.<工具> = { version, platforms: { <平台>: { version?, files: [ { url, sha256, archive?: "zip", name?（非壓縮檔時安裝的檔名）, extract?（zip 中要取出的檔名） } ] } } }`；`helper` 維持 plan 的格式。不認得的欄位一律拒絕；網址必須是允許清單中的固定版本網址（不能含 `/latest/`）。`release/components.lock.json` 使用同一個格式，另外每個檔案多一個 `checksums`（官方檢查碼檔案的網址），而且 lock 檔就記錄 SHA256（發佈時與官方檢查碼、實際下載的檔案三方比對），所以 `npm run release:dry` 不需要網路也能產生清單。完整說明見 `specs/notes/T40-T43-install-and-release.md`。
+- **請規格方確認**，並視需要更新 plan 4.9 的範例。
+
+### Q56 內建公鑰尚未設定（T40）
+
+- **狀況**：簽章私鑰只能由專案擁有者產生並存到 GitHub Secret，實作方不能產生後提交。
+- **目前做法**：`host/internal/release/pubkey.go` 的 `PublicKeyBase64` 先留空字串。留空時小幫手的 `--install` 與自動更新一律以 `SIGNATURE_INVALID` 拒絕清單；發佈流程第一步以 `yte-release check-key` 確認 Secret 的私鑰與這個公鑰相符，不相符（或尚未設定）時停止發佈。`npm run release:dry` 以 `-ldflags -X` 換成臨時產生的測試公鑰。
+- **請專案擁有者**依 README「維護者」章節產生金鑰、提交公鑰並設定 Secret。
