@@ -45,3 +45,13 @@ export function installCommand(_s: HostState, os: HostOs): string | null {
 
 /** 只缺 deno（可以下載，但建議安裝，T15a）。 */
 export const missingOnlyDeno = (s: HostState) => canDownload(s) && componentState(s, 'deno') === false;
+
+/** 自動更新連續失敗幾次以上才在下載面板提示（008 FR-25）。 */
+export const UPDATE_FAILURE_HINT_AT = 3;
+
+/** 下載面板是否顯示「自動更新連續失敗」的一行提示：失敗 3 次以上、且這次的失敗沒有被使用者關閉。 */
+export function showUpdateFailureHint(s: HostState, dismissedAt: number | null): boolean {
+  if (s.state !== 'connected' || !s.status.update) return false;
+  const u = s.status.update;
+  return u.consecutiveFailures >= UPDATE_FAILURE_HINT_AT && (dismissedAt === null || u.lastCheck === null || u.lastCheck !== dismissedAt);
+}

@@ -403,3 +403,26 @@
   3. 設定頁「關於」區只要最新版本比目前版本新，就顯示「前往下載」（即使已跳過或已點過）。設定頁本身不查詢。
   4. Firefox／Zen 簽署版（installType 不是 development）的「關於」區顯示「由瀏覽器自動更新」，不顯示最新版本。
 - **請規格方確認**。
+
+### Q57 與小幫手銜接的格式細節（T45、T46，plan 4.9；請甲方一併確認）
+
+- **狀況**：plan 4.9 的通訊協定表格沒有規定以下細節；擴充功能端先採寬鬆的解讀，小幫手端（T42）定案後若不同再調整。
+- **目前做法**：
+  1. `update.lastCheck`：接受 ISO 8601 字串（建議）、毫秒或秒的數字。
+  2. `components`：只接受 `helper`、`yt-dlp`、`deno`、`ffmpeg`、`ffprobe` 與 `bundled`、`homebrew`、`winget`、`path`；其他值忽略。設定頁列出小幫手、yt-dlp、ffmpeg、deno 與擴充功能（FR-24），ffprobe 不另列一行；路徑在滑鼠停留時顯示。
+  3. `setAutoUpdate` 的回應內容不使用（成功後重新讀取 `status`）；`checkUpdates` 只讀 `started`；`update.running` 為 true 時設定頁每 3 秒重新讀取 `status`，直到結束。
+  4. `stage: "updating-ytdlp"` 的進度事件：可以只帶 `jobId`（plan 4.9 的寫法），也可以是帶完整欄位的進度事件。下一個一般的進度事件清除這個狀態。
+  5. `uninstall` 成功後，擴充功能主動關閉這次的原生訊息連線（瀏覽器會結束正在執行的小幫手），3 秒後重新檢查；因此實際刪除檔案必須由分離的程序執行（plan 已如此規定）。
+  6. 小幫手未安裝時，影片／MP3 面板與設定頁一律顯示一行安裝指令；缺少 yt-dlp、ffmpeg 或 deno 時也顯示同一個指令（FR-13：可以重複執行），不再使用 `status.installCommand`。
+- **請規格方與甲方確認**；若格式不同，擴充功能端只需修改 `utils/native-protocol.ts` 的整理函式。
+
+### Q58 「這個指令會做什麼？」中 Windows 的 ffmpeg 來源（T45、008 FR-11）
+
+- **狀況**：plan 4.9 寫 Windows 的 ffmpeg 優先使用 `github.com/yt-dlp/FFmpeg-Builds`，沒有固定版本網址時改用 `github.com/BtbN/FFmpeg-Builds`，實際來源由甲方記錄在 `specs/notes/ffmpeg-source.md`（本次交付時還沒有）。
+- **目前做法**：說明中 Windows 寫 `github.com/yt-dlp/FFmpeg-Builds`、macOS 寫 `ffmpeg.martin-riedl.de`（常數在 `features/downloads/install-guide.ts`）。
+- **請規格方**在甲方定案後確認；若改用 BtbN，只需修改該常數。
+
+### Q59 小幫手「自動更新連續失敗」提示的關閉與重新開啟（T46、008 FR-25、FR-29c、constitution 第 7c 點）
+
+- **目前做法**：下載面板的一行提示（附「開啟設定頁」）可以按 ✕ 關閉；關閉時記下當時「最近一次檢查」的時間，之後再有新的失敗（檢查時間改變）才再顯示。設定頁「更新」區一律顯示連續失敗次數，並在提示被關閉時提供「在下載面板重新顯示提示」。提示只在使用者打開影片／MP3 面板時看到，不另外以卡片出現。
+- **請規格方確認**。另外，介面上的「橋接程式」已依 008「名詞」一節改稱「小幫手」（擴充功能端的字串）。

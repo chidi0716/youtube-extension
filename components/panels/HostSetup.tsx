@@ -6,7 +6,17 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { sendToBackground } from '@/features/downloads/content';
 import { checkHostStatus } from '@/features/downloads/host-client';
-import { canDownload, componentState, componentVersion, HOST_COMPONENTS, INSTALL_GUIDE_URL, installCommand, type HostComponent, type HostState } from '@/features/downloads/host-status';
+import {
+  canDownload,
+  componentState,
+  componentVersion,
+  HOST_COMPONENTS,
+  INSTALL_GUIDE_URL,
+  installCommand,
+  showUpdateFailureHint,
+  type HostComponent,
+  type HostState,
+} from '@/features/downloads/host-status';
 import {
   detailSource,
   INSTALL_COMMANDS,
@@ -20,6 +30,7 @@ import {
 } from '@/features/downloads/install-guide';
 import { detectOs, type HostOs } from '@/features/downloads/logic';
 import { t, type MessageKey } from '@/utils/i18n';
+import { hostUpdateHintDismissed } from '@/utils/settings';
 import { Button } from '../controls/Button';
 import { Icon } from '../icons';
 
@@ -236,6 +247,42 @@ export function DenoHint({ state }: { state: HostState }) {
         {t('hostDenoHint')}
         {command && <CopyCommand command={command} id="yte-deno-command" />}
       </span>
+    </div>
+  );
+}
+
+/**
+ * 小幫手自動更新連續失敗 3 次以上時的一行提示（008 FR-25、FR-29c）：只在使用者打開下載面板時看到，
+ * 可以關閉（直到下一次失敗），並連到設定頁查看詳情。
+ */
+export function UpdateFailureHint({ state, onOpenSettings }: { state: HostState; onOpenSettings: () => void }) {
+  const [dismissed, setDismissed] = useState<number | null | undefined>(undefined);
+  useEffect(() => {
+    void hostUpdateHintDismissed.getValue().then((v) => setDismissed(typeof v === 'number' ? v : null));
+  }, []);
+  if (dismissed === undefined || !showUpdateFailureHint(state, dismissed)) return null;
+  const lastCheck = state.state === 'connected' ? (state.status.update?.lastCheck ?? null) : null;
+  return (
+    <div class="yte-hint yte-update-failed-hint" role="note">
+      <Icon name="error" size={18} />
+      <span class="yte-update-failed-text">
+        {t('hostUpdateFailingHint')}{' '}
+        <button type="button" class="yte-inline-link" onClick={onOpenSettings}>
+          {t('helpOpenSettings')}
+        </button>
+      </span>
+      <button
+        type="button"
+        class="yte-icon-btn yte-hint-close"
+        aria-label={t('hintDismiss')}
+        title={t('hintDismiss')}
+        onClick={() => {
+          setDismissed(lastCheck ?? Date.now());
+          void hostUpdateHintDismissed.setValue(lastCheck ?? Date.now());
+        }}
+      >
+        <Icon name="close" size={18} />
+      </button>
     </div>
   );
 }

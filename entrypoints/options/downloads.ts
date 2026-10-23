@@ -1,11 +1,13 @@
-// 設定頁的「下載」區（002 FR-60、004 FR-11，tasks T23）：連線狀態（橋接程式、yt-dlp、ffmpeg、deno）、
-// 更新 yt-dlp、下載資料夾、檔名格式、嵌入資訊開關。設定改變時立即寫入；背景腳本在下次下載時讀取。
+// 設定頁的「下載」區（002 FR-60、004 FR-11、008 FR-2、FR-24、FR-25、FR-30，tasks T23、T45、T46）：
+// 各元件（小幫手、yt-dlp、ffmpeg、deno、擴充功能）的版本與來源、安裝說明、更新 yt-dlp、自動更新、移除下載功能、
+// 下載資料夾、檔名格式、嵌入資訊開關。設定改變時立即寫入；背景腳本在下次下載時讀取。
 import { checkHostStatus, HostError, pickFolder, updateYtDlp } from '@/features/downloads/host-client';
 import { componentState, componentVersion, HOST_COMPONENTS, INSTALL_GUIDE_URL, type HostComponent, type HostState } from '@/features/downloads/host-status';
 import { INSTALL_POLL_MS } from '@/features/downloads/install-guide';
 import type { HostOs } from '@/features/downloads/logic';
 import { t, type MessageKey } from '@/utils/i18n';
 import { downloadDir, embedInfo, namePreset } from '@/utils/settings';
+import { componentInfo, createMaintenance, extensionSource, sourceLabel } from './host-maintenance';
 import { installGuide, platformOs } from './install-guide';
 
 const COMPONENT_LABELS: Record<HostComponent, MessageKey> = {
@@ -53,7 +55,25 @@ export function renderDownloads(root: HTMLElement): () => void {
   const update = el('button', { type: 'button', className: 'button', id: 'downloads-update', textContent: t('updateYtDlp') });
   const updateResult = el('div', { className: 'option-desc update-result', id: 'downloads-update-result' });
   updateResult.setAttribute('role', 'status');
-  connection.append(list, install, el('div', { className: 'actions' }, recheck, update), updateResult);
+  // 擴充功能本身（008 FR-24）：版本與更新方式。
+  const extensionRow = el(
+    'div',
+    { className: 'status-row', dataset: { component: 'extension', ok: 'true' } },
+    el('span', { textContent: t('componentExtension') }),
+    el('span', { className: 'option-desc', id: 'downloads-extension', textContent: t('hostStatusVersion', browser.runtime.getManifest().version) }),
+  );
+  void extensionSource().then((source) => {
+    if (source) extensionRow.lastElementChild!.textContent = `${t('hostStatusVersion', browser.runtime.getManifest().version)} · ${source}`;
+  });
+  connection.append(list, el('div', { className: 'status-list' }, extensionRow), install, el('div', { className: 'actions' }, recheck, update), updateResult);
+
+  // ---- 自動更新、移除下載功能（008） ----
+  const maintenance = createMaintenance(async () => {
+    const next = await checkHostStatus(true);
+    if (disposed) return;
+    state = next;
+    renderStatus();
+  });
 
   // ---- 下載資料夾 ----
   const folder = group('folder', 'optionsFolder');
@@ -79,7 +99,7 @@ export function renderDownloads(root: HTMLElement): () => void {
     ),
   );
 
-  root.append(connection, folder, files);
+  root.append(connection, ...maintenance.elements, folder, files);
 
   const renderStatus = () => {
     list.replaceChildren();
@@ -98,9 +118,12 @@ export function renderDownloads(root: HTMLElement): () => void {
               ? t('hostStatusVersion', version)
               : t('hostStatusFound')
             : t(c === 'host' ? 'hostStatusNotInstalled' : 'hostStatusMissing');
-      list.append(
-        el('div', { className: 'status-row', dataset: { component: c, ok: String(ok === true) } }, el('span', { textContent: t(COMPONENT_LABELS[c]) }), el('span', { className: 'option-desc', textContent: text })),
-      );
+      // 來源（008 FR-24）：小幫手安裝的、Homebrew、winget 或系統上原本就有的；滑鼠停留時顯示路徑。
+      const info = ok ? componentInfo(state, c) : null;
+      const source = sourceLabel(info);
+      const value = el('span', { className: 'option-desc', textContent: source ? `${text} · ${source}` : text });
+      if (info?.path) value.title = info.path;
+      list.append(el('div', { className: 'status-row', dataset: { component: c, ok: String(ok === true) } }, el('span', { textContent: t(COMPONENT_LABELS[c]) }), value));
     }
     install.replaceChildren();
     // 小幫手未安裝或缺少元件：與面板相同的安裝說明（008 FR-2）；安裝期間每 3 秒自動檢查。
@@ -114,6 +137,7 @@ export function renderDownloads(root: HTMLElement): () => void {
     const connected = state.state === 'connected';
     update.disabled = !connected || componentState(state, 'ytDlp') !== true;
     choose.disabled = !connected;
+    maintenance.render(state);
     renderFolder();
     renderPresets();
   };
@@ -212,6 +236,7 @@ export function renderDownloads(root: HTMLElement): () => void {
   return () => {
     disposed = true;
     setPolling(false);
+    maintenance.dispose();
     unwatch();
   };
 }

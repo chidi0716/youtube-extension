@@ -467,7 +467,7 @@ await session('connected', async ({ page, context, home, downloads }) => {
   await opt.reload();
   await opt.waitForSelector('#downloads-groups .status-row[data-component="deno"]');
   await opt.waitForFunction(() => document.querySelector('#downloads-groups .status-row[data-component="ytDlp"]')?.dataset.ok === 'true', null, { timeout: 10_000 });
-  const status = await opt.evaluate(() => [...document.querySelectorAll('#downloads-groups .status-row')].map((r) => `${r.dataset.component}:${r.dataset.ok}:${r.lastElementChild.textContent}`));
+  const status = await opt.evaluate(() => [...document.querySelectorAll('#downloads-groups .status-row[data-component]:not([data-component="extension"])')].map((r) => `${r.dataset.component}:${r.dataset.ok}:${r.lastElementChild.textContent}`));
   check('T23：連線狀態列出橋接程式、yt-dlp、ffmpeg、deno 與版本', status.length === 4 && status.every((s) => s.split(':')[1] === 'true') && status[1].includes('2026.10.21'), status.join(' | '));
   const folder = await opt.locator('#downloads-folder').textContent();
   check('T23：下載資料夾顯示預設的系統「下載」資料夾路徑', folder === `System Downloads folder (${downloads})`, folder);

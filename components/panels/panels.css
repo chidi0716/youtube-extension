@@ -595,6 +595,31 @@ a.yte-link {
   margin-top: 4px;
 }
 
+/* 小幫手自動更新連續失敗（008 FR-25）：一行提示，可以關閉。 */
+.yte-update-failed-text {
+  flex: 1;
+}
+
+.yte-inline-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--yte-call-to-action);
+  font: inherit;
+  cursor: pointer;
+}
+
+.yte-inline-link:hover {
+  text-decoration: underline;
+}
+
+.yte-hint .yte-hint-close {
+  width: 24px;
+  height: 24px;
+  margin: -4px -6px -4px 0;
+  color: var(--yte-text-secondary);
+}
+
 /* ---------- 畫質清單（002 FR-10 至 FR-13） ---------- */
 
 .yte-video,

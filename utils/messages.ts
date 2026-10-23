@@ -40,6 +40,12 @@ export type ContentMessage =
   | { type: 'pickFolder' }
   /** 更新 yt-dlp（002 FR-6a、FR-60）。 */
   | { type: 'updateYtDlp' }
+  /** 設定頁：小幫手的「自動更新」開關（008 FR-24）。 */
+  | { type: 'hostSetAutoUpdate'; enabled: boolean }
+  /** 設定頁：立即檢查更新（008 FR-24）。 */
+  | { type: 'hostCheckUpdates' }
+  /** 設定頁：移除下載功能（008 FR-30）。 */
+  | { type: 'hostUninstall' }
   /** 作業系統（runtime.getPlatformInfo，內容腳本不能直接呼叫；安裝說明用，plan 3.10）。 */
   | { type: 'platformInfo' }
   // ---- 新版本提醒（008 FR-26 至 FR-29b）----
@@ -152,7 +158,11 @@ export function isContentMessage(value: unknown): value is ContentMessage {
     case 'updateCheck':
     case 'updateStatus':
     case 'platformInfo':
+    case 'hostCheckUpdates':
+    case 'hostUninstall':
       return true;
+    case 'hostSetAutoUpdate':
+      return typeof m.enabled === 'boolean';
     case 'updateAction':
       return (
         (REMINDER_ACTIONS as readonly unknown[]).includes(m.action) &&

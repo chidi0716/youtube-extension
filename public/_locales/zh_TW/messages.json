@@ -1172,5 +1172,177 @@
   "installReview": {
     "message": "想先檢視腳本內容：先下載、開啟檢視，再執行：",
     "description": "Install guide: how to review the script before running it (008 FR-1)."
+  },
+  "errJobsRunning": {
+    "message": "還有下載正在進行。請等下載完成或取消後再試一次。",
+    "description": "Error JOBS_RUNNING (plan 4.9)."
+  },
+  "errVerifyFailed": {
+    "message": "下載的更新沒有通過驗證，所以沒有使用，已保留目前的版本。",
+    "description": "Errors SIGNATURE_INVALID and CHECKSUM_MISMATCH (plan 4.9, 008 SR-2)."
+  },
+  "jobUpdatingYtDlp": {
+    "message": "正在更新 yt-dlp…",
+    "description": "Job state while the helper updates yt-dlp before retrying (008 FR-22)."
+  },
+  "hostUpdateFailingHint": {
+    "message": "小幫手已連續數次無法自動更新。",
+    "description": "One-line hint in the download panel after 3+ failed updates (008 FR-25)."
+  },
+  "hintDismiss": {
+    "message": "關閉提示",
+    "description": "Accessible label of the ✕ on a hint."
+  },
+  "componentExtension": {
+    "message": "擴充功能",
+    "description": "Row label in the options Downloads area (008 FR-24)."
+  },
+  "componentSourceBundled": {
+    "message": "由小幫手安裝",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourceHomebrew": {
+    "message": "Homebrew",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourceWinget": {
+    "message": "winget",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourcePath": {
+    "message": "電腦上原本就有的",
+    "description": "Component source (008 FR-24)."
+  },
+  "extensionSourceManual": {
+    "message": "手動載入（需要自行更新）",
+    "description": "Extension source for unpacked/temporary installs."
+  },
+  "extensionSourceAuto": {
+    "message": "由瀏覽器自動更新",
+    "description": "Extension source for signed installs."
+  },
+  "updatesTitle": {
+    "message": "更新",
+    "description": "Options group heading (008 FR-24)."
+  },
+  "updatesAuto": {
+    "message": "自動更新",
+    "description": "Switch label (008 FR-24)."
+  },
+  "updatesAutoDesc": {
+    "message": "開始下載時，小幫手每天最多檢查一次 yt-dlp、deno 與小幫手本身的更新，並在背景安裝。",
+    "description": "Switch description (008 FR-20)."
+  },
+  "updatesLastCheck": {
+    "message": "最近一次檢查",
+    "description": "Label (008 FR-24)."
+  },
+  "updatesNever": {
+    "message": "尚未檢查",
+    "description": "Last check value when never checked."
+  },
+  "updatesRunning": {
+    "message": "正在檢查更新…",
+    "description": "Last check value while running."
+  },
+  "updatesLastCheckResult": {
+    "message": "$TIME$（$RESULT$）",
+    "description": "Last check time and result.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "Oct 23, 2026, 2:05 PM"
+      },
+      "result": {
+        "content": "$2",
+        "example": "up to date"
+      }
+    }
+  },
+  "updatesResultOk": {
+    "message": "已是最新",
+    "description": "Update result."
+  },
+  "updatesResultUpdated": {
+    "message": "已更新",
+    "description": "Update result."
+  },
+  "updatesResultFailed": {
+    "message": "失敗",
+    "description": "Update result."
+  },
+  "updatesCheckNow": {
+    "message": "立即檢查更新",
+    "description": "Button (008 FR-24)."
+  },
+  "updatesStarted": {
+    "message": "正在背景檢查；沒有進行中的下載時才會安裝更新。",
+    "description": "Shown after starting a check (008 FR-21)."
+  },
+  "updatesAlreadyRunning": {
+    "message": "已經在檢查中。",
+    "description": "Shown when checkUpdates returns started: false."
+  },
+  "updatesSaveFailed": {
+    "message": "無法連到小幫手，請再試一次。",
+    "description": "Shown when an update command fails."
+  },
+  "updatesFailures": {
+    "message": "自動更新已連續失敗 $COUNT$ 次。通常再執行一次安裝指令即可解決。",
+    "description": "Shown after 3+ consecutive failures (008 FR-25).",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "updatesShowHint": {
+    "message": "在下載面板重新顯示提示",
+    "description": "Re-enables the dismissed update failure hint (constitution 7c)."
+  },
+  "updatesUnsupported": {
+    "message": "目前的小幫手版本不會自動更新。再執行一次安裝指令即可換成最新的小幫手。",
+    "description": "Shown when status has no update information (older helper)."
+  },
+  "uninstallTitle": {
+    "message": "移除下載功能",
+    "description": "Options group heading (008 FR-30)."
+  },
+  "uninstallDesc": {
+    "message": "刪除小幫手、由它安裝的 yt-dlp、ffmpeg、deno 與記錄檔，以及瀏覽器中的註冊。已下載的影片不受影響，你自己安裝的工具（例如 Homebrew 裝的）也不會被刪除。",
+    "description": "Uninstall description (008 FR-30)."
+  },
+  "uninstallButton": {
+    "message": "移除下載功能…",
+    "description": "Opens the confirmation dialog."
+  },
+  "uninstallDialogTitle": {
+    "message": "要移除下載功能嗎？",
+    "description": "Confirmation dialog title."
+  },
+  "uninstallDialogDesc": {
+    "message": "將刪除小幫手、yt-dlp、ffmpeg、deno 與記錄檔。已下載的影片會留在原本的位置。之後可以隨時用安裝指令重新安裝。",
+    "description": "Confirmation dialog text."
+  },
+  "uninstallCancel": {
+    "message": "取消",
+    "description": "Dialog button."
+  },
+  "uninstallConfirm": {
+    "message": "移除",
+    "description": "Dialog button."
+  },
+  "uninstallRunning": {
+    "message": "正在移除…",
+    "description": "Status while removing."
+  },
+  "uninstallDone": {
+    "message": "已移除下載功能。已下載的影片仍在原本的資料夾。",
+    "description": "Status after removing."
+  },
+  "uninstallFailed": {
+    "message": "無法移除下載功能。請確認小幫手已安裝後再試一次。",
+    "description": "Status when uninstall fails."
   }
 }

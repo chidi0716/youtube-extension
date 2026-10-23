@@ -461,3 +461,67 @@ h2 {
 .review-code {
   white-space: pre-wrap;
 }
+
+/* ---------- 自動更新與移除下載功能（008 FR-24、FR-30） ---------- */
+
+[hidden] {
+  display: none !important;
+}
+
+.button.danger {
+  border-color: #c30027;
+  color: #c30027;
+}
+
+:root[data-theme='dark'] .button.danger {
+  border-color: #ff7b8a;
+  color: #ff7b8a;
+}
+
+.button.danger:hover:not(:disabled) {
+  background: rgba(195, 0, 39, 0.08);
+}
+
+dialog.confirm {
+  max-width: 420px;
+  padding: 20px 24px 12px;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  background: inherit;
+  background-color: var(--dialog-background, #fff);
+  color: inherit;
+}
+
+:root[data-theme='dark'] dialog.confirm {
+  --dialog-background: #212121;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) dialog.confirm {
+    --dialog-background: #212121;
+  }
+}
+
+dialog.confirm::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+dialog.confirm h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+dialog.confirm p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+}
+
+#downloads-updates-message:empty,
+#downloads-uninstall-message:empty {
+  display: none;
+}

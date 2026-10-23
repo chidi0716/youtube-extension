@@ -1172,5 +1172,177 @@
   "installReview": {
     "message": "Want to read the script first? Download it, open it, then run it:",
     "description": "Install guide: how to review the script before running it (008 FR-1)."
+  },
+  "errJobsRunning": {
+    "message": "Some downloads are still running. Wait for them to finish or cancel them, then try again.",
+    "description": "Error JOBS_RUNNING (plan 4.9)."
+  },
+  "errVerifyFailed": {
+    "message": "A downloaded update didn't pass verification, so it wasn't used. The current version is kept.",
+    "description": "Errors SIGNATURE_INVALID and CHECKSUM_MISMATCH (plan 4.9, 008 SR-2)."
+  },
+  "jobUpdatingYtDlp": {
+    "message": "Updating yt-dlp…",
+    "description": "Job state while the helper updates yt-dlp before retrying (008 FR-22)."
+  },
+  "hostUpdateFailingHint": {
+    "message": "The helper couldn't update itself several times in a row.",
+    "description": "One-line hint in the download panel after 3+ failed updates (008 FR-25)."
+  },
+  "hintDismiss": {
+    "message": "Dismiss",
+    "description": "Accessible label of the ✕ on a hint."
+  },
+  "componentExtension": {
+    "message": "Extension",
+    "description": "Row label in the options Downloads area (008 FR-24)."
+  },
+  "componentSourceBundled": {
+    "message": "installed by the helper",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourceHomebrew": {
+    "message": "Homebrew",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourceWinget": {
+    "message": "winget",
+    "description": "Component source (008 FR-24)."
+  },
+  "componentSourcePath": {
+    "message": "already on your computer",
+    "description": "Component source (008 FR-24)."
+  },
+  "extensionSourceManual": {
+    "message": "loaded manually (update it yourself)",
+    "description": "Extension source for unpacked/temporary installs."
+  },
+  "extensionSourceAuto": {
+    "message": "updated by the browser",
+    "description": "Extension source for signed installs."
+  },
+  "updatesTitle": {
+    "message": "Updates",
+    "description": "Options group heading (008 FR-24)."
+  },
+  "updatesAuto": {
+    "message": "Update automatically",
+    "description": "Switch label (008 FR-24)."
+  },
+  "updatesAutoDesc": {
+    "message": "When you start a download, the helper checks for updates to yt-dlp, deno and itself at most once a day and installs them in the background.",
+    "description": "Switch description (008 FR-20)."
+  },
+  "updatesLastCheck": {
+    "message": "Last check",
+    "description": "Label (008 FR-24)."
+  },
+  "updatesNever": {
+    "message": "Not checked yet",
+    "description": "Last check value when never checked."
+  },
+  "updatesRunning": {
+    "message": "Checking for updates…",
+    "description": "Last check value while running."
+  },
+  "updatesLastCheckResult": {
+    "message": "$TIME$ — $RESULT$",
+    "description": "Last check time and result.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "Oct 23, 2026, 2:05 PM"
+      },
+      "result": {
+        "content": "$2",
+        "example": "up to date"
+      }
+    }
+  },
+  "updatesResultOk": {
+    "message": "up to date",
+    "description": "Update result."
+  },
+  "updatesResultUpdated": {
+    "message": "updated",
+    "description": "Update result."
+  },
+  "updatesResultFailed": {
+    "message": "failed",
+    "description": "Update result."
+  },
+  "updatesCheckNow": {
+    "message": "Check for updates now",
+    "description": "Button (008 FR-24)."
+  },
+  "updatesStarted": {
+    "message": "Checking in the background. Updates are installed when no download is running.",
+    "description": "Shown after starting a check (008 FR-21)."
+  },
+  "updatesAlreadyRunning": {
+    "message": "A check is already running.",
+    "description": "Shown when checkUpdates returns started: false."
+  },
+  "updatesSaveFailed": {
+    "message": "Couldn't reach the helper. Try again.",
+    "description": "Shown when an update command fails."
+  },
+  "updatesFailures": {
+    "message": "Automatic updates failed $COUNT$ times in a row. Running the install command again usually fixes this.",
+    "description": "Shown after 3+ consecutive failures (008 FR-25).",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "updatesShowHint": {
+    "message": "Show the hint in the download panel again",
+    "description": "Re-enables the dismissed update failure hint (constitution 7c)."
+  },
+  "updatesUnsupported": {
+    "message": "This version of the helper doesn't update automatically. Run the install command again to get the latest helper.",
+    "description": "Shown when status has no update information (older helper)."
+  },
+  "uninstallTitle": {
+    "message": "Remove downloads",
+    "description": "Options group heading (008 FR-30)."
+  },
+  "uninstallDesc": {
+    "message": "Deletes the helper, the yt-dlp, ffmpeg and deno it installed, its log files, and its registration with the browsers. Videos you downloaded are not affected. Tools you installed yourself (for example with Homebrew) are left alone.",
+    "description": "Uninstall description (008 FR-30)."
+  },
+  "uninstallButton": {
+    "message": "Remove downloads…",
+    "description": "Opens the confirmation dialog."
+  },
+  "uninstallDialogTitle": {
+    "message": "Remove downloads?",
+    "description": "Confirmation dialog title."
+  },
+  "uninstallDialogDesc": {
+    "message": "The helper, yt-dlp, ffmpeg, deno and the log files will be deleted. Videos you downloaded stay where they are. You can install again at any time with the install command.",
+    "description": "Confirmation dialog text."
+  },
+  "uninstallCancel": {
+    "message": "Cancel",
+    "description": "Dialog button."
+  },
+  "uninstallConfirm": {
+    "message": "Remove",
+    "description": "Dialog button."
+  },
+  "uninstallRunning": {
+    "message": "Removing…",
+    "description": "Status while removing."
+  },
+  "uninstallDone": {
+    "message": "Downloads were removed. Videos you downloaded are still in their folder.",
+    "description": "Status after removing."
+  },
+  "uninstallFailed": {
+    "message": "Couldn't remove downloads. Make sure the helper is installed, then try again.",
+    "description": "Status when uninstall fails."
   }
 }

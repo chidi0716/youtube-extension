@@ -144,11 +144,14 @@ function JobRow({ job }: { job: JobRecord }) {
     <li class="yte-job" data-state={job.state} data-job={job.jobId}>
       <div class="yte-job-head">
         <span class="yte-job-label">{job.label || job.fileName || job.kind}</span>
-        <span class="yte-job-state">{t(STATE_LABELS[job.state])}</span>
+        {/* 遇到 yt-dlp 過舊等錯誤時，小幫手先更新 yt-dlp 再重試（008 FR-22）。 */}
+        <span class="yte-job-state" data-stage={active && job.stage ? job.stage : undefined}>
+          {active && job.stage === 'updating-ytdlp' ? t('jobUpdatingYtDlp') : t(STATE_LABELS[job.state])}
+        </span>
       </div>
       {active && (
         <>
-          <ProgressBar percent={job.state === 'processing' && job.percent === 100 ? null : job.percent} />
+          <ProgressBar percent={job.stage || (job.state === 'processing' && job.percent === 100) ? null : job.percent} />
           <div class="yte-job-foot">
             <span class="yte-job-details">{details.join(' · ')}</span>
             <Button
