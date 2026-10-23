@@ -44,12 +44,11 @@
 ## T37 設定頁外觀（007 FR-20 至 FR-24）
 
 - 設定 `sync:pageTheme`：`youtube`（預設）／`system`／`dark`／`light`；設定頁「介面語言」下方新增「外觀」選單與一行說明（只影響設定頁與彈出視窗，FR-23）。
-- 記錄 YouTube 主題：深色模式功能（`features/viewing/dark-mode.ts`）原本就觀察 `<html dark>`，在同一個觀察中呼叫 `recordYouTubeTheme`，
-  只在值改變時寫入 `local:lastYouTubeTheme`（FR-21、FR-24）。觀看輔助功能只在 `www.youtube.com`／`youtube.com` 且工具列啟用時作用，
-  所以工具列被關閉時不再記錄（QUESTIONS Q52）。
+- 記錄 YouTube 主題（T37a，QUESTIONS Q52）：頁面整理的內容腳本（`entrypoints/tidy.content.ts`，工具列關閉時仍執行、在所有 YouTube 頁面作用）
+  以 `watchYouTubeTheme` 觀察 `<html dark>`，只在值改變時寫入 `local:lastYouTubeTheme`（FR-21、FR-24）。深色模式功能不再負責寫入。
 - `utils/page-theme.ts`：`resolvePageTheme`（有單元測試）與 `applyPageTheme`：設定頁與彈出視窗啟動時讀取兩個設定，以 `<html data-theme="dark|light">`
   切換顏色變數（同時設定 `color-scheme`，原生控制項與下拉清單跟著變）；監聽 storage 與 `prefers-color-scheme` 的變化即時更新（FR-22）。
   JS 套用前（沒有 `data-theme`）以 `prefers-color-scheme` 決定，避免閃爍成錯誤的顏色。
-- 驗證：`node spikes/stage7/appearance-test.mjs` 11/11（「跟隨 YouTube」時 YouTube 深色、系統淺色 → 設定頁與彈出視窗深色；YouTube 切成淺色 → 已開啟的設定頁立即變淺色；
+- 驗證：`node spikes/stage7/appearance-test.mjs` 13/13（「跟隨 YouTube」時 YouTube 深色、系統淺色 → 設定頁與彈出視窗深色；YouTube 切成淺色 → 已開啟的設定頁立即變淺色；
   深色、淺色、跟隨系統各自正確且不受 YouTube 影響；系統主題改變時即時更新；設定存在 sync；中文選單；不改變 YouTube 的主題）。
   `firefox-smoke.mjs` 驗證 Firefox 上設定頁的外觀選單立即套用。截圖：`T37-options-dark.png`、`T37-options-light.png`。

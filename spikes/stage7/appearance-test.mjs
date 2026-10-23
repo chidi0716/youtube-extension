@@ -70,13 +70,30 @@ try {
   await opt.emulateMedia({ colorScheme: 'light' });
   const synced = await opt.evaluate(() => chrome.storage.sync.get('pageTheme').then((r) => r.pageTheme));
   check('外觀設定存在 sync（FR-24）', synced === 'system', String(synced));
-  // 繁體中文
+  // 工具列關閉後（✕）在 YouTube 切換主題，設定頁仍跟著變（T37a、Q52）
   await choose('youtube');
+  await page.locator('yte-toolbar .yte-btn[data-button="close"]').click();
+  await page.waitForFunction(() => !document.querySelector('yte-toolbar'));
+  await setYouTubeDark(true);
+  const closedDark = await theme(opt);
+  await setYouTubeDark(false);
+  const closedLight = await theme(opt);
+  check('工具列關閉後在 YouTube 切換主題，設定頁仍跟著變（007 FR-21、T37a）', closedDark === 'dark' && closedLight === 'light', `${closedDark} ${closedLight}`);
+  // 換頁與重新整理後仍記錄
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await setYouTubeDark(true);
+  check('工具列關閉時重新整理後仍記錄主題', (await theme(opt)) === 'dark', await theme(opt));
+  await opt.evaluate(() => chrome.storage.sync.set({ enabled: true }));
+  await sleep(300);
+
+  // 繁體中文
   await opt.locator('#ui-language').selectOption('zh_TW');
   await sleep(500);
   const zh = await opt.evaluate(() => [...document.querySelectorAll('#page-theme option')].map((o) => o.textContent).join('|') + '|' + document.querySelector('#page-theme').value);
   check('繁體中文的外觀選單，切換語言後選擇保留', zh === '跟隨 YouTube|跟隨系統|深色|淺色|youtube', zh);
   // 工具列不受影響（FR-23）：YouTube 為淺色時，選「深色」不改變工具列
+  await setYouTubeDark(false);
   await choose('dark');
   const toolbarDark = await page.evaluate(() => document.documentElement.hasAttribute('dark'));
   check('外觀只影響設定頁與彈出視窗，不改變 YouTube 的主題（FR-23）', toolbarDark === false);

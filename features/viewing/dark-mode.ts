@@ -5,7 +5,6 @@
 // 找不到選單或選項時（例如 YouTube 改版，或其他擴充功能接管了主題）不做任何修改、不重試（FR-91），
 // 按鈕提示說明可能原因，console 記錄失敗的步驟（FR-15）。
 import { t } from '@/utils/i18n';
-import { recordYouTubeTheme } from '@/utils/page-theme';
 import {
   DARK_THEME_ATTRIBUTE,
   findAccountMenuButton,
@@ -57,11 +56,7 @@ export function createDarkMode(): DarkModeFeature {
   let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 
   // 使用者從 YouTube 選單切換主題時，按鈕跟著更新（FR-12）。
-  // 同時記下目前的主題，給設定頁與彈出視窗的「跟隨 YouTube」外觀使用（007 FR-21；只在改變時寫入）。
-  const sync = () => {
-    recordYouTubeTheme(isDarkTheme() ? 'dark' : 'light');
-    state.set((prev) => (prev.active === isDarkTheme() ? prev : { ...prev, active: isDarkTheme() }));
-  };
+  const sync = () => state.set((prev) => (prev.active === isDarkTheme() ? prev : { ...prev, active: isDarkTheme() }));
 
   const showNotice = () => {
     clearTimeout(noticeTimer);

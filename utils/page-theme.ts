@@ -33,6 +33,19 @@ export function recordYouTubeTheme(theme: Theme): void {
   })();
 }
 
+/**
+ * 頁面整理的內容腳本（工具列關閉時仍執行、在所有 YouTube 頁面作用）：記下目前的主題並觀察 <html dark> 的變化
+ * （007 FR-21，QUESTIONS Q52）。只觀察 <html> 的一個屬性；回傳停止觀察的函式。
+ */
+export function watchYouTubeTheme(attribute = 'dark'): () => void {
+  const html = document.documentElement;
+  const record = () => recordYouTubeTheme(html.hasAttribute(attribute) ? 'dark' : 'light');
+  record();
+  const observer = new MutationObserver(record);
+  observer.observe(html, { attributes: true, attributeFilter: [attribute] });
+  return () => observer.disconnect();
+}
+
 /** 設定頁、彈出視窗：套用外觀並在設定、YouTube 主題或系統主題改變時即時更新（FR-22）。 */
 export async function applyPageTheme(root: HTMLElement = document.documentElement): Promise<void> {
   const media = window.matchMedia('(prefers-color-scheme: dark)');
