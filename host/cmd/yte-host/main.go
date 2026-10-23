@@ -1,10 +1,14 @@
 // yte-host 是本專案的原生訊息橋接程式（plan 第 4 節）。
 //
-// 兩種執行模式：
+// 執行模式：
 //   - 由瀏覽器以原生訊息（Native Messaging）啟動：經由 stdin/stdout 交換
 //     「4 位元組長度＋JSON」的訊息，只接受 commands 套件定義的指令；
 //   - --run-job <工作 ID>：由橋接程式自己以脫離瀏覽器的方式啟動，執行一個下載工作
-//     （參數從狀態資料夾讀取並再驗證一次），讓瀏覽器關閉後下載仍能完成（plan 4.6）。
+//     （參數從狀態資料夾讀取並再驗證一次），讓瀏覽器關閉後下載仍能完成（plan 4.6）；
+//   - --install [--manifest <components.json> --signature <components.json.sig>] | --install --offline：
+//     一行指令的安裝（plan 4.9）或手動安裝（只註冊小幫手）；
+//   - --uninstall [--delay <秒>]：移除下載功能（008 FR-30）；
+//   - --version。
 package main
 
 import (
@@ -18,6 +22,7 @@ import (
 
 	"github.com/chidi0716/youtube-extension/host/internal/app"
 	"github.com/chidi0716/youtube-extension/host/internal/commands"
+	"github.com/chidi0716/youtube-extension/host/internal/installer"
 	"github.com/chidi0716/youtube-extension/host/internal/jobs"
 	"github.com/chidi0716/youtube-extension/host/internal/logx"
 	"github.com/chidi0716/youtube-extension/host/internal/platform"
@@ -33,8 +38,8 @@ var version = "dev"
 // 原生訊息設定檔已經限制只有本擴充功能能啟動橋接程式（FR-74），
 // 這裡再依瀏覽器傳來的參數檢查一次。
 const (
-	chromeOrigin = "chrome-extension://bkjlangdjfpllnkcpfpdlajchbginjdj/"
-	firefoxID    = "youtube-extension@chidi0716"
+	chromeOrigin = platform.ChromeOrigin
+	firefoxID    = platform.FirefoxID
 )
 
 // WaitAfterDisconnect 是瀏覽器關閉連線後，等待這次連線開始的下載完成的時間上限（plan 4.6）。
@@ -62,8 +67,20 @@ func main() {
 		fmt.Println(version)
 		return
 	}
+	// 自我更新與工具替換留下的 *.old（plan 4.9：下次啟動時刪除）。
+	if l := platform.CurrentLayout(); len(args) == 0 || args[0] != "--uninstall" {
+		installer.CleanupOld(l.InstallDir, l.BinDir)
+	}
 	if len(args) == 2 && args[0] == jobs.RunJobFlag {
 		os.Exit(runJob(args[1]))
+	}
+	if len(args) >= 1 {
+		switch args[0] {
+		case "--install":
+			os.Exit(runInstall(args[1:]))
+		case "--uninstall":
+			os.Exit(runUninstall(args[1:]))
+		}
 	}
 	client, ok := identifyCaller(args)
 	if !ok {

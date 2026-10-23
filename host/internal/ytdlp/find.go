@@ -8,24 +8,30 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/chidi0716/youtube-extension/host/internal/platform"
 )
 
 // Env 是尋找執行檔時用到的環境，方便在測試中替換。
 type Env struct {
-	GOOS     string
-	Getenv   func(string) string
-	LookPath func(string) (string, error)
-	Glob     func(string) ([]string, error)
-	IsFile   func(string) bool
+	GOOS string
+	// BundledDir 是安裝資料夾中的 bin/（plan 4.9）：一行指令安裝的工具放在這裡，
+	// 尋找時最優先（008 FR-15）。空字串代表不找。
+	BundledDir string
+	Getenv     func(string) string
+	LookPath   func(string) (string, error)
+	Glob       func(string) ([]string, error)
+	IsFile     func(string) bool
 }
 
 // SystemEnv 回傳目前系統的 Env。
 func SystemEnv() Env {
 	return Env{
-		GOOS:     runtime.GOOS,
-		Getenv:   os.Getenv,
-		LookPath: exec.LookPath,
-		Glob:     filepath.Glob,
+		GOOS:       runtime.GOOS,
+		BundledDir: platform.BinDir(),
+		Getenv:     os.Getenv,
+		LookPath:   exec.LookPath,
+		Glob:       filepath.Glob,
 		IsFile: func(p string) bool {
 			st, err := os.Stat(p)
 			return err == nil && st.Mode().IsRegular()
@@ -67,20 +73,25 @@ func (e Env) packagePatterns(tool string) []string {
 	switch tool {
 	case "yt-dlp":
 		return []string{e.join(pkgs, "yt-dlp.yt-dlp_*", "yt-dlp.exe"), e.join(pkgs, "*", "yt-dlp.exe")}
-	case "ffmpeg":
-		return []string{e.join(pkgs, "Gyan.FFmpeg_*", "*", "bin", "ffmpeg.exe"), e.join(pkgs, "*", "*", "bin", "ffmpeg.exe")}
+	case "ffmpeg", "ffprobe":
+		return []string{e.join(pkgs, "Gyan.FFmpeg_*", "*", "bin", tool+".exe"), e.join(pkgs, "*", "*", "bin", tool+".exe")}
 	case "deno":
 		return []string{e.join(pkgs, "DenoLand.Deno_*", "deno.exe"), e.join(pkgs, "*", "deno.exe")}
 	}
 	return nil
 }
 
-// Find 依序在 PATH、ExtraDirs、winget 套件資料夾尋找 tool（"yt-dlp"、"ffmpeg" 或 "deno"）。
-// 找不到時回傳空字串。
+// Find 依序在安裝資料夾的 bin/、PATH、ExtraDirs、winget 套件資料夾尋找 tool
+// （"yt-dlp"、"ffmpeg"、"ffprobe" 或 "deno"）。找不到時回傳空字串。
 func (e Env) Find(tool string) string {
 	exe := tool
 	if e.GOOS == "windows" {
 		exe += ".exe"
+	}
+	if e.BundledDir != "" {
+		if p := e.join(e.BundledDir, exe); e.IsFile(p) {
+			return p
+		}
 	}
 	if p, err := e.LookPath(exe); err == nil && p != "" {
 		if abs, err := filepath.Abs(p); err == nil {
@@ -138,6 +149,37 @@ func (e Env) ChildPath(tools ...string) string {
 		}
 	}
 	return strings.Join(parts, sep)
+}
+
+// IsBundled 回傳 path 是否位於安裝資料夾的 bin/ 中。
+func (e Env) IsBundled(path string) bool {
+	if e.BundledDir == "" || path == "" {
+		return false
+	}
+	dir := path[:max(0, strings.LastIndexAny(path, `\/`))]
+	if e.GOOS == "windows" {
+		return strings.EqualFold(dir, e.BundledDir)
+	}
+	return dir == e.BundledDir
+}
+
+// Source 回傳工具的來源（008 FR-24、plan 4.9 的 status）：
+// "bundled"（安裝資料夾）、"homebrew"、"winget"，其他一律為 "path"。
+func (e Env) Source(path string) string {
+	if e.IsBundled(path) {
+		return "bundled"
+	}
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		resolved = path
+	}
+	switch Manager(e.GOOS, path, resolved, nil) {
+	case "homebrew":
+		return "homebrew"
+	case "winget":
+		return "winget"
+	}
+	return "path"
 }
 
 // Manager 判斷 yt-dlp 是由哪個套件管理工具安裝的；不是時回傳空字串。

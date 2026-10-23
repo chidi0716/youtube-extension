@@ -69,3 +69,7 @@ spikes/stage4/.cache/
 
 # 階段 6 實測的暫存截圖
 spikes/stage6/.cache/
+
+# 階段 8：引導腳本模擬測試的暫存檔、發佈流程的輸出（npm run release:dry）
+spikes/stage8/.cache/
+release/dist/
