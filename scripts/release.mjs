@@ -11,7 +11,7 @@
 // 本專案不使用自己的簽章金鑰（008 FR-51）：components.json 列出每個檔案的 SHA256，只從本專案
 // GitHub 以 HTTPS 取得，repo 開啟 GitHub 的「不可變更版本」。
 //
-// 預先發行版本與試跑時 Firefox 版不送簽署：附上未簽署的
+// 沒有 Mozilla 金鑰（或預先發行版本、試跑）時照常完成（008 FR-52）：附上未簽署的
 // youtube-extension-<版本>-firefox-temporary.zip，不產生 updates.json，Release 說明加註。
 //
 // 輸出：release/dist/upload/（要附加到 Release 的檔案）與 release/dist/release-notes.md。
@@ -53,11 +53,13 @@ const tag = tagIndex >= 0 ? argv[tagIndex + 1] : `v${version}`;
 if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) fail(`package.json version ${version} is not x.y.z`);
 if (tag !== `v${version}`) fail(`tag ${tag} does not match package.json version ${version} (expected v${version})`);
 const prerelease = version.includes('-');
+const hasMozillaKeys = Boolean(process.env.WEB_EXT_API_KEY && process.env.WEB_EXT_API_SECRET);
 
 // Firefox 版是否送 Mozilla 簽署，以及不簽署的原因（印在記錄中）。
 let unsignedReason = '';
 if (dry) unsignedReason = 'dry run';
 else if (prerelease) unsignedReason = 'prerelease (AMO signs each version number only once, plan 4.10)';
+else if (!hasMozillaKeys) unsignedReason = 'AMO_JWT_ISSUER / AMO_JWT_SECRET are not set (008 FR-52)';
 const signFirefox = unsignedReason === '';
 
 function fail(message) {

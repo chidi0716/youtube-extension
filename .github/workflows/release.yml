@@ -3,9 +3,10 @@
 # 本專案不使用自己的簽章金鑰（008 FR-51）：components.json 列出每個檔案的 SHA256，repo 開啟
 # GitHub 的「不可變更版本」（Settings → General → Releases），發佈後檔案不能被替換。
 #
-# 需要的 Secrets（Settings → Secrets and variables → Actions，見 README「維護者」章節）：
+# 選用的 Secrets（Settings → Secrets and variables → Actions，見 README「維護者」章節）：
 #   AMO_JWT_ISSUER       Mozilla 附加元件 API 金鑰（JWT issuer）
 #   AMO_JWT_SECRET       Mozilla 附加元件 API 金鑰（JWT secret）
+# 沒有設定時照常發佈：Firefox 版不送簽署，附上未簽署的套件，不產生 updates.json（008 FR-52）。
 # 標籤含「-」（例如 v0.2.0-beta.1）時建立為預先發行版本，不會成為 releases/latest，
 # 因此不會觸發新版本提醒、小幫手自動更新與 Firefox 自動更新。
 name: Release
