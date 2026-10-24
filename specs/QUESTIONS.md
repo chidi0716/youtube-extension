@@ -23,7 +23,7 @@
 - **目前做法**：只保留公鑰（`wxt.config.ts`），ID 記在 `specs/notes/extension-ids.md`；`.gitignore` 已排除 `*.pem` 等私鑰檔名作為保險。
 - **請規格方確認**：不需要打包 `.crx`（002「不在本次範圍」已排除上架商店）。若需要，請專案擁有者自行產生金鑰並保管私鑰，再替換 `wxt.config.ts` 的公鑰與 `extension-ids.md` 的 ID。
 
-### Q4 擴充功能的正式名稱（T01）— 待定：專案擁有者尚未決定名稱，暫時沿用現有名稱，之後只需修改 _locales
+### Q4 擴充功能的正式名稱（T01）— 已回答：YT Toolbar Master（2026-10-24，規格 009、T52）
 
 - **狀況**：規格沒有定義擴充功能的顯示名稱與說明文字。現有程式碼使用 “YouTube Extension” / “A browser extension for YouTube”。
 - **目前做法**：沿用現有名稱，`en` 與 `zh_TW` 名稱相同，說明文字翻成「YouTube 瀏覽器擴充功能」。
@@ -242,7 +242,7 @@
 ### Q33 未連線狀態的「安裝說明」連結（T22a） — 已回答：錨點 install-the-helper；已通知橋接程式實作方（T15）在 README 中使用此錨點
 
 - **狀況**：002 FR-2 要求連到本 repo README 的安裝章節，章節尚未撰寫。說明面板（001 FR-18）不得開啟外部網站，但未連線狀態沒有同樣的限制。
-- **目前做法**：以新分頁開啟 `https://github.com/chidi0716/youtube-extension#install-the-helper`（使用者點擊才開啟，擴充功能本身不連線）。T15 撰寫 README 時，安裝章節的標題需要產生 `install-the-helper` 這個錨點（例如 `## Install the helper`），或修改 `features/downloads/host-status.ts` 的 `INSTALL_GUIDE_URL`。
+- **目前做法**：以新分頁開啟 `https://github.com/chidi0716/yt-toolbar-master#install-the-helper`（使用者點擊才開啟，擴充功能本身不連線）。T15 撰寫 README 時，安裝章節的標題需要產生 `install-the-helper` 這個錨點（例如 `## Install the helper`），或修改 `features/downloads/host-status.ts` 的 `INSTALL_GUIDE_URL`。
 - **請規格方確認**錨點名稱與開啟 GitHub 頁面的做法。
 
 ### Q34 未連線時 yt-dlp、ffmpeg 的狀態（T22a） — 已回答：接受

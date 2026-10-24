@@ -167,6 +167,18 @@ T11 可以和階段 1、2 同時進行。
 - **T51 文件**：README（英文與繁中）「維護者」章節改為：開啟不可變更版本 → 建立版本標籤；Mozilla 金鑰列為之後的選用步驟。更新 `docs/what-gets-installed*.md`、`specs/notes/T40-T43-install-and-release.md`、e2e-checklist 第 10 節中與簽章相關的內容。
 - **完成條件**：同階段 8；全文搜尋確認沒有殘留的 `ed25519`、`.sig`、`RELEASE_SIGNING_KEY`、`PublicKeyBase64`。
 
+## 階段 9：改名與一鍵下載（009）
+
+- **T52 專案改名**：repo 已改名為 `chidi0716/yt-toolbar-master`，擴充功能顯示名稱改為「YT Toolbar Master」（兩種語言相同）。
+  - 所有 `chidi0716/youtube-extension` 網址改為新名稱：新版本提醒、安裝指令、元件清單允許的網址、Firefox `update_url`、發佈腳本、引導與移除腳本、README、docs、測試；Go module 路徑改為 `github.com/chidi0716/yt-toolbar-master/host`。
+  - 發佈檔名中的 `youtube-extension-` 前綴改為 `yt-toolbar-master-`。
+  - **不改**（使用者看不到，且改了會讓已安裝的版本失聯）：Chrome 金鑰與擴充功能 ID、Firefox `gecko.id`、原生訊息名稱 `com.chidi0716.youtube_extension`、安裝資料夾 `youtube-extension-host`、記錄檔位置。在 plan 3.3 註明這些識別碼保留舊名的原因。
+- **T53 一鍵下載**（009 第一節，plan 3.11）：設定、畫質選擇函式與單元測試、面板流程、「改用其他畫質」、重複下載判斷、提示文字。
+- **T54 安裝後接著下載**（009 第二節）。
+- **T55 右鍵下載**（009 第三節）：`contextMenus` 權限、選單建立與更新、連結解析與單元測試、通知、設定開關。
+- **T56 檢查與文件**：權限檢查測試（`utils/policy.test.ts`）加入 `contextMenus`；README（英文與繁中）功能介紹加入一鍵與右鍵下載；e2e-checklist 新增第 11 節（009 驗收條件）；與既有功能的組合測試（鎖定畫質、編輯工具列、隱藏的工具、下載清單）。
+- **完成條件**：同階段 8（含 `release:dry`、`web-ext lint --self-hosted`）；全文搜尋確認除了 T52 列出的保留識別碼以外，沒有殘留 `chidi0716/youtube-extension`。
+
 ## 階段 5：收尾
 
 - **T24 E2E 檢查清單**

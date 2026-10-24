@@ -264,7 +264,7 @@
 | 10.1.5 | **尚未設定 Mozilla 金鑰**時推送正式標籤：Release 照常建立，附上 `youtube-extension-<版本>-firefox-temporary.zip`、沒有 `updates.json`，說明中註明只能以臨時附加元件載入；該 zip 解壓後可以在 `about:debugging` 載入（008 FR-52）。 | ✔（本機模擬） | ☐ |
 | 10.1.5a | 設定 `AMO_JWT_ISSUER`、`AMO_JWT_SECRET` 後的下一個正式版本：Firefox 版送 Mozilla 簽署成功（manifest 有 `update_url`，不公開頻道應接受，Q57），Release 附有 `.xpi` 與 `updates.json`。 | — | ☐ |
 | 10.1.6 | Release 有：`install.sh`、`install.ps1`、`uninstall.sh`、`uninstall.ps1`、三種 `yte-host-*`、兩個手動安裝 zip、`components.json`、Chrome zip、`.xpi` 與 `updates.json`（或未簽署時的 `-firefox-temporary.zip`）、`SHA256SUMS`；說明文字含各瀏覽器的更新步驟。下載後 `shasum -a 256 -c SHA256SUMS` 全部 OK。 | — | ☐ |
-| 10.1.7 | `https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh` 下載到的腳本中 `TAG=` 是這個版本；`install.ps1` 是純 ASCII（沒有 BOM）。 | ✔（release:dry） | ☐ |
+| 10.1.7 | `https://github.com/chidi0716/yt-toolbar-master/releases/latest/download/install.sh` 下載到的腳本中 `TAG=` 是這個版本；`install.ps1` 是純 ASCII（沒有 BOM）。 | ✔（release:dry） | ☐ |
 | 10.1.8 | 預先發行標籤（例如 `v0.2.0-beta.1`）即使已設定 Mozilla 金鑰，Firefox 版也不送簽署（附 `-firefox-temporary.zip`）。 | — | ☐ |
 
 ### 10.2 一行指令安裝（實機）

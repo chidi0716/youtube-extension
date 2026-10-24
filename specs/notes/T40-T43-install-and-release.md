@@ -38,7 +38,7 @@ spikes/stage8/             引導腳本的模擬測試（macOS：假 curl 等；
   "schema": 1,
   "version": "0.2.0",
   "helper": {
-    "darwin-amd64":  { "url": "https://github.com/chidi0716/youtube-extension/releases/download/v0.2.0/yte-host-darwin-amd64", "sha256": "…" },
+    "darwin-amd64":  { "url": "https://github.com/chidi0716/yt-toolbar-master/releases/download/v0.2.0/yte-host-darwin-amd64", "sha256": "…" },
     "darwin-arm64":  { … },
     "windows-amd64": { "url": "…/yte-host-windows-amd64.exe", "sha256": "…" }
   },
@@ -53,7 +53,7 @@ spikes/stage8/             引導腳本的模擬測試（macOS：假 curl 等；
 ```
 
 - 鍵依字母排序、兩格縮排、結尾換行（Go `json.MarshalIndent`）。引導腳本以文字比對取出小幫手的 SHA256，所以格式必須固定。
-- **不使用自己的簽章**（008 FR-51，T49 移除原本自己的簽章與內建公鑰）：清單只從本專案 GitHub 以 HTTPS 取得（`release.AllowedManifestURL`：第一個網址與每一次轉址都只能是 `github.com/chidi0716/youtube-extension/releases/` 或 GitHub 的檔案主機），每個檔案核對清單中的 SHA256，repo 開啟「不可變更版本」。
+- **不使用自己的簽章**（008 FR-51，T49 移除原本自己的簽章與內建公鑰）：清單只從本專案 GitHub 以 HTTPS 取得（`release.AllowedManifestURL`：第一個網址與每一次轉址都只能是 `github.com/chidi0716/yt-toolbar-master/releases/` 或 GitHub 的檔案主機），每個檔案核對清單中的 SHA256，repo 開啟「不可變更版本」。
 - 驗證（`release.ParseManifest`）：不認得的欄位、缺少的平台或工具、不是 64 位小寫十六進位的 SHA256、不在允許清單的網址、`/latest/` 網址、不符合預期的執行檔名稱都拒絕。
 - 允許的網址（`release/hosts.go`）：`github.com` 的本專案、`yt-dlp/yt-dlp`、`denoland/deno`、`yt-dlp/FFmpeg-Builds`、`BtbN/FFmpeg-Builds` 的 `/releases/`；`ffmpeg.martin-riedl.de/download/`；GitHub 的轉址目的地 `objects.githubusercontent.com`、`release-assets.githubusercontent.com`。只允許 https，每一次轉址都重新檢查。測試掃描 `host/` 的 Go 原始碼與 `install/bootstrap/`，確認沒有其他網域（YouTube 只出現在交給 yt-dlp 的影片網址）。
 

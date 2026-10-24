@@ -28,7 +28,7 @@
 | `dangerouslySetInnerHTML`、`innerHTML`、`outerHTML`、`insertAdjacentHTML`、`document.write` | 原始碼沒有（只有 `components/icons.tsx` 說明「不使用 innerHTML」的註解）。建置結果中 Preact 本身含 `innerHTML` 指派，即 `lint-exceptions.md` 的既有例外，執行時不會走到 |
 | 外部腳本或樣式網址 | 沒有。HTML 只載入擴充功能內的 `/chunks/*.js`、`/assets/*.css`；CSS 沒有 `@import` 或外部字型 |
 | 分析或追蹤程式碼（analytics、gtag、sentry、telemetry 等） | 沒有 |
-| 程式中的網址 | `https://www.youtube.com`（字幕網址解析）、`https://i.ytimg.com/vi/…`（縮圖）、`https://youtu.be/`（複製連結）、`https://github.com/chidi0716/youtube-extension#install-the-helper`（安裝說明連結）。建置結果另有 SVG／MathML 命名空間與 WXT 錯誤訊息中的文件網址（`wxt.dev`、`github.com/wxt-dev`、`developer.mozilla.org`），都只是字串，不會被請求 |
+| 程式中的網址 | `https://www.youtube.com`（字幕網址解析）、`https://i.ytimg.com/vi/…`（縮圖）、`https://youtu.be/`（複製連結）、`https://github.com/chidi0716/yt-toolbar-master#install-the-helper`（安裝說明連結）。建置結果另有 SVG／MathML 命名空間與 WXT 錯誤訊息中的文件網址（`wxt.dev`、`github.com/wxt-dev`、`developer.mozilla.org`），都只是字串，不會被請求 |
 
 ## 3. 橋接程式執行的外部程式
 
@@ -98,7 +98,7 @@
 |---|---|
 | 兩份 manifest 的 `permissions`、`host_permissions` | 與 plan 3.2 完全一致（`storage`、`downloads`、`notifications`、`nativeMessaging`；`*://*.youtube.com/*`、`https://i.ytimg.com/*`）；沒有 `optional_permissions`、`management` 或 GitHub 的主機權限。新增單元測試 `utils/policy.test.ts`，直接以 `wxt.config.ts` 的 manifest 函式檢查 Chrome 與 Firefox 兩種輸出 |
 | `api.github.com` | 原始碼（`entrypoints/`、`components/`、`features/`、`utils/`、`public/`、`wxt.config.ts`，不含單元測試）只出現在 `utils/update-check.ts`（`utils/policy.test.ts` 自動檢查）；建置結果只在兩份 `background.js` |
-| 其他 GitHub 網址 | 只有給使用者的連結與指令：版本頁面前綴 `https://github.com/chidi0716/youtube-extension/releases/`（「前往下載」只開啟通過檢查的網址）、安裝指令中的 `…/releases/latest/download/install.sh`、`install.ps1`、README 的安裝章節。擴充功能不會 `fetch` 這些網址（同一測試檢查） |
+| 其他 GitHub 網址 | 只有給使用者的連結與指令：版本頁面前綴 `https://github.com/chidi0716/yt-toolbar-master/releases/`（「前往下載」只開啟通過檢查的網址）、安裝指令中的 `…/releases/latest/download/install.sh`、`install.ps1`、README 的安裝章節。擴充功能不會 `fetch` 這些網址（同一測試檢查） |
 | `management.getSelf()` | 不需要 `management` 權限（Chrome 與 MDN 文件）；Chromium 實測載入未封裝時回傳 `development` |
 | 查詢內容 | `GET`，`credentials: 'omit'`、`referrerPolicy: 'no-referrer'`、沒有自訂標頭；Chromium 實測的請求標頭只有 `accept`、`origin`（擴充功能 ID）、`user-agent` |
 

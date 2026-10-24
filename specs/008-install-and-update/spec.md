@@ -124,5 +124,5 @@
 
 ## 待決定事項
 
-- **D-1 擴充功能名稱**：目前為「YouTube Extension」；正式給他人使用前需要決定（不能以 YouTube 開頭）。
+- ~~**D-1 擴充功能名稱**~~：已決定為「YT Toolbar Master」（2026-10-24），repo 為 `chidi0716/yt-toolbar-master`。
 - ~~**D-2 授權條款**~~：已決定採用 MIT（2026-10-23），見根目錄 `LICENSE`。

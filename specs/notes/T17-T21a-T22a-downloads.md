@@ -57,7 +57,7 @@
   - 其他影片：橋接程式連線（T16）完成前，連線檢查一律回傳「無法連線」（`features/downloads/host-status.ts`）。面板列出橋接程式（無法連線）、
     yt-dlp 與 ffmpeg（需要橋接程式才能確認）；依作業系統（以 `navigator.userAgentData.platform`、`navigator.platform` 與 User-Agent 判斷）
     顯示 macOS（Homebrew、`install.sh`）或 Windows（winget、`install.ps1`）的步驟，其他系統顯示「橋接程式提供 macOS 與 Windows 版本」；
-    「安裝說明」以新分頁開啟 `https://github.com/chidi0716/youtube-extension#install-the-helper`（README 的章節在 T15 撰寫，QUESTIONS Q33）；
+    「安裝說明」以新分頁開啟 `https://github.com/chidi0716/yt-toolbar-master#install-the-helper`（README 的章節在 T15 撰寫，QUESTIONS Q33）；
     「重新檢查」按鈕。
 - 縮圖、截圖、字幕在未連線狀態下照常使用。
 

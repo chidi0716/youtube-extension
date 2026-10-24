@@ -86,10 +86,11 @@ host/                           橋接程式（Go），見第 4 節
 | `downloads` | 縮圖與截圖存檔 |
 | `notifications` | 下載完成／失敗通知 |
 | `nativeMessaging` | 與橋接程式溝通 |
+| `contextMenus` | 在 YouTube 頁面的影片連結上提供「下載影片／MP3」選單（009 第三節）；不會產生安裝警告 |
 | 主機權限 `*://*.youtube.com/*` | 內容腳本 |
 | 主機權限 `https://i.ytimg.com/*` | 背景腳本檢查縮圖尺寸是否存在並下載 |
 
-不申請 `tabs`、`scripting`、`webRequest`、`<all_urls>`、`cookies`。
+不申請 `tabs`、`scripting`、`webRequest`、`<all_urls>`、`cookies`、`management`。
 
 ### 3.3 擴充功能 ID 固定
 
@@ -207,7 +208,7 @@ host/                           橋接程式（Go），見第 4 節
 
 - 新模組 `utils/update-check.ts`（純邏輯：版本比較、是否該查詢、是否該顯示，要有單元測試）與背景腳本中的查詢。全專案只有這個模組可以出現 `api.github.com`（T26 檢查要更新）。
 - **是否需要提醒**：背景腳本以 `browser.management.getSelf()` 取得 `installType`（不需要 `management` 權限）；只有 `development` 才查詢與提醒（Chrome 載入未封裝、Firefox 臨時附加元件）。其他安裝類型一律不查詢。
-- **查詢**：`GET https://api.github.com/repos/chidi0716/youtube-extension/releases/latest`（只回傳正式版本，不含預先發行版本），不帶任何自訂標頭或 cookie（`credentials: 'omit'`）。只取 `tag_name`（去掉開頭的 `v`）、`name`、`html_url`；`html_url` 必須以 `https://github.com/chidi0716/youtube-extension/releases/` 開頭，否則丟棄。GitHub API 允許跨來源讀取，因此不需要新增主機權限。
+- **查詢**：`GET https://api.github.com/repos/chidi0716/yt-toolbar-master/releases/latest`（只回傳正式版本，不含預先發行版本），不帶任何自訂標頭或 cookie（`credentials: 'omit'`）。只取 `tag_name`（去掉開頭的 `v`）、`name`、`html_url`；`html_url` 必須以 `https://github.com/chidi0716/yt-toolbar-master/releases/` 開頭，否則丟棄。GitHub API 允許跨來源讀取，因此不需要新增主機權限。
 - **時機**：內容腳本在影片頁載入完成時送訊息給背景腳本；背景腳本檢查 `local:updateCheck.lastCheckedAt` 超過 24 小時、且沒有選擇「不再提醒」才查詢。失敗只記錄在 console，不重試。
 - **儲存**（`local:`，不同步）：`updateCheck = { lastCheckedAt, latest: {version, title, url} | null }`、`updateReminder = { skippedVersion, disabled, lastCardShownAt: {version, at}, handledVersion }`。
 - **卡片**：屬於工具列的 Shadow DOM，位置在工具列下方，不疊在播放器上。顯示條件、收合計時、小圓點、隔天再出現依 008 FR-28 至 FR-29b 與 constitution 第 7c 點。
@@ -222,13 +223,28 @@ host/                           橋接程式（Go），見第 4 節
 ### 3.10 安裝引導與下載區設定（008 第一、三、四節，擴充功能端）
 
 - **安裝指令**（常數集中在 `features/downloads/host-status.ts`）：
-  - macOS：`curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh | sh`
-  - Windows：`irm https://github.com/chidi0716/youtube-extension/releases/latest/download/install.ps1 | iex`
+  - macOS：`curl -fsSL https://github.com/chidi0716/yt-toolbar-master/releases/latest/download/install.sh | sh`
+  - Windows：`irm https://github.com/chidi0716/yt-toolbar-master/releases/latest/download/install.ps1 | iex`
   - 作業系統以 `runtime.getPlatformInfo()` 判斷（不需要權限）；其他系統顯示 README 連結。
 - **自動偵測**：影片／MP3 面板顯示安裝引導時，每 3 秒送一次 `status`，面板收起就停止；成功後切換成可下載畫面。
 - **設定頁「下載」區**：用 `status` 的 `components` 與 `update`（4.9 節）顯示各元件版本與來源；「自動更新」開關（`setAutoUpdate`）、「立即檢查更新」（`checkUpdates`）、最近一次檢查時間與結果；`update.consecutiveFailures >= 3` 時在下載面板顯示一行提示（008 FR-25）。
 - **移除下載功能**：確認對話框（在設定頁內，不是瀏覽器的 `confirm`）→ `uninstall`；有進行中的下載時顯示 `JOBS_RUNNING` 的說明。
 - **自動更新 yt-dlp 後重試**（008 FR-22）：下載進度事件出現 `stage: "updating-ytdlp"` 時，面板顯示「正在更新 yt-dlp…」。
+
+### 3.11 一鍵下載與右鍵下載（009）
+
+- **畫質選擇**：新增純函式 `pickDefaultFormat(formats, {height: 'best'|2160|1440|1080|720|480, container: 'mp4'|'any'})`，放在 `utils/format-list.ts` 旁並重用其分組結果；規則依 009 FR-2，要有單元測試（包含只有更高畫質、同畫質多幀率、2K 以上 MP4 組、只有內含聲音的格式）。
+- **設定**（`sync:`）：`quickDownload`（預設 true）、`defaultVideoHeight`（預設 1080）、`defaultVideoContainer`（預設 `mp4`）、`downloadContextMenu`（預設 true）。MP3 位元率沿用既有設定。
+- **一鍵流程**：背景腳本新增 `quickDownload({videoId, kind, source: 'toolbar'|'contextMenu'})`：取得影片資訊（共用 3.8 的快取）→ 檢查是否可下載（009 FR-6）→ 選格式 → 呼叫既有的 `download`。重複下載判斷依工作清單中「同影片＋同種類且狀態為進行中」。
+- **「改用其他畫質」**：送 `cancel` 後在同一個面板切換成完整清單。
+- **安裝後接著下載**：記住的意圖存在內容腳本記憶體（`{videoId, kind, at}`），不寫入儲存；面板偵測到小幫手後檢查影片 ID 一致且未超過 30 分鐘。
+- **右鍵選單**：背景腳本以 `contextMenus.create` 建立父選單與兩個子項目：
+  - `contexts: ['link']`、`documentUrlPatterns: ['*://*.youtube.com/*']`、`targetUrlPatterns`：`*://*.youtube.com/watch*`、`*://*.youtube.com/shorts/*`、`*://youtu.be/*`；
+  - 點擊時從 `linkUrl` 取出影片 ID（以既有的 ID 驗證規則），無效時不動作；
+  - 在 `runtime.onInstalled` 與設定或語言改變時以 `contextMenus.removeAll` 後重建（Chrome MV3 背景程式重啟後選單會保留，不需要每次重建）；
+  - 選單文字使用 007 的翻譯層並代入目前預設值。
+- **開始通知**：只在右鍵下載時建立；取得標題後以同一個通知 ID 更新。
+- 工具列按鈕的提示文字依設定即時更新（009 FR-7）。
 
 ## 4. 橋接程式（host/）
 
@@ -367,7 +383,7 @@ install/
 
 **信任鏈**：
 - 第一次安裝：引導腳本從同一個 Release 以 HTTPS 下載 `components.json`，核對小幫手的 sha256 後執行。這與「執行從 GitHub 下載的腳本」本身的信任來源相同（引導腳本無法在 macOS／Windows 內建工具中可靠地驗證 Ed25519）。
-- 小幫手執行 `--install` 與之後每一次更新，都只接受從本專案 GitHub（`github.com/chidi0716/youtube-extension/releases/`，含其轉址）以 HTTPS 取得的清單，並嚴格檢查格式與允許的網址；每個下載的檔案都必須符合清單中的 SHA256（008 SR-2）。
+- 小幫手執行 `--install` 與之後每一次更新，都只接受從本專案 GitHub（`github.com/chidi0716/yt-toolbar-master/releases/`，含其轉址）以 HTTPS 取得的清單，並嚴格檢查格式與允許的網址；每個下載的檔案都必須符合清單中的 SHA256（008 SR-2）。
 - repo 開啟「不可變更版本」，版本發佈後清單與檔案不能被替換。
 - 小幫手自我更新時，新版本的檔案必須符合已驗證清單中的 sha256。
 
@@ -393,7 +409,7 @@ install/
 **自動更新**（`host/internal/updater`，狀態檔 `update-state.json` 放在安裝資料夾）：
 - `download` 指令成功建立工作後，若自動更新開啟且距上次檢查超過 24 小時，啟動分離的 `yte-host --update` 程序（與 `--run-job` 相同的分離方式），立即返回，不延遲下載。
 - `--update`：
-  1. 下載 `https://github.com/chidi0716/youtube-extension/releases/latest/download/components.json`，檢查格式與允許的網址。
+  1. 下載 `https://github.com/chidi0716/yt-toolbar-master/releases/latest/download/components.json`，檢查格式與允許的網址。
   2. 等到沒有進行中的工作（每 10 秒檢查一次，最多 6 小時）。
   3. yt-dlp：執行 `yt-dlp -U`（只限安裝資料夾中的 yt-dlp；套件管理工具安裝的不動）。
   4. deno、ffmpeg（只限安裝資料夾中的）：版本與清單不同時依清單下載替換。
@@ -413,8 +429,8 @@ install/
 新錯誤代碼：`JOBS_RUNNING`、`SIGNATURE_INVALID`、`CHECKSUM_MISMATCH`（擴充功能要有對應的中英文訊息）。
 
 **移除指令**（README，008 FR-31）：
-- macOS：`curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/uninstall.sh | sh`
-- Windows：`irm https://github.com/chidi0716/youtube-extension/releases/latest/download/uninstall.ps1 | iex`
+- macOS：`curl -fsSL https://github.com/chidi0716/yt-toolbar-master/releases/latest/download/uninstall.sh | sh`
+- Windows：`irm https://github.com/chidi0716/yt-toolbar-master/releases/latest/download/uninstall.ps1 | iex`
 
 這兩個腳本不需下載小幫手，直接刪除 4.8 節的位置。
 
@@ -429,7 +445,7 @@ install/
   4. 依 `release/components.lock.json` 產生並驗證 `components.json`。
   5. 產生 `updates.json`（Firefox 更新資訊，列出這個版本與 `.xpi` 的下載網址）。
   6. 建立 GitHub Release，附上：引導腳本與移除腳本、三種小幫手、`components.json`、Chrome zip、`.xpi`（或未簽署的 Firefox 套件）、`updates.json`（有簽署時）、`SHA256SUMS`。說明文字以範本產生，包含各瀏覽器的更新步驟（Chrome：下載 zip、解壓覆蓋原資料夾、在擴充功能頁按重新載入）。
-- Firefox manifest 加入 `browser_specific_settings.gecko.update_url: "https://github.com/chidi0716/youtube-extension/releases/latest/download/updates.json"`（Firefox 會跟隨轉址；實作時確認）。
+- Firefox manifest 加入 `browser_specific_settings.gecko.update_url: "https://github.com/chidi0716/yt-toolbar-master/releases/latest/download/updates.json"`（Firefox 會跟隨轉址；實作時確認）。
 - 新增 `npm run release:dry`：在本機完成第 1、3、4、5 步，輸出到 `release/dist/`，方便沒有 Secrets 時驗證。
 - 預先發行版本（標籤含 `-`，例如 `v0.2.0-beta.1`）建立為 prerelease，不會被 `releases/latest` 取得，因此不觸發提醒與自動更新；預先發行版本**不送 Firefox 簽署**（AMO 同一個數字版本只能簽一次），需要給 Firefox 使用者測試時直接發正式的小版本。
 - README「維護者」章節：開啟「不可變更版本」、（之後）設定兩個 Mozilla Secrets、建立第一個版本的步驟。
