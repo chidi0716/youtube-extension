@@ -7,6 +7,6 @@ export default defineConfig({
   plugins: [WxtVitest()],
   test: {
     include: ['**/*.test.{ts,tsx}'],
-    exclude: ['**/node_modules/**', '.output/**', '.wxt/**', 'spikes/**'],
+    exclude: ['**/node_modules/**', '.output/**', '.wxt/**', 'spikes/**', '.claude/**'],
   },
 });

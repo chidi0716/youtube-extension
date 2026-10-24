@@ -33,7 +33,14 @@ describe('權限（plan 3.2、constitution 第 4 點）', () => {
       expect(manifest.host_permissions).toEqual(['*://*.youtube.com/*', 'https://i.ytimg.com/*']);
       expect(manifest).not.toHaveProperty('optional_permissions');
       expect(manifest).not.toHaveProperty('optional_host_permissions');
-      expect(JSON.stringify(manifest)).not.toMatch(/github|management|<all_urls>|"tabs"|scripting|webRequest|cookies/);
+      // Firefox 的 update_url 是瀏覽器自己的更新檢查（plan 4.10），不是擴充功能的連線，先取出另外檢查。
+      const gecko = (manifest.browser_specific_settings as { gecko?: Record<string, unknown> } | undefined)?.gecko;
+      if (browser === 'firefox') {
+        expect(gecko?.update_url).toBe('https://github.com/chidi0716/youtube-extension/releases/latest/download/updates.json');
+      }
+      const rest = JSON.parse(JSON.stringify(manifest));
+      delete rest.browser_specific_settings?.gecko?.update_url;
+      expect(JSON.stringify(rest)).not.toMatch(/github|management|<all_urls>|"tabs"|scripting|webRequest|cookies/);
     });
   }
 });
