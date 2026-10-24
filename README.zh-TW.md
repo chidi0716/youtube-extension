@@ -87,11 +87,13 @@ YouTube 上的工具列  →  擴充功能背景腳本  →  本機橋接程式 
 ### 這個指令會做什麼？
 
 1. 從本專案的 [GitHub 正式版本](https://github.com/chidi0716/youtube-extension/releases)下載對應系統的小幫手，並與發佈清單（`components.json`）核對 SHA-256。
-2. 小幫手以內建的專案公鑰**驗證發佈清單的簽章**，再下載：
+2. 小幫手檢查發佈清單（只接受以 HTTPS 從本專案 GitHub 正式版本取得的清單），再下載：
    - yt-dlp：[yt-dlp 官方正式版本](https://github.com/yt-dlp/yt-dlp/releases)，核對官方檢查碼；
    - deno：[deno 官方正式版本](https://github.com/denoland/deno/releases)，核對官方檢查碼；
    - ffmpeg 與 ffprobe：macOS 從 [Martin Riedl 的 FFmpeg Build Server](https://ffmpeg.martin-riedl.de)、Windows 從 [yt-dlp/FFmpeg-Builds](https://github.com/yt-dlp/FFmpeg-Builds) 下載，核對發佈時記錄的檢查碼。電腦上已經有 ffmpeg 與 ffprobe（例如 Homebrew）時沿用，不另外下載。
 3. 全部放在 `~/Library/Application Support/youtube-extension-host/`（macOS）或 `%LOCALAPPDATA%\youtube-extension-host\`（Windows），並為 Chrome 與 Firefox（含 Zen）註冊小幫手。
+
+每個下載的檔案都必須符合發佈清單中的 SHA-256，否則刪除且不替換任何東西。本專案的版本在 GitHub 上設為不可變更，發佈後檔案不能再被修改。
 
 每一步都會即時印出說明。重複執行只會修復或更新需要的部分；任何一步失敗時會印出原因，再執行一次同一個指令即可從失敗處繼續。你自己安裝的程式（例如 Homebrew 的 yt-dlp）不會被修改；小幫手優先使用自己資料夾中的版本，設定頁會標示目前使用哪一份。
 
@@ -197,12 +199,12 @@ npm run build:host      # 本機橋接程式 → host/dist/（macOS arm64/amd64�
 npm run zip
 npm run zip:firefox
 npm run sign:firefox    # Firefox → 簽署後的 .xpi，輸出到 .output/firefox-signed（見下方）
-npm run release:dry     # 以臨時金鑰產生所有發佈檔案 → release/dist（見「發佈新版本」）
+npm run release:dry     # 不需要 Secret，產生所有發佈檔案 → release/dist（見「發佈新版本」）
 ```
 
 ## 手動載入擴充功能
 
-[版本頁面](https://github.com/chidi0716/youtube-extension/releases)有打包好的 `youtube-extension-<版本>-chrome.zip` 與 `youtube-extension-<版本>-firefox.xpi`。使用自己建置的版本時，改用 `.output/chrome-mv3` 或 `.output/firefox-mv3`。
+[版本頁面](https://github.com/chidi0716/youtube-extension/releases)有打包好的 `youtube-extension-<版本>-chrome.zip` 與 `youtube-extension-<版本>-firefox.xpi`（尚未經 Mozilla 簽署的版本改附 `youtube-extension-<版本>-firefox-temporary.zip`，Firefox 與 Zen 只能以臨時附加元件載入）。使用自己建置的版本時，改用 `.output/chrome-mv3` 或 `.output/firefox-mv3`。
 
 - **Chrome**：把 Chrome 版解壓縮到一個會保留的資料夾，開啟 `chrome://extensions`，打開「開發人員模式」，點「載入未封裝項目」，選擇該資料夾（或 `.output/chrome-mv3`）。Chrome 無法自動更新這個擴充功能；有新版本時擴充功能會顯示提醒。更新方式：把新版本解壓縮覆蓋同一個資料夾，再到 `chrome://extensions` 按「重新載入」。
 - **Firefox（開發用）**：開啟 `about:debugging#/runtime/this-firefox`，點「載入臨時附加元件」，選擇 `.output/firefox-mv3/manifest.json`。臨時附加元件在 Firefox 重新啟動後會被移除。
@@ -220,28 +222,24 @@ npm run release:dry     # 以臨時金鑰產生所有發佈檔案 → release/di
 
 ### 發佈新版本（維護者）
 
-推送 `v*` 標籤時會執行 [`.github/workflows/release.yml`](./.github/workflows/release.yml)：執行測試、建置擴充功能與三種小幫手、依 [`release/components.lock.json`](./release/components.lock.json) 與官方檢查碼核對每個第三方檔案、產生並簽署 `components.json`、把 Firefox 版送 Mozilla 簽署（不公開頻道）、產生 `updates.json`（Firefox 自動更新用），最後建立 GitHub Release，附上安裝腳本、小幫手、`components.json(.sig)`、Chrome zip、`.xpi`、`updates.json` 與 `SHA256SUMS`。標籤含「-」（例如 `v0.2.0-beta.1`）時建立為預先發行版本，不會成為「最新版本」，因此不會觸發新版本提醒與自動更新。
+推送 `v*` 標籤時會執行 [`.github/workflows/release.yml`](./.github/workflows/release.yml)：執行測試、建置擴充功能與三種小幫手、依 [`release/components.lock.json`](./release/components.lock.json) 與官方檢查碼核對每個第三方檔案、產生 `components.json`（每個檔案的網址與 SHA-256），最後建立 GitHub Release，附上安裝腳本、小幫手、`components.json`、Chrome zip、Firefox 套件與 `SHA256SUMS`。設定了 Mozilla API 金鑰時，Firefox 版會送 Mozilla 簽署（不公開頻道），並附上 `updates.json`（Firefox 自動更新用）。標籤含「-」（例如 `v0.2.0-beta.1`）時建立為預先發行版本：不會成為「最新版本」，所以不會觸發新版本提醒與自動更新，Firefox 版也不送簽署（Mozilla 每個版本號只能簽署一次）。
+
+本專案不使用自己的簽章金鑰。小幫手只接受以 HTTPS 從本專案 GitHub 正式版本取得的 `components.json`，並以其中的 SHA-256 核對每個下載的檔案；開啟「不可變更版本」後，已發佈版本的檔案無法再被修改或替換。
 
 #### 第一次設定
 
-1. **發佈簽章金鑰**：在你自己的電腦上（不要放進 repo）執行：
-   ```bash
-   cd host && go run ./cmd/yte-release keygen -out ~/yte-release-signing.key
-   ```
-   它會印出公鑰。把公鑰貼到 [`host/internal/release/pubkey.go`](./host/internal/release/pubkey.go) 的 `PublicKeyBase64` 並 commit。完成之前，小幫手會拒絕所有發佈清單。
-2. **GitHub Secrets**（repo 的 **Settings → Secrets and variables → Actions → New repository secret**）：
-   - `RELEASE_SIGNING_KEY`：第 1 步金鑰檔案的內容。之後把檔案離線保存（例如密碼管理工具）或刪除。
-   - `AMO_JWT_ISSUER`、`AMO_JWT_SECRET`：在 <https://addons.mozilla.org/developers/addon/api/key/> 建立的 API 金鑰（「JWT issuer」與「JWT secret」）。
+1. **開啟不可變更版本**：repo 的 **Settings → General**，在 **Releases** 區開啟不可變更版本（immutable releases）。之後已發佈的版本與檔案就不能再修改。
+2. 在本機試跑整個流程：`npm run release:dry`（輸出在 `release/dist/`，Firefox 版不送簽署）。
+3. 建立第一個版本（見下方）。不需要任何 Secret：沒有 Mozilla API 金鑰時，Release 會附上未簽署的 `youtube-extension-<版本>-firefox-temporary.zip`（Firefox／Zen 只能以臨時附加元件載入）、不產生 `updates.json`，並在說明中註明。
 
-   簽章私鑰與 `pubkey.go` 的公鑰不符時，發佈流程會停止。
-3. 不需要 Secrets 也能在本機試跑整個流程：`npm run release:dry`（使用用完即刪的臨時金鑰，輸出在 `release/dist/`，Firefox 版不送簽署）。
+**之後（選用）：Firefox／Zen 的 Mozilla 簽署**。在 <https://addons.mozilla.org/developers/addon/api/key/> 建立 API 金鑰，加到 repo 的 Secrets（**Settings → Secrets and variables → Actions → New repository secret**）：`AMO_JWT_ISSUER`（「JWT issuer」）與 `AMO_JWT_SECRET`（「JWT secret」）。下一個版本起 `.xpi` 會經過簽署，Firefox／Zen 也會自動更新。
 
 #### 發佈步驟
 
 1. 修改 `package.json` 的 `version`（例如 `0.2.0`）並 commit。
 2. 需要時更新 `release/components.lock.json` 中固定的第三方版本（見 [`specs/notes/ffmpeg-source.md`](./specs/notes/ffmpeg-source.md)），並以 `cd host && go run ./cmd/yte-release lock-check -download` 檢查。
 3. 建立並推送標籤：`git tag v0.2.0 && git push origin v0.2.0`（必須與 `package.json` 相同）。
-4. 流程完成後檢查版本頁面。Firefox／Zen 使用者會自動更新；Chrome 使用者會在擴充功能中看到附有版本連結的提醒。
+4. 流程完成後檢查版本頁面。簽署版的 Firefox／Zen 會自動更新；Chrome（與 Firefox 臨時附加元件）使用者會在擴充功能中看到附有版本連結的提醒。
 
 ### 從原始碼建置（給附加元件審查者）
 

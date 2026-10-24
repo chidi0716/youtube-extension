@@ -400,7 +400,7 @@
 ### Q56 內建公鑰尚未設定（T40） — 已回答：不使用自己的簽章（008 FR-51），由 T49 移除
 
 - **狀況**：簽章私鑰只能由專案擁有者產生並存到 GitHub Secret，實作方不能產生後提交。
-- **目前做法**：`host/internal/release/pubkey.go` 的 `PublicKeyBase64` 先留空字串。留空時小幫手的 `--install` 與自動更新一律以 `SIGNATURE_INVALID` 拒絕清單；發佈流程第一步以 `yte-release check-key` 確認 Secret 的私鑰與這個公鑰相符，不相符（或尚未設定）時停止發佈。`npm run release:dry` 以 `-ldflags -X` 換成臨時產生的測試公鑰。
+- **目前做法**（T49 已全部移除）：內建公鑰先留空字串。留空時小幫手的 `--install` 與自動更新一律以 `SIGNATURE_INVALID` 拒絕清單；發佈流程第一步以 `yte-release check-key` 確認 Secret 的私鑰與這個公鑰相符，不相符（或尚未設定）時停止發佈。`npm run release:dry` 以 `-ldflags -X` 換成臨時產生的測試公鑰。
 - **請專案擁有者**依 README「維護者」章節產生金鑰、提交公鑰並設定 Secret。
 
 ### Q57 Firefox 的 update_url 與 web-ext lint（T43、plan 4.10） — 已回答：同意改用 --self-hosted
@@ -476,3 +476,13 @@
 
 - **目前做法**：下載面板的一行提示（附「開啟設定頁」）可以按 ✕ 關閉；關閉時記下當時「最近一次檢查」的時間，之後再有新的失敗（檢查時間改變）才再顯示。設定頁「更新」區一律顯示連續失敗次數，並在提示被關閉時提供「在下載面板重新顯示提示」。提示只在使用者打開影片／MP3 面板時看到，不另外以卡片出現。
 - **請規格方確認**。另外，介面上的「橋接程式」已依 008「名詞」一節改稱「小幫手」（擴充功能端的字串）。
+
+## 階段 8a（T49–T51，實作方甲）
+
+### Q68 錯誤代碼改名、`--install --manifest` 的本機檔案、不可變更版本的建立順序（T49、T50）
+
+- **錯誤代碼**：`SIGNATURE_INVALID` 改名為 `MANIFEST_INVALID`（清單格式不正確、網址不在允許清單，或清單網址／轉址不是本專案 GitHub）。擴充功能的錯誤代碼清單（`utils/native-protocol.ts`）、訊息對應（`features/downloads/jobs.ts`，仍顯示「下載的更新沒有通過驗證…」）與測試同步修改；舊代碼視為 `UNKNOWN`。安裝說明「這個指令會做什麼？」中的「驗證簽章」改為「核對檢查碼（SHA-256）」。
+- **`--install --manifest <檔案>`**：本機檔案無法檢查來源網址，只做同樣嚴格的格式與網址檢查；這個參數只由引導腳本使用，清單是它剛以 HTTPS 從本專案同一個固定版本下載的。沒有 `--manifest` 時，小幫手自己只從 `releases/latest/download/` 下載。
+- **不可變更版本**：`gh release create` 附帶檔案時會先建立草稿、上傳全部檔案後才發佈，所以不可變更版本開啟後仍能一次建立完整的 Release；GitHub 的設定名稱與位置（Settings → General → Releases）以 GitHub 當時的介面為準，無法在本環境確認。
+- **預先發行版本**：依 plan 4.10，即使有 Mozilla 金鑰也不送簽署，附未簽署的套件。
+- **請規格方確認**；第一次正式發佈時請專案擁有者依 e2e-checklist 10.1.1、10.1.5 確認。

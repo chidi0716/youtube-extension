@@ -7,10 +7,9 @@
 ```
 host/
   cmd/yte-host/            install.go（--install、--uninstall）、update.go（--update）
-  cmd/yte-release/         維護者與發佈流程的工具：keygen、pubkey、check-key、sign、verify、
-                           lock-check、manifest、zip
-  internal/release/        components.json 格式與驗證、Ed25519、內建公鑰（pubkey.go）、
-                           允許的下載網址（hosts.go）、官方檢查碼解析、版本比較、下載工具
+  cmd/yte-release/         維護者與發佈流程的工具：lock-check、manifest、check、zip
+  internal/release/        components.json 格式與驗證、允許的下載網址與清單網址（hosts.go）、
+                           官方檢查碼解析、版本比較、下載工具
   internal/installer/      --install／--uninstall：下載、核對、解壓、替換、註冊瀏覽器
   internal/updater/        自動更新：update-state.json、24 小時限制、鎖檔、--update 流程
   internal/platform/       layout.go（安裝資料夾、bin/、原生訊息設定檔與登錄機碼位置）、
@@ -53,7 +52,8 @@ spikes/stage8/             引導腳本的模擬測試（macOS：假 curl 等；
 }
 ```
 
-- 鍵依字母排序、兩格縮排、結尾換行（Go `json.MarshalIndent`）。`components.json.sig` 是對原始位元組的 Ed25519 簽章（base64 一行）。
+- 鍵依字母排序、兩格縮排、結尾換行（Go `json.MarshalIndent`）。引導腳本以文字比對取出小幫手的 SHA256，所以格式必須固定。
+- **不使用自己的簽章**（008 FR-51，T49 移除原本自己的簽章與內建公鑰）：清單只從本專案 GitHub 以 HTTPS 取得（`release.AllowedManifestURL`：第一個網址與每一次轉址都只能是 `github.com/chidi0716/youtube-extension/releases/` 或 GitHub 的檔案主機），每個檔案核對清單中的 SHA256，repo 開啟「不可變更版本」。
 - 驗證（`release.ParseManifest`）：不認得的欄位、缺少的平台或工具、不是 64 位小寫十六進位的 SHA256、不在允許清單的網址、`/latest/` 網址、不符合預期的執行檔名稱都拒絕。
 - 允許的網址（`release/hosts.go`）：`github.com` 的本專案、`yt-dlp/yt-dlp`、`denoland/deno`、`yt-dlp/FFmpeg-Builds`、`BtbN/FFmpeg-Builds` 的 `/releases/`；`ffmpeg.martin-riedl.de/download/`；GitHub 的轉址目的地 `objects.githubusercontent.com`、`release-assets.githubusercontent.com`。只允許 https，每一次轉址都重新檢查。測試掃描 `host/` 的 Go 原始碼與 `install/bootstrap/`，確認沒有其他網域（YouTube 只出現在交給 yt-dlp 的影片網址）。
 
@@ -74,7 +74,7 @@ Linux（只供開發與測試）：`$XDG_STATE_HOME`（或 `~/.local/state`）`/
 
 ## yte-host --install
 
-1. 以內建公鑰驗證 `components.json.sig`（沒有公鑰時不連網，直接 `SIGNATURE_INVALID`）。
+1. 檢查清單（`--manifest` 的檔案，或以 HTTPS 從本專案 GitHub 的 `releases/latest/download/` 下載）：格式錯誤、網址不在允許清單、清單網址或轉址不是本專案 GitHub 時為 `MANIFEST_INVALID`，不下載任何東西。
 2. 小幫手：安裝資料夾中的檔案 SHA256 已與清單相同就略過；目前執行的小幫手（引導腳本剛核對過的）與清單相同就複製自己，否則從清單網址下載並核對。
 3. yt-dlp：已存在就略過（之後由 `yt-dlp -U` 自己更新）。
 4. deno：已存在且 `install-state.json` 記錄的版本與清單相同就略過。
@@ -121,7 +121,7 @@ Linux（只供開發與測試）：`$XDG_STATE_HOME`（或 `~/.local/state`）`/
 | `checkUpdates` | — | `{"started": true}`；已經在執行時 `{"started": false}` |
 | `uninstall` | — | `{"ok": true}`（2 秒後由分離的程序刪除）；有進行中的下載時錯誤 `JOBS_RUNNING` |
 
-新錯誤代碼：`JOBS_RUNNING`、`SIGNATURE_INVALID`、`CHECKSUM_MISMATCH`（後兩者出現在 `--install` 的輸出與 `update-state.json` 的 `lastError`）。
+新錯誤代碼：`JOBS_RUNNING`、`MANIFEST_INVALID`（T49 前為 `SIGNATURE_INVALID`）、`CHECKSUM_MISMATCH`（後兩者出現在 `--install` 的輸出與 `update-state.json` 的 `lastError`）。
 
 008 FR-22：下載遇到 `YTDLP_OUTDATED` 或 `VERIFICATION_REQUIRED`，且 yt-dlp 在安裝資料夾中時，執行下載的程序執行 `yt-dlp -U`（同一個工作只試一次），期間送出
 
@@ -136,28 +136,28 @@ Linux（只供開發與測試）：`$XDG_STATE_HOME`（或 `~/.local/state`）`/
 `node scripts/release.mjs --tag vX.Y.Z`（GitHub Actions）與 `npm run release:dry`：
 
 1. 測試（`npm test`、`npm run compile`、`go test ./...`；Actions 中在前面的步驟執行）。
-2. 簽章金鑰：正式發佈以 `yte-release check-key -key-env RELEASE_SIGNING_KEY` 確認與 `pubkey.go` 相符；試跑臨時產生一組，結束時刪除私鑰。
-3. `yte-release lock-check`：正式發佈加 `-download`，下載每個第三方檔案，與 lock 的 SHA256 及官方檢查碼比對。
-4. 建置三種小幫手（試跑時以 `YTE_DRY_RUN_PUBKEY` 經 `-ldflags -X` 換成測試公鑰，結束後刪除 `host/dist`）與手動安裝的 zip。
-5. 產生、簽署、驗證 `components.json`。
-6. 引導腳本與移除腳本：代入版本標籤（`@RELEASE_TAG@`）；`.ps1` 轉成純 ASCII。
-7. 擴充功能：Chrome zip；Firefox 先以 `web-ext lint --self-hosted` 檢查，正式發佈以 `scripts/sign-firefox.mjs` 送 Mozilla 簽署（試跑時只打包、不簽署）。
-8. `updates.json`：版本取自建置出的 Firefox manifest，`update_link` 指向這個版本的 `.xpi`，附 `update_hash`（sha256）與 `applications.gecko.strict_min_version`。
-9. `release-notes.md`（範本）與 `SHA256SUMS`。
+2. `yte-release lock-check`：正式發佈加 `-download`，下載每個第三方檔案，與 lock 的 SHA256 及官方檢查碼比對。
+3. 建置三種小幫手與手動安裝的 zip。
+4. 產生 `components.json` 並以 `yte-release check` 再檢查一次。
+5. 引導腳本與移除腳本：代入版本標籤（`@RELEASE_TAG@`）；`.ps1` 轉成純 ASCII。
+6. 擴充功能：Chrome zip；Firefox 先以 `web-ext lint --self-hosted` 檢查。有 Mozilla 金鑰（Actions 把 `AMO_JWT_ISSUER`、`AMO_JWT_SECRET` 傳成 `WEB_EXT_API_KEY`、`WEB_EXT_API_SECRET`）、不是預先發行版本、也不是試跑時，以 `scripts/sign-firefox.mjs` 送 Mozilla 簽署並附 `.xpi`；否則附未簽署的 `youtube-extension-<版本>-firefox-temporary.zip`（008 FR-52）。
+7. `updates.json`：只在有簽署的 `.xpi` 時附上；版本取自建置出的 Firefox manifest，`update_link` 指向這個版本的 `.xpi`，附 `update_hash`（sha256）與 `applications.gecko.strict_min_version`。試跑時寫到 `release/dist/updates.preview.json`（不附加）。
+8. `release-notes.md`（範本中的 `{{firefoxSteps}}`、`{{firefoxStepsZh}}`、`{{firefoxFiles}}` 依是否簽署代入不同的說明）與 `SHA256SUMS`。
 - Actions 以 `gh release create <tag> release/dist/upload/* --notes-file … --verify-tag` 建立 Release；標籤含 `-` 時加 `--prerelease`。
 
 ## 驗證紀錄
 
 - `cd host && go vet ./... && go test ./...`（另以 `GOOS=windows`、`GOOS=darwin` 執行 `go vet`）：全部通過；`go test -race` 對 release、installer、updater、jobs、app 通過。
-  - release：簽章正確／竄改／其他金鑰／格式錯誤／沒有公鑰、清單欄位缺漏與不合法（24 種）、允許與拒絕的網址、官方檢查碼的各種格式、版本比較（`0.10.0 > 0.9.0`）、repo 的 lock 檔、`BuildManifest`、lock 與官方檢查碼及實際檔案不符、轉址到不允許的網域。
-  - installer（本機 TLS 假伺服器）：全新安裝、重複執行全部略過且不再下載、清單版本改變時只重新下載 deno、複製自己、中途失敗（NETWORK）後再執行從失敗處繼續、SHA256 不符時保留舊版本、竄改的小幫手不安裝、簽章錯誤時完全不下載、從 latest 下載清單、系統已有 ffmpeg 時跳過、zip 路徑穿越、Windows 的 `.old` 替換與清理、手動安裝與移除（已下載的影片保留）、設定檔與 `install/manifests/` 範本相同。
+  - release：清單只接受本專案 GitHub 的網址（`AllowedManifestURL`）、清單欄位缺漏與不合法（24 種）、允許與拒絕的網址、官方檢查碼的各種格式、版本比較（`0.10.0 > 0.9.0`）、repo 的 lock 檔、`BuildManifest`、lock 與官方檢查碼及實際檔案不符、轉址到不允許的網域。
+  - installer（本機 TLS 假伺服器）：全新安裝、重複執行全部略過且不再下載、清單版本改變時只重新下載 deno、複製自己、中途失敗（NETWORK）後再執行從失敗處繼續、SHA256 不符時保留舊版本、竄改的小幫手不安裝、格式不正確的清單完全不下載（`MANIFEST_INVALID`）、從 latest 下載清單、清單轉址到不允許的位置時拒絕、系統已有 ffmpeg 時跳過、zip 路徑穿越、Windows 的 `.old` 替換與清理、手動安裝與移除（已下載的影片保留）、設定檔與 `install/manifests/` 範本相同。
   - updater：24 小時判斷、鎖檔、等到下載結束才替換、只更新安裝資料夾中的元件、自我更新、開發版不更新、連續失敗次數、等待逾時。
   - jobs：`outdated-once`、`bot-once` 情境（假 yt-dlp 在 `-U` 前回報過舊或要求驗證）更新後重試成功並送出 `stage`；已是最新、更新失敗、更新後仍失敗、其他錯誤都不重試。
   - e2e（真正的 yte-host）：`--install --offline`、非法參數、Linux 上 `--install` 回報不支援、`--uninstall`；經由原生訊息的 `status` 新欄位、`setAutoUpdate`、`checkUpdates`、`uninstall`（2 秒後安裝資料夾被刪除）。
 - `bash spikes/stage8/test-bootstrap-macos.sh`：以假 curl、uname、sysctl、id、shasum 執行引導腳本：Apple Silicon 與 Intel 選對小幫手、以正確參數執行 `--install`、竄改的小幫手不執行、下載失敗時說明、拒絕 root 與非 macOS、沒有版本標籤時停止、`curl … | sh` 方式也可以、暫存資料夾刪除。
 - `bash spikes/stage3/check-ps1.sh`（官方 PowerShell 7.4.6 for Linux）：三個 `.ps1` 語法正確。
 - `bash spikes/stage8/test-bootstrap-windows.sh`：把發佈版 `install.ps1` 以 Latin-1 解碼後 `Invoke-Expression`（模擬 Windows PowerShell 5.1 的 `irm | iex`），`Invoke-WebRequest` 換成本機檔案：中文訊息正確還原、核對 SHA256 後以正確參數執行小幫手、竄改時停止、下載失敗時說明、沒有版本標籤時停止，且腳本結束後 PowerShell 仍在執行（沒有呼叫 `exit`）。
-- `npm run release:dry`：成功，輸出 15 個檔案；`SHA256SUMS` 正確；測試私鑰已刪除；`web-ext lint --self-hosted` 0 個錯誤。
+- `npm run release:dry`：成功，輸出 13 個檔案（未簽署的 Firefox 套件、沒有 `updates.json`）；`SHA256SUMS` 正確；`web-ext lint --self-hosted` 0 個錯誤。
+- T50：以去掉 `-download` 的副本在本機執行 `node scripts/release.mjs --tag v0.1.0 --skip-tests`（沒有 Mozilla 金鑰）：流程完成，附 `-firefox-temporary.zip`、沒有 `updates.json`，Release 說明為未簽署的版本。
 - 無法在容器中驗證的部分列在 `specs/e2e-checklist.md` 第 10 節。
 
 ## 其他

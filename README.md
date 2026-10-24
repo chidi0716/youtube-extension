@@ -85,11 +85,13 @@ The same command and steps are shown in the extension's Video and MP3 panels and
 ### What does the command do?
 
 1. Downloads the helper for your system from this project's [GitHub releases](https://github.com/chidi0716/youtube-extension/releases) and checks its SHA-256 against the release list (`components.json`).
-2. The helper checks the **signature** of the release list with the project key built into it, then downloads:
+2. The helper checks the release list (it only accepts it from this project's GitHub releases over HTTPS), then downloads:
    - yt-dlp from the [official yt-dlp releases](https://github.com/yt-dlp/yt-dlp/releases), checked against the official checksums;
    - deno from the [official deno releases](https://github.com/denoland/deno/releases), checked against the official checksums;
    - ffmpeg and ffprobe from [Martin Riedl's FFmpeg build server](https://ffmpeg.martin-riedl.de) (macOS) or [yt-dlp/FFmpeg-Builds](https://github.com/yt-dlp/FFmpeg-Builds) (Windows), checked against the checksums recorded when the release was made. If ffmpeg and ffprobe are already on your computer (for example from Homebrew), they are used instead.
 3. Puts everything in `~/Library/Application Support/youtube-extension-host/` (macOS) or `%LOCALAPPDATA%\youtube-extension-host\` (Windows) and registers the helper for Chrome and Firefox (including Zen).
+
+Every downloaded file must match the SHA-256 in the release list, or it is deleted and nothing is replaced. The project's releases are immutable on GitHub: once published, their files cannot be changed.
 
 Every step is printed as it happens. Running the command again only repairs or updates what is needed; if a step fails, it prints the reason and running the same command again continues from there. Programs you installed yourself (for example yt-dlp from Homebrew) are never changed; the helper prefers its own copies, and the settings page shows which copy is used.
 
@@ -195,12 +197,12 @@ npm run build:host      # local helper → host/dist/ (macOS arm64/amd64, Window
 npm run zip
 npm run zip:firefox
 npm run sign:firefox    # Firefox → signed .xpi in .output/firefox-signed (see below)
-npm run release:dry     # all release files with a temporary key → release/dist (see Releases)
+npm run release:dry     # all release files, without secrets → release/dist (see Releases)
 ```
 
 ## Load the extension manually
 
-Ready-made packages are on the [releases page](https://github.com/chidi0716/youtube-extension/releases): `youtube-extension-<version>-chrome.zip` and `youtube-extension-<version>-firefox.xpi`. To use your own build, use `.output/chrome-mv3` or `.output/firefox-mv3` instead.
+Ready-made packages are on the [releases page](https://github.com/chidi0716/youtube-extension/releases): `youtube-extension-<version>-chrome.zip` and `youtube-extension-<version>-firefox.xpi` (a release that is not signed by Mozilla yet has `youtube-extension-<version>-firefox-temporary.zip` instead, which Firefox and Zen can only load as a temporary add-on). To use your own build, use `.output/chrome-mv3` or `.output/firefox-mv3` instead.
 
 - **Chrome:** unzip the Chrome package to a folder you keep, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose that folder (or `.output/chrome-mv3`). Chrome cannot update it by itself; when a new version is out the extension shows a reminder. To update, unzip the new package over the same folder and click the reload button in `chrome://extensions`.
 - **Firefox (development):** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose `.output/firefox-mv3/manifest.json`. Temporary add-ons are removed when Firefox restarts.
@@ -218,28 +220,24 @@ Ready-made packages are on the [releases page](https://github.com/chidi0716/yout
 
 ### Releases (maintainers)
 
-Pushing a `v*` tag runs [`.github/workflows/release.yml`](./.github/workflows/release.yml). It runs the tests, builds the extension and the three helpers, checks every third-party file against [`release/components.lock.json`](./release/components.lock.json) and the official checksums, builds and signs `components.json`, sends the Firefox build to Mozilla for signing (unlisted channel), writes `updates.json` (Firefox auto-update), and creates the GitHub release with the install scripts, helpers, `components.json(.sig)`, the Chrome zip, the `.xpi`, `updates.json` and `SHA256SUMS`. Tags with a `-` (for example `v0.2.0-beta.1`) become prereleases, which are never “latest”, so they trigger no update reminders or automatic updates.
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](./.github/workflows/release.yml). It runs the tests, builds the extension and the three helpers, checks every third-party file against [`release/components.lock.json`](./release/components.lock.json) and the official checksums, writes `components.json` (the address and SHA-256 of every file), and creates the GitHub release with the install scripts, helpers, `components.json`, the Chrome zip, the Firefox package and `SHA256SUMS`. When the Mozilla API key is set, the Firefox build is signed by Mozilla (unlisted channel) and `updates.json` (Firefox auto-update) is added. Tags with a `-` (for example `v0.2.0-beta.1`) become prereleases: they are never “latest”, so they trigger no update reminders or automatic updates, and their Firefox build is not sent for signing (Mozilla signs each version number only once).
+
+This project does not use a signing key of its own. The helper only accepts `components.json` from this project's GitHub releases over HTTPS and checks every file it downloads against the SHA-256 in it; with immutable releases turned on, files of a published release cannot be changed or replaced.
 
 #### First-time setup
 
-1. **Release signing key.** On your own computer (never in the repository):
-   ```bash
-   cd host && go run ./cmd/yte-release keygen -out ~/yte-release-signing.key
-   ```
-   It prints the public key. Paste it into `PublicKeyBase64` in [`host/internal/release/pubkey.go`](./host/internal/release/pubkey.go) and commit. Until this is done, helpers refuse every release list.
-2. **GitHub secrets** (repository **Settings → Secrets and variables → Actions → New repository secret**):
-   - `RELEASE_SIGNING_KEY`: the content of the key file from step 1. Then keep the file offline (for example in a password manager) or delete it.
-   - `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`: the API key from <https://addons.mozilla.org/developers/addon/api/key/> (“JWT issuer” and “JWT secret”).
+1. **Turn on immutable releases:** repository **Settings → General**, in the **Releases** section enable immutable releases. Published releases (and their files) can then no longer be modified.
+2. Try everything locally: `npm run release:dry` (output in `release/dist/`; the Firefox package is not signed).
+3. Create the first release (below). No secrets are needed: without the Mozilla API key, the release gets an unsigned `youtube-extension-<version>-firefox-temporary.zip` (Firefox/Zen can only load it as a temporary add-on), no `updates.json`, and a note in the release text.
 
-   The workflow stops if the signing key does not match the public key in `pubkey.go`.
-3. Try everything locally without secrets: `npm run release:dry` (uses a temporary key that is deleted afterwards; output in `release/dist/`, the Firefox package is not signed).
+**Later (optional): Mozilla signing for Firefox/Zen.** Create an API key at <https://addons.mozilla.org/developers/addon/api/key/> and add it as repository secrets (**Settings → Secrets and variables → Actions → New repository secret**): `AMO_JWT_ISSUER` (“JWT issuer”) and `AMO_JWT_SECRET` (“JWT secret”). From the next release on, the `.xpi` is signed and Firefox/Zen update by themselves.
 
 #### Making a release
 
 1. Update `version` in `package.json` (for example `0.2.0`) and commit.
 2. Optionally update the pinned third-party versions in `release/components.lock.json` (see [`specs/notes/ffmpeg-source.md`](./specs/notes/ffmpeg-source.md)) and check them with `cd host && go run ./cmd/yte-release lock-check -download`.
 3. Tag and push: `git tag v0.2.0 && git push origin v0.2.0`. The tag must match `package.json`.
-4. After the workflow finishes, check the release page. Firefox/Zen users get the new version automatically; Chrome users get a reminder in the extension with a link to the release.
+4. After the workflow finishes, check the release page. Signed Firefox/Zen installs get the new version automatically; Chrome users (and temporary Firefox add-ons) get a reminder in the extension with a link to the release.
 
 ### Building from source (for add-on reviewers)
 

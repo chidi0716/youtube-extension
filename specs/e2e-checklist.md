@@ -246,7 +246,7 @@
 | 9.27 | 自動更新連續失敗 3 次以上（例如離線時開始下載 3 天）：下載面板顯示一行提示（附「開啟設定頁」，可按 ✕ 關閉，同一次失敗不再出現）；設定頁顯示失敗次數，並可「在下載面板重新顯示提示」。 | ✔（假的小幫手） | ☐ | ☐ | ☐ | ☐ |
 | 9.28 | 把 yt-dlp 換成舊版並觸發 `YTDLP_OUTDATED`：面板顯示「正在更新 yt-dlp…」，更新後自動重試並完成。 | ✔（假的小幫手） | ☐ | ☐ | ☐ | ☐ |
 | 9.29 | 「移除下載功能」：顯示設定頁內的確認對話框（「取消」不做任何事）；下載進行中時說明需要先等下載完成；移除後專屬資料夾與瀏覽器註冊被刪除、已下載的影片還在，設定頁與面板改為顯示安裝說明。 | ✔（假的小幫手） | ☐ | ☐ | ☐ | ☐ |
-| 9.30 | 竄改小幫手的更新檔（簽章或檢查碼不符）：更新失敗、保留舊版本；設定頁的最近一次結果為「失敗」，錯誤訊息為「下載的更新沒有通過驗證…」。 | 單元（訊息對應） | ☐ | ☐ | ☐ | ☐ |
+| 9.30 | 竄改小幫手的更新檔（檢查碼不符）：更新失敗、保留舊版本；設定頁的最近一次結果為「失敗」，錯誤訊息為「下載的更新沒有通過驗證…」。 | 單元（訊息對應） | ☐ | ☐ | ☐ | ☐ |
 | 9.31 | 深色外觀、繁體中文介面下，設定頁的「更新」「移除下載功能」區與確認對話框清楚可讀。 | ✔（繁體中文） | ☐ | ☐ | ☐ | ☐ |
 
 ## 10. 安裝與發佈（維護者／實機，008、plan 4.9、4.10）
@@ -257,14 +257,15 @@
 
 | # | 項目 | 自動化 | 結果 |
 |---|---|---|---|
-| 10.1.1 | 依 README「Releases (maintainers)」以 `yte-release keygen` 產生金鑰，把公鑰貼到 `host/internal/release/pubkey.go` 並 commit；私鑰存到 Secret `RELEASE_SIGNING_KEY`；另設定 `AMO_JWT_ISSUER`、`AMO_JWT_SECRET`。私鑰檔案沒有出現在 repo 中。 | — | ☐ |
-| 10.1.2 | 本機 `npm run release:dry` 成功，`release/dist/upload/` 有 15 個檔案，`release/dist/.tools/` 中沒有留下私鑰。 | ✔ | ☐ |
+| 10.1.1 | 依 README「Releases (maintainers)」在 repo 設定開啟不可變更版本（immutable releases）。發佈後試著編輯版本或刪除、替換其中一個檔案，GitHub 拒絕。 | — | ☐ |
+| 10.1.2 | 本機 `npm run release:dry` 成功，`release/dist/upload/` 有 13 個檔案（Firefox 為未簽署的 `-firefox-temporary.zip`，沒有 `updates.json`）。 | ✔ | ☐ |
 | 10.1.3 | 先推送一個預先發行標籤（例如 `v0.2.0-beta.1`，注意 Q58 的版本號問題）：Actions 成功，Release 標示為 Pre-release，`releases/latest` 不指向它。 | — | ☐ |
-| 10.1.4 | 推送正式標籤：Actions 的 `lock-check -download` 對每個第三方檔案印出「matches the official checksum」與「downloaded and verified」；`check-key` 印出 ok。 | — | ☐ |
-| 10.1.5 | Firefox 版送 Mozilla 簽署成功（manifest 有 `update_url`，不公開頻道應接受，Q57），Release 附有 `.xpi`。 | — | ☐ |
-| 10.1.6 | Release 有：`install.sh`、`install.ps1`、`uninstall.sh`、`uninstall.ps1`、三種 `yte-host-*`、兩個手動安裝 zip、`components.json(.sig)`、Chrome zip、`.xpi`、`updates.json`、`SHA256SUMS`；說明文字含各瀏覽器的更新步驟。下載後 `shasum -a 256 -c SHA256SUMS` 全部 OK。 | — | ☐ |
+| 10.1.4 | 推送正式標籤：Actions 的 `lock-check -download` 對每個第三方檔案印出「matches the official checksum」與「downloaded and verified」；`yte-release check` 印出 components.json 正確。 | — | ☐ |
+| 10.1.5 | **尚未設定 Mozilla 金鑰**時推送正式標籤：Release 照常建立，附上 `youtube-extension-<版本>-firefox-temporary.zip`、沒有 `updates.json`，說明中註明只能以臨時附加元件載入；該 zip 解壓後可以在 `about:debugging` 載入（008 FR-52）。 | ✔（本機模擬） | ☐ |
+| 10.1.5a | 設定 `AMO_JWT_ISSUER`、`AMO_JWT_SECRET` 後的下一個正式版本：Firefox 版送 Mozilla 簽署成功（manifest 有 `update_url`，不公開頻道應接受，Q57），Release 附有 `.xpi` 與 `updates.json`。 | — | ☐ |
+| 10.1.6 | Release 有：`install.sh`、`install.ps1`、`uninstall.sh`、`uninstall.ps1`、三種 `yte-host-*`、兩個手動安裝 zip、`components.json`、Chrome zip、`.xpi` 與 `updates.json`（或未簽署時的 `-firefox-temporary.zip`）、`SHA256SUMS`；說明文字含各瀏覽器的更新步驟。下載後 `shasum -a 256 -c SHA256SUMS` 全部 OK。 | — | ☐ |
 | 10.1.7 | `https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh` 下載到的腳本中 `TAG=` 是這個版本；`install.ps1` 是純 ASCII（沒有 BOM）。 | ✔（release:dry） | ☐ |
-| 10.1.8 | 簽章私鑰與 `pubkey.go` 不符時（例如暫時改錯 Secret 再重跑），流程在 `check-key` 停止，不建立 Release。 | — | ☐ |
+| 10.1.8 | 預先發行標籤（例如 `v0.2.0-beta.1`）即使已設定 Mozilla 金鑰，Firefox 版也不送簽署（附 `-firefox-temporary.zip`）。 | — | ☐ |
 
 ### 10.2 一行指令安裝（實機）
 
@@ -280,7 +281,7 @@
 | 10.2.8 | 下載途中中斷網路：印出網路錯誤與「再執行一次」的說明；恢復後再執行，從失敗處繼續完成。 | ✔（假伺服器） | ☐ | ☐ |
 | 10.2.9 | 用 `sudo` 執行 macOS 指令：被拒絕並說明原因。 | ✔ | ☐ | — |
 | 10.2.10 | 安裝後使用者資料夾以外沒有新增檔案；PATH 沒有改變（重新開一個終端機，`which yt-dlp` 結果與安裝前相同）。 | — | ☐ | ☐ |
-| 10.2.11 | 竄改測試：把 `components.json` 改一個字元後以 `yte-host --install --manifest … --signature …` 執行，顯示簽章驗證失敗、不下載任何東西；把下載的小幫手改一個位元組後執行引導腳本的核對，顯示 SHA256 不符並停止。 | ✔ | ☐ | ☐ |
+| 10.2.11 | 竄改測試：把 `components.json` 中一個檔案的網址改成其他網站，或刪掉一個欄位，再以 `yte-host --install --manifest …` 執行，顯示發佈清單無效、不下載任何東西；把清單中一個 SHA256 改掉，顯示檔案與清單不符、保留舊版本；把下載的小幫手改一個位元組後執行引導腳本的核對，顯示 SHA256 不符並停止。 | ✔ | ☐ | ☐ |
 | 10.2.12 | Zen：一行指令安裝後（不另外設定）Zen 找得到小幫手（Q41）。 | — | ☐ | ☐ |
 | 10.2.13 | README 的「手動安裝」：下載 `youtube-extension-host-macos.zip`／`-windows.zip`，以自己安裝的 yt-dlp、ffmpeg、deno 執行 `install.sh`／`install.ps1`，可以下載。 | ✔（Linux e2e） | ☐ | ☐ |
 
