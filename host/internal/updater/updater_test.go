@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"crypto/ed25519"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -122,8 +121,6 @@ type fixture struct {
 	mu     sync.Mutex
 	files  map[string][]byte
 	hits   map[string]int
-	priv   ed25519.PrivateKey
-	pub    ed25519.PublicKey
 	layout platform.Layout
 }
 
@@ -131,7 +128,6 @@ const plat = release.DarwinARM64
 
 func newFixture(t *testing.T) *fixture {
 	f := &fixture{t: t, files: map[string][]byte{}, hits: map[string]int{}}
-	f.pub, f.priv, _ = ed25519.GenerateKey(nil)
 	f.srv = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		defer f.mu.Unlock()
@@ -207,18 +203,18 @@ func (f *fixture) publish(m *release.Manifest) {
 		f.t.Fatal(err)
 	}
 	f.set("/latest/components.json", b)
-	f.set("/latest/components.json.sig", release.Sign(f.priv, b))
 }
 
 func (f *fixture) updater(active func() int, ytdlp func(context.Context, string) (bool, error)) *Updater {
 	su, _ := url.Parse(f.srv.URL)
 	return &Updater{
 		Layout: f.layout, Platform: plat, Version: "0.1.0", SelfPath: f.layout.HelperPath,
-		PublicKey: f.pub, ManifestBase: f.srv.URL + "/latest/",
-		Fetcher:     &release.Fetcher{Client: f.srv.Client(), Allow: func(x *url.URL) bool { return x.Host == su.Host }},
-		ActiveJobs:  active,
-		UpdateYtDlp: ytdlp,
-		PollEvery:   5 * time.Millisecond,
+		ManifestBase:  f.srv.URL + "/latest/",
+		ManifestAllow: func(x *url.URL) bool { return x.Host == su.Host && strings.HasPrefix(x.Path, "/latest/") },
+		Fetcher:       &release.Fetcher{Client: f.srv.Client(), Allow: func(x *url.URL) bool { return x.Host == su.Host }},
+		ActiveJobs:    active,
+		UpdateYtDlp:   ytdlp,
+		PollEvery:     5 * time.Millisecond,
 	}
 }
 
@@ -289,19 +285,19 @@ func TestRunUpdatesEverythingAfterDownloadsFinish(t *testing.T) {
 func TestRunFailuresAreCountedAndKeepOldVersions(t *testing.T) {
 	f := newFixture(t)
 	noJobs := func() int { return 0 }
-	// 簽章錯誤：什麼都不下載、不替換。
-	f.set("/latest/components.json.sig", release.Sign(ed25519.NewKeyFromSeed(make([]byte, 32)), []byte("x")))
+	// 清單格式不正確：什麼都不下載、不替換。
+	f.set("/latest/components.json", []byte(`{"schema": 1, "version": "0.2.0", "unexpected": true}`))
 	for i := 1; i <= 3; i++ {
 		result, err := f.updater(noJobs, nil).Run(context.Background())
-		if result != ResultFailed || errs.From(err).Code != errs.SignatureInvalid {
+		if result != ResultFailed || errs.From(err).Code != errs.ManifestInvalid {
 			t.Fatalf("run %d: %q %v", i, result, err)
 		}
-		if s := Load(f.layout.InstallDir); s.ConsecutiveFailures != i || s.LastError != "SIGNATURE_INVALID" {
+		if s := Load(f.layout.InstallDir); s.ConsecutiveFailures != i || s.LastError != "MANIFEST_INVALID" {
 			t.Fatalf("run %d state: %+v", i, s)
 		}
 	}
 	if f.hit("/deno.zip") != 0 || f.hit("/helper") != 0 {
-		t.Error("downloaded with an invalid signature")
+		t.Error("downloaded with an invalid manifest")
 	}
 	if ViewOf(f.layout.InstallDir).ConsecutiveFailures != 3 {
 		t.Error("view")

@@ -16,7 +16,7 @@ import (
 
 // 下載的上限。
 const (
-	// MaxSmallFile 是清單、簽章與檢查碼檔案的大小上限。
+	// MaxSmallFile 是清單與檢查碼檔案的大小上限。
 	MaxSmallFile = 1 << 20
 	// MaxDownload 是單一工具檔案的大小上限（Windows 的 ffmpeg 壓縮檔約 190 MB）。
 	MaxDownload = 600 << 20
@@ -46,6 +46,13 @@ func NewFetcher(version string) *Fetcher {
 		ForceAttemptHTTP2:     true,
 	}
 	return &Fetcher{Client: &http.Client{Transport: tr}, Allow: AllowedURL, UserAgent: "yte-host/" + version}
+}
+
+// WithAllow 回傳只允許 allow 的網址的 Fetcher（共用同一個 HTTP client）。
+func (f *Fetcher) WithAllow(allow URLCheck) *Fetcher {
+	c := *f
+	c.Allow = allow
+	return &c
 }
 
 func (f *Fetcher) client() *http.Client {
@@ -97,7 +104,7 @@ func (e *HTTPError) Error() string { return fmt.Sprintf("%s: HTTP %d", e.URL, e.
 // ErrTooLarge 表示檔案超過大小上限。
 var ErrTooLarge = errors.New("the file is larger than expected")
 
-// Get 下載小檔案（清單、簽章、檢查碼），最多 MaxSmallFile 位元組。
+// Get 下載小檔案（清單、檢查碼），最多 MaxSmallFile 位元組。
 func (f *Fetcher) Get(ctx context.Context, rawURL string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()

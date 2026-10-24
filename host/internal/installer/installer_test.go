@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"crypto/ed25519"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -107,12 +106,10 @@ func (fs *fakeServer) fetcher() *release.Fetcher {
 	return &release.Fetcher{Client: fs.Client(), Allow: func(x *url.URL) bool { return x.Scheme == "https" && x.Host == u.Host }}
 }
 
-// env 是一次測試的環境：假伺服器、測試金鑰、假的家目錄。
+// env 是一次測試的環境：假伺服器、假的家目錄。
 type env struct {
 	t      *testing.T
 	srv    *fakeServer
-	pub    ed25519.PublicKey
-	priv   ed25519.PrivateKey
 	home   string
 	layout platform.Layout
 	out    *bytes.Buffer
@@ -123,12 +120,8 @@ type env struct {
 const testPlatform = release.DarwinARM64
 
 func newEnv(t *testing.T) *env {
-	pub, priv, err := ed25519.GenerateKey(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
 	home := t.TempDir()
-	e := &env{t: t, srv: newFakeServer(t), pub: pub, priv: priv, home: home,
+	e := &env{t: t, srv: newFakeServer(t), home: home,
 		layout: platform.LayoutFor("darwin", home, nil), out: &bytes.Buffer{}, helper: []byte("helper v0.2.0")}
 	e.srv.set("/helper", e.helper)
 	e.srv.set("/yt-dlp_macos", []byte("#!yt-dlp"))
@@ -166,25 +159,24 @@ func (e *env) manifest(denoVersion, ffVersion string) *release.Manifest {
 	return m
 }
 
-func (e *env) signed(m *release.Manifest) ([]byte, []byte) {
+func (e *env) marshal(m *release.Manifest) []byte {
 	b, err := m.Marshal()
 	if err != nil {
 		e.t.Fatal(err)
 	}
-	return b, release.Sign(e.priv, b)
+	return b
 }
 
 func (e *env) installer() *Installer {
 	return &Installer{
 		Layout: e.layout, Platform: testPlatform, Version: "0.2.0",
-		PublicKey: e.pub, Fetcher: e.srv.fetcher(), Out: e.out,
+		Fetcher: e.srv.fetcher(), ManifestAllow: e.srv.fetcher().Allow, Out: e.out,
 		FindSystem: func(string) string { return "" },
 	}
 }
 
 func (e *env) install(in *Installer, m *release.Manifest) error {
-	b, sig := e.signed(m)
-	return in.Install(context.Background(), b, sig)
+	return in.Install(context.Background(), e.marshal(m))
 }
 
 func readFile(t *testing.T, p string) string {
@@ -355,25 +347,26 @@ func TestInstallChecksumMismatch(t *testing.T) {
 	}
 }
 
-func TestInstallRejectsBadSignature(t *testing.T) {
+// TestInstallRejectsInvalidManifest：格式不正確、網址不在允許範圍的清單一律拒絕，什麼都不下載（008 SR-2）。
+func TestInstallRejectsInvalidManifest(t *testing.T) {
 	e := newEnv(t)
-	b, sig := e.signed(e.m)
-	b = bytes.Replace(b, []byte(`"0.2.0"`), []byte(`"0.2.1"`), 1)
-	if err := e.installer().Install(context.Background(), b, sig); code(err) != errs.SignatureInvalid {
-		t.Fatalf("got %v, want SIGNATURE_INVALID", err)
+	good := e.marshal(e.m)
+	bad := [][]byte{
+		bytes.Replace(good, []byte(`"schema": 1,`), []byte(`"schema": 1, "extra": true,`), 1),
+		bytes.Replace(good, []byte(e.sum("/helper")), []byte("abc"), 1),
+		good[:len(good)/2],
+		[]byte("not json"),
 	}
-	// 其他金鑰簽的清單。
-	_, other, _ := ed25519.GenerateKey(nil)
-	b, _ = e.signed(e.m)
-	if err := e.installer().Install(context.Background(), b, release.Sign(other, b)); code(err) != errs.SignatureInvalid {
-		t.Fatalf("other key: got %v", err)
+	for i, b := range bad {
+		if err := e.installer().Install(context.Background(), b); code(err) != errs.ManifestInvalid {
+			t.Fatalf("case %d: got %v, want MANIFEST_INVALID", i, err)
+		}
 	}
-	// 小幫手沒有內建公鑰。
+	// 網址指向允許範圍以外（正式環境的檢查）的清單。
 	in := e.installer()
-	in.PublicKey = nil
-	b, sig = e.signed(e.m)
-	if err := in.Install(context.Background(), b, sig); code(err) != errs.SignatureInvalid {
-		t.Fatalf("no key: got %v", err)
+	in.Fetcher = in.Fetcher.WithAllow(release.AllowedURL)
+	if err := in.Install(context.Background(), good); code(err) != errs.ManifestInvalid {
+		t.Fatalf("manifest with local URLs under the production check: %v", err)
 	}
 	if e.srv.totalHits() != 0 {
 		t.Errorf("downloaded %d files with an invalid manifest", e.srv.totalHits())
@@ -381,21 +374,41 @@ func TestInstallRejectsBadSignature(t *testing.T) {
 	if _, err := os.Stat(e.layout.HelperPath); err == nil {
 		t.Error("something was installed")
 	}
+	var buf bytes.Buffer
+	PrintFailure(&buf, errs.New(errs.ManifestInvalid, "x"))
+	if !strings.Contains(buf.String(), "GitHub") {
+		t.Errorf("failure message:\n%s", buf.String())
+	}
 }
 
+// TestInstallFetchesLatestManifest：沒有 --manifest 時從本專案 GitHub 下載清單；清單網址或
+// 轉址目的地不在允許範圍時拒絕（MANIFEST_INVALID）。
 func TestInstallFetchesLatestManifest(t *testing.T) {
 	e := newEnv(t)
-	b, sig := e.signed(e.m)
-	e.srv.set("/latest/components.json", b)
-	e.srv.set("/latest/components.json.sig", sig)
+	e.srv.set("/latest/components.json", e.marshal(e.m))
 	in := e.installer()
 	in.ManifestBase = e.url("/latest/")
-	if err := in.Install(context.Background(), nil, nil); err != nil {
+	if err := in.Install(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
-	e.srv.set("/latest/components.json.sig", release.Sign(ed25519.NewKeyFromSeed(make([]byte, 32)), b))
-	if err := in.Install(context.Background(), nil, nil); code(err) != errs.SignatureInvalid {
-		t.Fatalf("bad downloaded signature: %v", err)
+	// 只允許 /latest/ 下的清單（模擬「只接受本專案的 Release」）；轉址到其他路徑時拒絕。
+	in.ManifestAllow = func(u *url.URL) bool { return strings.HasPrefix(u.Path, "/latest/") }
+	other := newFakeServer(t)
+	other.set("/components.json", e.marshal(e.m))
+	e.srv.mu.Lock()
+	delete(e.srv.files, "/latest/components.json")
+	e.srv.mu.Unlock()
+	redirect := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, other.URL+"/components.json", http.StatusFound)
+	}))
+	defer redirect.Close()
+	in.ManifestBase = redirect.URL + "/latest/"
+	in.Fetcher = &release.Fetcher{Client: redirect.Client(), Allow: func(*url.URL) bool { return true }}
+	if err := in.Install(context.Background(), nil); code(err) != errs.ManifestInvalid {
+		t.Fatalf("redirect to another location: %v", err)
+	}
+	if other.hit("/components.json") != 0 {
+		t.Error("followed a redirect to a location that is not allowed")
 	}
 }
 

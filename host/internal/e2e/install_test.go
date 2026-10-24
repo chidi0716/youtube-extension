@@ -58,7 +58,7 @@ func TestInstallOfflineEndToEnd(t *testing.T) {
 	}
 
 	// 不接受其他參數；Linux 不支援一行指令的安裝。
-	for _, args := range [][]string{{"--install", "--evil"}, {"--install", "--manifest", "x"}, {"--install", "--offline", "--manifest", "a", "--signature", "b"}, {"--uninstall", "--delay", "999"}} {
+	for _, args := range [][]string{{"--install", "--evil"}, {"--install", "--manifest"}, {"--install", "--signature", "x"}, {"--install", "--manifest", "a", "--manifest", "b"}, {"--install", "--offline", "--manifest", "a"}, {"--uninstall", "--delay", "999"}} {
 		if _, code := run(args...); code != 2 {
 			t.Errorf("%v: exit %d, want 2", args, code)
 		}

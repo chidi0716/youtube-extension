@@ -2,7 +2,6 @@ package release
 
 import (
 	"context"
-	"crypto/ed25519"
 	"encoding/json"
 	"errors"
 	"io/fs"
@@ -59,79 +58,31 @@ func marshal(t *testing.T, m *Manifest) []byte {
 	return b
 }
 
-func TestSignAndVerify(t *testing.T) {
-	pubB64, privB64, err := GenerateKey()
-	if err != nil {
-		t.Fatal(err)
+// TestAllowedManifestURL 確認清單只能從本專案 GitHub 的 Release（含 GitHub 的轉址目的地）取得（008 SR-2）。
+func TestAllowedManifestURL(t *testing.T) {
+	ok := []string{
+		LatestBase + ManifestName,
+		"https://github.com/chidi0716/youtube-extension/releases/download/v0.2.0/components.json",
+		"https://release-assets.githubusercontent.com/github-production-release-asset/1/2?sp=r",
+		"https://objects.githubusercontent.com/github-production-release-asset-2e65be/1/2",
 	}
-	pub, err := ParsePublicKey(pubB64)
-	if err != nil {
-		t.Fatal(err)
+	bad := []string{
+		"https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.21/components.json",
+		"https://github.com/chidi0716/youtube-extension/raw/main/components.json",
+		"https://github.com/chidi0716/youtube-extension-fork/releases/download/v1/components.json",
+		"https://ffmpeg.martin-riedl.de/download/components.json",
+		"http://github.com/chidi0716/youtube-extension/releases/latest/download/components.json",
+		"https://evil.example/chidi0716/youtube-extension/releases/latest/download/components.json",
 	}
-	priv, err := ParsePrivateKey(privB64)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if PublicKeyOf(priv) != pubB64 {
-		t.Fatal("PublicKeyOf does not match the generated public key")
-	}
-	data := marshal(t, sampleManifest())
-	sig := Sign(priv, data)
-
-	m, err := VerifyAndParse(pub, data, sig, AllowedURL)
-	if err != nil {
-		t.Fatalf("valid signature rejected: %v", err)
-	}
-	if m.Version != "0.2.0" || m.Tools[ToolFFmpeg].VersionFor(WindowsAMD64) != "N-1" || m.Tools[ToolFFmpeg].VersionFor(DarwinARM64) != "9.0.2" {
-		t.Fatalf("unexpected manifest: %+v", m)
-	}
-
-	// 改一個位元組：簽章失效。
-	tampered := append([]byte(nil), data...)
-	tampered[len(tampered)/2] ^= 1
-	if _, err := VerifyAndParse(pub, tampered, sig, AllowedURL); !errors.Is(err, ErrBadSignature) {
-		t.Fatalf("tampered manifest: got %v", err)
-	}
-	// 只多一個空白也不行（簽章針對原始位元組）。
-	if err := Verify(pub, append(append([]byte(nil), data...), ' '), sig); !errors.Is(err, ErrBadSignature) {
-		t.Fatalf("manifest with extra byte: got %v", err)
-	}
-	// 另一把金鑰。
-	otherPub, _, _ := GenerateKey()
-	op, _ := ParsePublicKey(otherPub)
-	if err := Verify(op, data, sig); !errors.Is(err, ErrBadSignature) {
-		t.Fatalf("other key: got %v", err)
-	}
-	// 簽章檔格式錯誤。
-	for _, bad := range []string{"", "not base64!", "AAAA"} {
-		if err := Verify(pub, data, []byte(bad)); !errors.Is(err, ErrBadSignature) {
-			t.Fatalf("sig %q: got %v", bad, err)
+	for _, s := range ok {
+		if u, _ := url.Parse(s); !AllowedManifestURL(u) {
+			t.Errorf("should be allowed: %s", s)
 		}
 	}
-	// 沒有公鑰。
-	if err := Verify(nil, data, sig); !errors.Is(err, ErrNoPublicKey) {
-		t.Fatalf("no key: got %v", err)
-	}
-	if _, err := ParsePublicKey(""); !errors.Is(err, ErrNoPublicKey) {
-		t.Fatalf("empty public key: got %v", err)
-	}
-	for _, bad := range []string{"xx", "AAAA", privB64 + "AAAA"} {
-		if _, err := ParsePrivateKey(bad); err == nil {
-			t.Fatalf("private key %q accepted", bad)
+	for _, s := range bad {
+		if u, _ := url.Parse(s); AllowedManifestURL(u) {
+			t.Errorf("should be denied: %s", s)
 		}
-	}
-}
-
-func TestBuiltinPublicKeyIsValidOrEmpty(t *testing.T) {
-	if strings.TrimSpace(PublicKeyBase64) == "" {
-		if _, err := BuiltinPublicKey(); !errors.Is(err, ErrNoPublicKey) {
-			t.Fatalf("empty key: %v", err)
-		}
-		return
-	}
-	k, err := BuiltinPublicKey()
-	if err != nil || len(k) != ed25519.PublicKeySize {
-		t.Fatalf("built-in public key is invalid: %v", err)
 	}
 }
 

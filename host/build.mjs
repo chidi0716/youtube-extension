@@ -28,17 +28,7 @@ mkdirSync(distDir, { recursive: true });
 
 const binaryName = ({ goos, goarch }) => `yte-host-${goos}-${goarch}${goos === 'windows' ? '.exe' : ''}`;
 
-// npm run release:dry 以臨時產生的測試公鑰建置（plan 4.10），讓產出的小幫手能驗證同一次產生的
-// components.json.sig。正式版本不設定這個環境變數，一律使用 host/internal/release/pubkey.go 的公鑰。
-const dryRunPubkey = process.env.YTE_DRY_RUN_PUBKEY ?? '';
-if (dryRunPubkey && !/^[A-Za-z0-9+/]{43}=$/.test(dryRunPubkey)) {
-  throw new Error('YTE_DRY_RUN_PUBKEY must be a base64-encoded Ed25519 public key');
-}
-let ldflags = `-s -w -X main.version=${version}`;
-if (dryRunPubkey) {
-  ldflags += ` -X github.com/chidi0716/youtube-extension/host/internal/release.PublicKeyBase64=${dryRunPubkey}`;
-  console.log('(dry run: using a temporary public key)');
-}
+const ldflags = `-s -w -X main.version=${version}`;
 
 for (const target of targets) {
   const out = join(distDir, binaryName(target));

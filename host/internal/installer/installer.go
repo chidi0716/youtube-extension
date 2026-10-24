@@ -1,11 +1,10 @@
 // Package installer 實作 yte-host --install、--uninstall（plan 4.9、008 FR-11 至 FR-15、FR-30）：
-// 驗證發佈清單的簽章、下載 yt-dlp、deno、ffmpeg 並核對 SHA256、解壓、放進安裝資料夾，
+// 從本專案 GitHub 取得並檢查發佈清單、下載 yt-dlp、deno、ffmpeg 並核對 SHA256、解壓、放進安裝資料夾，
 // 以及為 Chrome 與 Firefox 註冊小幫手。
 package installer
 
 import (
 	"context"
-	"crypto/ed25519"
 	"errors"
 	"fmt"
 	"io"
@@ -29,9 +28,11 @@ type Installer struct {
 	// Version 是這個小幫手的版本。
 	Version string
 	// SelfPath 是目前執行中的小幫手（os.Executable）。
-	SelfPath  string
-	PublicKey ed25519.PublicKey
-	Fetcher   *release.Fetcher
+	SelfPath string
+	Fetcher  *release.Fetcher
+	// ManifestAllow 檢查下載清單的網址（含每一次轉址）；預設 release.AllowedManifestURL，
+	// 只允許本專案 GitHub 的 Release（008 SR-2）。測試可以替換成本機伺服器。
+	ManifestAllow release.URLCheck
 	// ManifestBase 是沒有指定 --manifest 時下載清單的位置（預設 release.LatestBase）。
 	ManifestBase string
 	// FindSystem 尋找安裝資料夾以外的工具（例如 Homebrew 的 ffmpeg）；找不到時回傳空字串。
@@ -65,47 +66,48 @@ func PlatformKey(goos, goarch string) string {
 	return ""
 }
 
-// LoadManifest 驗證簽章後解析清單。manifest 為 nil 時從 ManifestBase 下載清單與簽章。
-func (in *Installer) LoadManifest(ctx context.Context, manifest, sig []byte) (*release.Manifest, error) {
-	// 沒有內建公鑰時不必連網：任何清單都無法通過驗證。
-	if len(in.PublicKey) == 0 {
-		return nil, errs.New(errs.SignatureInvalid, "%v", release.ErrNoPublicKey)
-	}
+// LoadManifest 解析並嚴格檢查清單（格式、允許的網址、SHA256 格式）。manifest 為 nil 時
+// 以 HTTPS 從本專案 GitHub 的 ManifestBase 下載（只接受本專案的 Release 與 GitHub 的轉址）。
+// manifest 不為 nil 時是 --install --manifest 的檔案（引導腳本剛從同一個 Release 下載）。
+func (in *Installer) LoadManifest(ctx context.Context, manifest []byte) (*release.Manifest, error) {
 	if manifest == nil {
 		base := in.ManifestBase
 		if base == "" {
 			base = release.LatestBase
 		}
+		allow := in.ManifestAllow
+		if allow == nil {
+			allow = release.AllowedManifestURL
+		}
 		in.source(base + release.ManifestName)
 		var err error
-		if manifest, err = in.Fetcher.Get(ctx, base+release.ManifestName); err != nil {
-			return nil, classify(err)
-		}
-		if sig, err = in.Fetcher.Get(ctx, base+release.SignatureName); err != nil {
+		if manifest, err = in.Fetcher.WithAllow(allow).Get(ctx, base+release.ManifestName); err != nil {
+			if errors.Is(err, release.ErrNotAllowed) {
+				return nil, errs.New(errs.ManifestInvalid, "%v", err)
+			}
 			return nil, classify(err)
 		}
 	}
-	m, err := release.VerifyAndParse(in.PublicKey, manifest, sig, in.Fetcher.Allow)
+	m, err := release.ParseManifest(manifest, in.Fetcher.Allow)
 	if err != nil {
-		// 簽章錯誤與（簽章正確但）格式不符都一律拒絕（008 SR-2）。
-		return nil, errs.New(errs.SignatureInvalid, "%v", err)
+		return nil, errs.New(errs.ManifestInvalid, "%v", err)
 	}
 	return m, nil
 }
 
-// Install 依 008 FR-11 安裝全部元件。manifest、sig 為 nil 時從 GitHub 下載最新的清單。
+// Install 依 008 FR-11 安裝全部元件。manifest 為 nil 時從本專案 GitHub 下載最新的清單。
 // 可以重複執行：已是最新的部分略過，其餘修復或更新（FR-13）。
-func (in *Installer) Install(ctx context.Context, manifest, sig []byte) error {
+func (in *Installer) Install(ctx context.Context, manifest []byte) error {
 	if in.Platform == "" {
 		return errs.New(errs.UnsupportedPlatform, "this computer is not supported")
 	}
 	fmt.Fprintf(in.Out, "安裝下載功能（%s）/ Installing the download helper (%s)\n", in.Platform, in.Platform)
 	fmt.Fprintf(in.Out, "安裝位置 / Install folder: %s\n", in.Layout.InstallDir)
-	m, err := in.LoadManifest(ctx, manifest, sig)
+	m, err := in.LoadManifest(ctx, manifest)
 	if err != nil {
 		return err
 	}
-	in.say("發佈清單的簽章正確（版本 "+m.Version+"）", "Release list signature verified (version "+m.Version+")")
+	in.say("發佈清單格式正確（版本 "+m.Version+"），每個檔案都會核對 SHA256", "Release list checked (version "+m.Version+"); every file is verified against its SHA256")
 	if err := os.MkdirAll(in.Layout.BinDir, 0o755); err != nil {
 		return classify(err)
 	}
@@ -342,9 +344,9 @@ func classify(err error) error {
 // Explain 回傳給使用者看的中英文說明與解決方式（008 FR-14）。
 func Explain(err error) (zh, en string) {
 	switch errs.From(err).Code {
-	case errs.SignatureInvalid:
-		return "發佈清單的簽章驗證失敗，為了安全已停止，沒有安裝任何東西。請稍後再試；若持續發生請回報問題。",
-			"The release list failed signature verification, so nothing was installed. Try again later; report an issue if it keeps happening."
+	case errs.ManifestInvalid:
+		return "發佈清單格式不正確或不是來自本專案的 GitHub，為了安全已停止，沒有安裝任何東西。請稍後再試；若持續發生請回報問題。",
+			"The release list is not valid or did not come from this project's GitHub, so nothing was installed. Try again later; report an issue if it keeps happening."
 	case errs.ChecksumMismatch:
 		return "下載的檔案與發佈清單不符（可能下載不完整或被竄改），已刪除該檔案。",
 			"A downloaded file did not match the release list (incomplete or tampered download) and was deleted."

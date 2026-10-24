@@ -5,7 +5,7 @@
 //     「4 位元組長度＋JSON」的訊息，只接受 commands 套件定義的指令；
 //   - --run-job <工作 ID>：由橋接程式自己以脫離瀏覽器的方式啟動，執行一個下載工作
 //     （參數從狀態資料夾讀取並再驗證一次），讓瀏覽器關閉後下載仍能完成（plan 4.6）；
-//   - --install [--manifest <components.json> --signature <components.json.sig>] | --install --offline：
+//   - --install [--manifest <components.json>] | --install --offline：
 //     一行指令的安裝（plan 4.9）或手動安裝（只註冊小幫手）；
 //   - --uninstall [--delay <秒>]：移除下載功能（008 FR-30）；
 //   - --update：自動更新（plan 4.9，由 download 或 checkUpdates 以脫離的方式啟動）；

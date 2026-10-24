@@ -1142,7 +1142,7 @@
     "description": "Expandable section with the install steps and sources (008 FR-1, FR-11)."
   },
   "installDetailHelper": {
-    "message": "從本專案 GitHub 的正式版本下載適合你電腦的小幫手，並驗證簽章：",
+    "message": "從本專案 GitHub 的正式版本下載適合你電腦的小幫手，並核對檢查碼（SHA-256）：",
     "description": "Install step description (008 FR-11)."
   },
   "installDetailYtDlp": {
@@ -1179,7 +1179,7 @@
   },
   "errVerifyFailed": {
     "message": "下載的更新沒有通過驗證，所以沒有使用，已保留目前的版本。",
-    "description": "Errors SIGNATURE_INVALID and CHECKSUM_MISMATCH (plan 4.9, 008 SR-2)."
+    "description": "Errors MANIFEST_INVALID and CHECKSUM_MISMATCH (plan 4.9, 008 SR-2)."
   },
   "jobUpdatingYtDlp": {
     "message": "正在更新 yt-dlp…",

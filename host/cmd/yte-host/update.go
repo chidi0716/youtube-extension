@@ -32,14 +32,12 @@ func updateYtDlp(ctx context.Context, path string) (bool, error) {
 func runUpdate() int {
 	log := logx.New(platform.LogDir(), "update")
 	l := platform.CurrentLayout()
-	pub, _ := release.BuiltinPublicKey()
 	st := store()
 	u := &updater.Updater{
 		Layout:      l,
 		Platform:    installer.PlatformKey(runtime.GOOS, runtime.GOARCH),
 		Version:     version,
 		SelfPath:    selfPath(),
-		PublicKey:   pub,
 		Fetcher:     release.NewFetcher(version),
 		ActiveJobs:  func() int { return st.ActiveCount(time.Now()) },
 		UpdateYtDlp: updateYtDlp,

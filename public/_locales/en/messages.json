@@ -1142,7 +1142,7 @@
     "description": "Expandable section with the install steps and sources (008 FR-1, FR-11)."
   },
   "installDetailHelper": {
-    "message": "Downloads this project's helper for your system from this project's GitHub releases and verifies its signature:",
+    "message": "Downloads this project's helper for your system from this project's GitHub releases and checks its checksum (SHA-256):",
     "description": "Install step description (008 FR-11)."
   },
   "installDetailYtDlp": {
@@ -1179,7 +1179,7 @@
   },
   "errVerifyFailed": {
     "message": "A downloaded update didn't pass verification, so it wasn't used. The current version is kept.",
-    "description": "Errors SIGNATURE_INVALID and CHECKSUM_MISMATCH (plan 4.9, 008 SR-2)."
+    "description": "Errors MANIFEST_INVALID and CHECKSUM_MISMATCH (plan 4.9, 008 SR-2)."
   },
   "jobUpdatingYtDlp": {
     "message": "Updating yt-dlp…",

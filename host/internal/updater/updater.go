@@ -2,7 +2,6 @@ package updater
 
 import (
 	"context"
-	"crypto/ed25519"
 	"errors"
 	"io"
 	"os"
@@ -32,12 +31,13 @@ func (nopLogger) Printf(string, ...any) {}
 
 // Updater 是一次 yte-host --update。
 type Updater struct {
-	Layout    platform.Layout
-	Platform  string // darwin-arm64、darwin-amd64、windows-amd64
-	Version   string // 目前小幫手的版本
-	SelfPath  string // 目前執行中的小幫手
-	PublicKey ed25519.PublicKey
-	Fetcher   *release.Fetcher
+	Layout   platform.Layout
+	Platform string // darwin-arm64、darwin-amd64、windows-amd64
+	Version  string // 目前小幫手的版本
+	SelfPath string // 目前執行中的小幫手
+	Fetcher  *release.Fetcher
+	// ManifestAllow 檢查下載清單的網址；預設 release.AllowedManifestURL（測試可以替換）。
+	ManifestAllow release.URLCheck
 	// ManifestBase 是最新正式版本的下載位置（預設 release.LatestBase）。
 	ManifestBase string
 	// ActiveJobs 回傳進行中的下載數量；替換工具前等到 0（008 FR-21）。
@@ -71,7 +71,7 @@ func (u *Updater) defaults() {
 func (u *Updater) installer() *installer.Installer {
 	return &installer.Installer{
 		Layout: u.Layout, Platform: u.Platform, Version: u.Version, SelfPath: u.SelfPath,
-		PublicKey: u.PublicKey, Fetcher: u.Fetcher, ManifestBase: u.ManifestBase, Out: io.Discard,
+		Fetcher: u.Fetcher, ManifestAllow: u.ManifestAllow, ManifestBase: u.ManifestBase, Out: io.Discard,
 	}
 }
 
@@ -138,8 +138,8 @@ func (u *Updater) Run(ctx context.Context) (string, error) {
 // run 是更新的各個步驟。任何一個元件失敗時繼續處理其他元件，最後回傳第一個錯誤。
 func (u *Updater) run(ctx context.Context) ([]string, error) {
 	in := u.installer()
-	// 1. 下載並驗證清單（簽章錯誤時什麼都不做，008 SR-2）。
-	m, err := in.LoadManifest(ctx, nil, nil)
+	// 1. 從本專案 GitHub 下載並檢查清單（不正確時什麼都不做，008 SR-2）。
+	m, err := in.LoadManifest(ctx, nil)
 	if err != nil {
 		return nil, err
 	}

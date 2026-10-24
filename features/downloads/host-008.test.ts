@@ -74,12 +74,13 @@ describe('status 的新增欄位（plan 4.9、008 FR-24）', () => {
 });
 
 describe('新指令與錯誤代碼（plan 4.9）', () => {
-  it('JOBS_RUNNING、SIGNATURE_INVALID、CHECKSUM_MISMATCH 是已知代碼，並有易懂的訊息', () => {
+  it('JOBS_RUNNING、MANIFEST_INVALID、CHECKSUM_MISMATCH 是已知代碼，並有易懂的訊息', () => {
     expect(toErrorCode('JOBS_RUNNING')).toBe('JOBS_RUNNING');
-    expect(toErrorCode('SIGNATURE_INVALID')).toBe('SIGNATURE_INVALID');
+    expect(toErrorCode('MANIFEST_INVALID')).toBe('MANIFEST_INVALID');
+    expect(toErrorCode('SIGNATURE_INVALID')).toBe('UNKNOWN');
     expect(toErrorCode('CHECKSUM_MISMATCH')).toBe('CHECKSUM_MISMATCH');
     expect(errorInfo('JOBS_RUNNING').message).toBe('errJobsRunning');
-    expect(errorInfo('SIGNATURE_INVALID').message).toBe('errVerifyFailed');
+    expect(errorInfo('MANIFEST_INVALID').message).toBe('errVerifyFailed');
     expect(errorInfo('CHECKSUM_MISMATCH').message).toBe('errVerifyFailed');
   });
 

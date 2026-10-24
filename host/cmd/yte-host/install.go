@@ -42,41 +42,37 @@ func findSystem(tool string) string {
 
 // newInstaller 建立正式環境的 Installer。
 func newInstaller() *installer.Installer {
-	pub, _ := release.BuiltinPublicKey()
 	return &installer.Installer{
 		Layout:     platform.CurrentLayout(),
 		Platform:   installer.PlatformKey(runtime.GOOS, runtime.GOARCH),
 		Version:    version,
 		SelfPath:   selfPath(),
-		PublicKey:  pub,
 		Fetcher:    release.NewFetcher(version),
 		FindSystem: findSystem,
 		Out:        os.Stdout,
 	}
 }
 
+const installUsage = "usage: yte-host --install [--manifest <components.json>] | --install --offline"
+
 // runInstall 實作 --install。參數只接受固定的旗標，路徑必須是存在的檔案。
 func runInstall(args []string) int {
-	var manifestPath, sigPath string
+	var manifestPath string
 	offline := false
 	for i := 0; i < len(args); i++ {
 		switch a := args[i]; {
 		case a == "--offline":
 			offline = true
-		case (a == "--manifest" || a == "--signature") && i+1 < len(args):
-			if a == "--manifest" {
-				manifestPath = args[i+1]
-			} else {
-				sigPath = args[i+1]
-			}
+		case a == "--manifest" && i+1 < len(args) && manifestPath == "":
+			manifestPath = args[i+1]
 			i++
 		default:
-			fmt.Fprintln(os.Stderr, "usage: yte-host --install [--manifest <components.json> --signature <components.json.sig>] | --install --offline")
+			fmt.Fprintln(os.Stderr, installUsage)
 			return 2
 		}
 	}
-	if offline && (manifestPath != "" || sigPath != "") || (manifestPath == "") != (sigPath == "") {
-		fmt.Fprintln(os.Stderr, "usage: yte-host --install [--manifest <components.json> --signature <components.json.sig>] | --install --offline")
+	if offline && manifestPath != "" {
+		fmt.Fprintln(os.Stderr, installUsage)
 		return 2
 	}
 	if isRoot() {
@@ -91,20 +87,17 @@ func runInstall(args []string) int {
 		}
 		return 0
 	}
-	var manifest, sig []byte
+	var manifest []byte
 	if manifestPath != "" {
 		var err error
-		if manifest, err = readSmall(manifestPath); err == nil {
-			sig, err = readSmall(sigPath)
-		}
-		if err != nil {
+		if manifest, err = readSmall(manifestPath); err != nil {
 			installer.PrintFailure(os.Stdout, err)
 			return 1
 		}
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	if err := in.Install(ctx, manifest, sig); err != nil {
+	if err := in.Install(ctx, manifest); err != nil {
 		installer.PrintFailure(os.Stdout, err)
 		return 1
 	}

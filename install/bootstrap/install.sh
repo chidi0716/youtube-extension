@@ -4,9 +4,10 @@
 #   curl -fsSL https://github.com/chidi0716/youtube-extension/releases/latest/download/install.sh | sh
 #
 # 這個腳本只做三件事，其餘全部由小幫手（yte-host --install）完成並逐步說明：
-#   1. 從本專案同一個 GitHub Release 下載 components.json、components.json.sig 與這台 Mac 的小幫手；
+#   1. 以 HTTPS 從本專案同一個 GitHub Release（固定版本）下載 components.json 與這台 Mac 的小幫手；
 #   2. 確認小幫手的 SHA256 與 components.json 相同；
-#   3. 執行小幫手的 --install（小幫手會以內建公鑰驗證 components.json 的簽章）。
+#   3. 執行小幫手的 --install（小幫手檢查清單，並核對之後每個下載檔案的 SHA256）。
+# 本專案不使用自己的簽章（008 FR-51）；repo 開啟 GitHub 的「不可變更版本」，發佈後檔案不能被替換。
 # 不需要 sudo，只寫入你的使用者資料夾。發佈流程會把下面的 @RELEASE_TAG@ 換成版本標籤。
 set -eu
 
@@ -53,7 +54,6 @@ say "下載功能安裝程式 $TAG / Download helper installer $TAG"
 say "從本專案的 GitHub 下載小幫手 / Downloading the helper from this project's GitHub:"
 say "  $BASE/"
 download components.json
-download components.json.sig
 download "$HELPER"
 
 # 從 components.json 取出 helper.<平台>.sha256（不依賴 jq 等額外工具）：
@@ -70,4 +70,4 @@ say "小幫手的 SHA256 相符 / Helper SHA256 verified: $ACTUAL"
 
 chmod 755 "$TMP/$HELPER"
 xattr -d com.apple.quarantine "$TMP/$HELPER" 2>/dev/null || true
-"$TMP/$HELPER" --install --manifest "$TMP/components.json" --signature "$TMP/components.json.sig"
+"$TMP/$HELPER" --install --manifest "$TMP/components.json"

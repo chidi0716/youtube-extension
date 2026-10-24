@@ -20,7 +20,6 @@ for p in darwin-arm64 darwin-amd64; do
 done
 echo "windows" >"$cache/release/yte-host-windows-amd64.exe"
 (cd "$repo/host" && GOTOOLCHAIN=local go run ./cmd/yte-release manifest -version 0.2.0 -helpers "$cache/release" -out "$cache/release/components.json")
-echo "signature" >"$cache/release/components.json.sig"
 
 cat >"$cache/shims/curl" <<EOF
 #!/bin/sh
@@ -57,7 +56,7 @@ fail() { echo "FAIL: $*" >&2; exit 1; }
 
 echo "== Apple Silicon"
 run "$script" >"$cache/out.txt" 2>&1 || { cat "$cache/out.txt"; fail "install failed"; }
-grep -q "yte-host-darwin-arm64 --install --manifest .*components.json --signature .*components.json.sig" "$cache/helper.log" || fail "helper not run correctly: $(cat "$cache/helper.log")"
+grep -q "^yte-host-darwin-arm64 --install --manifest [^ ]*components.json$" "$cache/helper.log" || fail "helper not run correctly: $(cat "$cache/helper.log")"
 grep -q "Helper SHA256 verified" "$cache/out.txt" || fail "no SHA256 message"
 [ -z "$(ls -A "$cache/tmp")" ] || fail "temporary folder left behind: $(ls -A "$cache/tmp")"
 
@@ -78,11 +77,11 @@ grep -q "does not match the release list" "$cache/out.txt" || fail "no mismatch 
 (cd "$repo/host" && GOTOOLCHAIN=local go run ./cmd/yte-release manifest -version 0.2.0 -helpers "$cache/release" -out "$cache/release/components.json")
 
 echo "== download failure"
-touch "$cache/fail-components.json.sig"
+touch "$cache/fail-yte-host-darwin-arm64"
 if run "$script" >"$cache/out.txt" 2>&1; then fail "download failure ignored"; fi
-grep -q "Could not download components.json.sig" "$cache/out.txt" || fail "no download message"
+grep -q "Could not download yte-host-darwin-arm64" "$cache/out.txt" || fail "no download message"
 grep -q "Run the same command again" "$cache/out.txt" || fail "no retry hint"
-rm -f "$cache/fail-components.json.sig"
+rm -f "$cache/fail-yte-host-darwin-arm64"
 
 echo "== root, other OS, missing tag"
 printf '#!/bin/sh\necho 0\n' >"$cache/user/id"

@@ -3,9 +3,10 @@
 #   irm https://github.com/chidi0716/youtube-extension/releases/latest/download/install.ps1 | iex
 #
 # This script only does three things; the helper (yte-host --install) does the rest and explains each step:
-#   1. Download components.json, components.json.sig and the helper from the same GitHub release of this project.
+#   1. Download components.json and the helper over HTTPS from the same (fixed-version) GitHub release of this project.
 #   2. Check that the helper's SHA256 matches components.json.
-#   3. Run the helper with --install (the helper verifies the signature of components.json with its built-in key).
+#   3. Run the helper with --install (the helper checks the list and the SHA256 of every file it downloads).
+# This project does not use its own signing key (008 FR-51); the repository has GitHub immutable releases on.
 # No administrator rights are needed; everything goes into your user folder.
 #
 # Comments are English only and every Chinese message is wrapped in Z '...': the release workflow
@@ -50,7 +51,7 @@
         Say ((Z '下載功能安裝程式') + " $Tag / Download helper installer $Tag")
         Say ((Z '從本專案的 GitHub 下載小幫手') + ' / Downloading the helper from this project''s GitHub:')
         Say "  $Base/"
-        foreach ($name in @('components.json', 'components.json.sig', $Helper)) {
+        foreach ($name in @('components.json', $Helper)) {
             try {
                 Invoke-WebRequest -UseBasicParsing -Uri "$Base/$name" -OutFile (Join-Path $Tmp $name)
             } catch {
@@ -78,7 +79,7 @@
         Say ((Z '小幫手的 SHA256 相符') + " / Helper SHA256 verified: $actual")
 
         # Run the helper directly (not captured) so that its Chinese output goes straight to the console.
-        & $exe --install --manifest (Join-Path $Tmp 'components.json') --signature (Join-Path $Tmp 'components.json.sig')
+        & $exe --install --manifest (Join-Path $Tmp 'components.json')
         if ($LASTEXITCODE -ne 0) {
             Write-Host ''
             Write-Host ((Z '安裝沒有完成，請看上面的說明。') + ' / The installation did not finish; see the messages above.') -ForegroundColor Yellow

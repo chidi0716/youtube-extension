@@ -199,7 +199,7 @@ export function errorInfo(code: HostErrorCode | null): ErrorInfo {
       return { message: 'errTooManyJobs', action: null, retry: true };
     case 'JOBS_RUNNING':
       return { message: 'errJobsRunning', action: null, retry: true };
-    case 'SIGNATURE_INVALID':
+    case 'MANIFEST_INVALID':
     case 'CHECKSUM_MISMATCH':
       return { message: 'errVerifyFailed', action: null, retry: true };
     default:

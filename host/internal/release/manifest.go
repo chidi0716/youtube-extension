@@ -290,7 +290,7 @@ func checkURL(s string, allow URLCheck) error {
 }
 
 // Marshal 以固定格式（排序過的鍵、兩格縮排、結尾換行）輸出清單。
-// 簽章針對這份原始位元組，所以輸出之後不得再修改。
+// 引導腳本以文字比對取出小幫手的 SHA256，所以格式必須固定。
 func (m *Manifest) Marshal() ([]byte, error) {
 	b, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {

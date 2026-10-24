@@ -1,5 +1,9 @@
-// Package release 定義本專案發佈清單 components.json 的格式、Ed25519 簽章驗證、
-// 內建公鑰，以及小幫手與安裝流程可以連線的網址（plan 4.9、constitution 第 2 點）。
+// Package release 定義本專案發佈清單 components.json 的格式與驗證，以及小幫手與安裝流程
+// 可以連線的網址（plan 4.9、constitution 第 2 點）。
+//
+// 本專案不使用自己的簽章（008 FR-51）：清單只從本專案 GitHub 的 Release 以 HTTPS 取得
+// （AllowedManifestURL，每一次轉址都檢查），每個下載的檔案都必須符合清單中的 SHA256，
+// repo 開啟 GitHub 的「不可變更版本」，版本發佈後檔案不能被替換。
 //
 // 小幫手與安裝腳本只會連到這個檔案列出的網域；release 套件的測試會掃描原始碼，
 // 確認沒有其他網域。
@@ -14,14 +18,20 @@ import (
 const Repo = "chidi0716/youtube-extension"
 
 // LatestBase 是最新正式版本的下載位置（不含預先發行版本）。
-// 自動更新從這裡取得 components.json 與 components.json.sig。
+// 自動更新從這裡取得 components.json。
 const LatestBase = "https://github.com/" + Repo + "/releases/latest/download/"
 
-// ManifestName、SignatureName 是發佈清單與簽章在 Release 中的檔名。
-const (
-	ManifestName  = "components.json"
-	SignatureName = "components.json.sig"
-)
+// ManifestName 是發佈清單在 Release 中的檔名。
+const ManifestName = "components.json"
+
+// projectPrefix 是本專案 Release 的網址前綴。
+const projectPrefix = "https://github.com/" + Repo + "/releases/"
+
+// githubAssetPrefixes 是 GitHub Release 檔案的轉址目的地。
+var githubAssetPrefixes = []string{
+	"https://objects.githubusercontent.com/",
+	"https://release-assets.githubusercontent.com/",
+}
 
 // allowedPrefixes 是可以下載的網址前綴（https）。github.com 只允許指定專案的 Release；
 // Release 的檔案會轉址到 GitHub 的檔案主機，那兩個主機只會出現在轉址中。
@@ -61,6 +71,25 @@ func AllowedURL(u *url.URL) bool {
 	}
 	s := "https://" + strings.ToLower(u.Host) + u.EscapedPath()
 	for _, p := range allowedPrefixes {
+		if strings.HasPrefix(s, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// AllowedManifestURL 回傳 u 是否是可以取得發佈清單的網址：只有本專案的 Release，
+// 以及 GitHub 把 Release 檔案轉址過去的檔案主機（008 SR-2）。Fetcher 會對第一個網址與
+// 每一次轉址都套用這個檢查，所以清單不會從其他專案或其他網站取得。
+func AllowedManifestURL(u *url.URL) bool {
+	if !AllowedURL(u) {
+		return false
+	}
+	s := "https://" + strings.ToLower(u.Host) + u.EscapedPath()
+	if strings.HasPrefix(s, projectPrefix) {
+		return true
+	}
+	for _, p := range githubAssetPrefixes {
 		if strings.HasPrefix(s, p) {
 			return true
 		}

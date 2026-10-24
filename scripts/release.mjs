@@ -1,12 +1,18 @@
-// 產生 GitHub Release 的所有檔案（plan 4.10、008 FR-50）。
+// 產生 GitHub Release 的所有檔案（plan 4.10、008 FR-50 至 FR-52）。
 //
-//   npm run release:dry          在本機完成發佈流程的第 1、3、4、5 步（測試、建置小幫手、產生並以
-//                                臨時測試金鑰簽署 components.json、產生 updates.json），
-//                                不需要任何 Secret 與網路；Firefox 版不送簽署。
+//   npm run release:dry          在本機完成發佈流程的第 1、3、4、5 步（測試、建置小幫手、產生
+//                                components.json、預覽 updates.json），不需要任何 Secret 與網路；
+//                                Firefox 版不送簽署。
 //   node scripts/release.mjs --tag vX.Y.Z
-//                                GitHub Actions 使用（.github/workflows/release.yml）：以 Secret
-//                                RELEASE_SIGNING_KEY 簽署、lock 檔與官方檢查碼及實際下載的檔案比對、
-//                                Firefox 版以 web-ext sign 送 Mozilla 簽署（WEB_EXT_API_KEY／SECRET）。
+//                                GitHub Actions 使用（.github/workflows/release.yml）：lock 檔與官方
+//                                檢查碼及實際下載的檔案比對；有 Mozilla 金鑰（WEB_EXT_API_KEY／SECRET）
+//                                且不是預先發行版本時，Firefox 版以 web-ext sign 送 Mozilla 簽署。
+//
+// 本專案不使用自己的簽章金鑰（008 FR-51）：components.json 列出每個檔案的 SHA256，只從本專案
+// GitHub 以 HTTPS 取得，repo 開啟 GitHub 的「不可變更版本」。
+//
+// 預先發行版本與試跑時 Firefox 版不送簽署：附上未簽署的
+// youtube-extension-<版本>-firefox-temporary.zip，不產生 updates.json，Release 說明加註。
 //
 // 輸出：release/dist/upload/（要附加到 Release 的檔案）與 release/dist/release-notes.md。
 // 選項：--skip-tests（GitHub Actions 已在前一步執行測試）。
@@ -46,8 +52,13 @@ const { version } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
 const tag = tagIndex >= 0 ? argv[tagIndex + 1] : `v${version}`;
 if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) fail(`package.json version ${version} is not x.y.z`);
 if (tag !== `v${version}`) fail(`tag ${tag} does not match package.json version ${version} (expected v${version})`);
-if (!dry && !process.env.RELEASE_SIGNING_KEY) fail('RELEASE_SIGNING_KEY is not set (use --dry for a local dry run)');
 const prerelease = version.includes('-');
+
+// Firefox 版是否送 Mozilla 簽署，以及不簽署的原因（印在記錄中）。
+let unsignedReason = '';
+if (dry) unsignedReason = 'dry run';
+else if (prerelease) unsignedReason = 'prerelease (AMO signs each version number only once, plan 4.10)';
+const signFirefox = unsignedReason === '';
 
 function fail(message) {
   console.error(`release: ${message}`);
@@ -63,8 +74,7 @@ function run(cmd, args, opts = {}) {
   console.log(`$ ${cmd} ${args.join(' ')}`);
   return execFileSync(cmd, args, {
     cwd: root,
-    stdio: opts.capture ? ['ignore', 'pipe', 'inherit'] : 'inherit',
-    encoding: 'utf8',
+    stdio: 'inherit',
     shell: isWindows && (cmd === 'npm' || cmd === 'npx'),
     ...opts,
     env: { ...process.env, GOTOOLCHAIN: 'local', ...(opts.env ?? {}) },
@@ -90,135 +100,145 @@ const yteRelease = join(toolsDir, isWindows ? 'yte-release.exe' : 'yte-release')
 run('go', ['build', '-o', yteRelease, './cmd/yte-release'], { cwd: hostDir });
 const lockPath = join(root, 'release', 'components.lock.json');
 
-// 簽章金鑰：正式發佈使用 Secret，並確認與小幫手內建的公鑰相符；試跑時臨時產生一組（用完即刪）。
-step('2. signing key');
-let keyArgs;
-let pubkey = '';
-const dryKey = join(toolsDir, 'dry-run.key');
-if (dry) {
-  pubkey = run(yteRelease, ['keygen', '-out', dryKey], { capture: true }).trim();
-  keyArgs = ['-key-file', dryKey];
-  console.log(`temporary public key for this dry run: ${pubkey}`);
-} else {
-  run(yteRelease, ['check-key', '-key-env', 'RELEASE_SIGNING_KEY']);
-  keyArgs = ['-key-env', 'RELEASE_SIGNING_KEY'];
+// lock 檔：正式發佈時下載每個檔案，與 lock 記錄的 SHA256 及官方檢查碼比對。
+step('2. third-party components (release/components.lock.json)');
+run(yteRelease, ['lock-check', '-lock', lockPath, ...(dry ? [] : ['-download'])]);
+if (dry) console.log('(dry run: not comparing with the official checksum files; the release workflow does)');
+
+// 第 3 步：三種小幫手與手動安裝的資料夾
+step('3. helper builds');
+run('node', [join(hostDir, 'build.mjs')]);
+const hostDist = join(hostDir, 'dist');
+for (const name of ['yte-host-darwin-arm64', 'yte-host-darwin-amd64', 'yte-host-windows-amd64.exe']) {
+  copyFileSync(join(hostDist, name), join(uploadDir, name));
+  chmodSync(join(uploadDir, name), 0o755);
+}
+for (const pkg of ['youtube-extension-host-macos', 'youtube-extension-host-windows']) {
+  run(yteRelease, ['zip', '-dir', join(hostDist, pkg), '-out', join(uploadDir, `${pkg}.zip`)]);
 }
 
-try {
-  // lock 檔：正式發佈時下載每個檔案，與 lock 記錄的 SHA256 及官方檢查碼比對。
-  step('3. third-party components (release/components.lock.json)');
-  run(yteRelease, ['lock-check', '-lock', lockPath, ...(dry ? [] : ['-download'])]);
-  if (dry) console.log('(dry run: not comparing with the official checksum files; the release workflow does)');
+// 第 4 步：components.json（每個檔案的網址與 SHA256）
+step('4. components.json');
+const manifestPath = join(uploadDir, 'components.json');
+run(yteRelease, ['manifest', '-lock', lockPath, '-version', version, '-tag', tag, '-helpers', uploadDir, '-out', manifestPath]);
+run(yteRelease, ['check', '-in', manifestPath]);
 
-  // 第 3 步：三種小幫手與手動安裝的資料夾
-  step('4. helper builds');
-  run('node', [join(hostDir, 'build.mjs')], { env: dry ? { YTE_DRY_RUN_PUBKEY: pubkey } : { YTE_DRY_RUN_PUBKEY: '' } });
-  const hostDist = join(hostDir, 'dist');
-  for (const name of ['yte-host-darwin-arm64', 'yte-host-darwin-amd64', 'yte-host-windows-amd64.exe']) {
-    copyFileSync(join(hostDist, name), join(uploadDir, name));
-    chmodSync(join(uploadDir, name), 0o755);
+// 引導腳本與移除腳本
+step('5. install and uninstall scripts');
+writeScript('install/bootstrap/install.sh', 'install.sh');
+writeScript('install/bootstrap/install.ps1', 'install.ps1');
+writeScript('install/macos/uninstall.sh', 'uninstall.sh');
+writeScript('install/windows/uninstall.ps1', 'uninstall.ps1');
+
+// 擴充功能
+step('6. extension packages');
+run('npm', ['run', 'zip']);
+copyFileSync(findOutput(`-${version}-chrome.zip`), join(uploadDir, `youtube-extension-${version}-chrome.zip`));
+const xpiName = `youtube-extension-${version}-firefox.xpi`;
+const temporaryName = `youtube-extension-${version}-firefox-temporary.zip`;
+// web-ext lint：自行發佈（manifest 有 update_url），以 --self-hosted 檢查；有錯誤時停止。
+const lintFirefox = () =>
+  run('npx', ['web-ext', 'lint', '--self-hosted', '--source-dir', join(root, '.output', 'firefox-mv3')]);
+if (signFirefox) {
+  run('npm', ['run', 'build:firefox']);
+  lintFirefox();
+  run('node', [join(root, 'scripts', 'sign-firefox.mjs')]);
+  const signedDir = join(root, '.output', 'firefox-signed');
+  const xpis = readdirSync(signedDir)
+    .filter((f) => f.endsWith('.xpi'))
+    .map((f) => join(signedDir, f))
+    .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
+  if (!xpis.length) fail('web-ext sign did not produce an .xpi');
+  copyFileSync(xpis[0], join(uploadDir, xpiName));
+} else {
+  run('npm', ['run', 'zip:firefox']);
+  lintFirefox();
+  copyFileSync(findOutput(`-${version}-firefox.zip`), join(uploadDir, temporaryName));
+  console.log(`(the Firefox package is NOT signed by Mozilla: ${unsignedReason}; attached as ${temporaryName})`);
+}
+
+// 第 5 步：Firefox 的更新資訊，只在有簽署的 .xpi 時附上。版本號使用建置出的 manifest 中的版本
+// （WXT 會把預先發行標記從 manifest 的 version 去掉），必須與 .xpi 中的版本完全相同。
+// 試跑時寫到 release/dist/updates.preview.json（不附加），確認產生方式正確。
+step('7. updates.json');
+if (signFirefox || dry) {
+  const firefoxManifest = JSON.parse(readFileSync(join(root, '.output', 'firefox-mv3', 'manifest.json'), 'utf8'));
+  const gecko = firefoxManifest.browser_specific_settings?.gecko ?? {};
+  if (gecko.id !== GECKO_ID || gecko.update_url !== `https://github.com/${REPO}/releases/latest/download/updates.json`) {
+    fail('the Firefox manifest does not have the expected gecko id and update_url');
   }
-  for (const pkg of ['youtube-extension-host-macos', 'youtube-extension-host-windows']) {
-    run(yteRelease, ['zip', '-dir', join(hostDist, pkg), '-out', join(uploadDir, `${pkg}.zip`)]);
-  }
-  if (dry) {
-    // 試跑的小幫手信任的是用完即刪的測試公鑰，不留在 host/dist 以免被誤用。
-    rmSync(hostDist, { recursive: true, force: true });
-    console.log('(dry run: removed host/dist; run "npm run build:host" for normal helper builds)');
-  }
-
-  // 第 4 步：components.json 與簽章
-  step('5. components.json');
-  const manifestPath = join(uploadDir, 'components.json');
-  const sigPath = join(uploadDir, 'components.json.sig');
-  run(yteRelease, ['manifest', '-lock', lockPath, '-version', version, '-tag', tag, '-helpers', uploadDir, '-out', manifestPath]);
-  run(yteRelease, ['sign', ...keyArgs, '-in', manifestPath, '-out', sigPath]);
-  run(yteRelease, ['verify', '-in', manifestPath, '-sig', sigPath, ...(dry ? ['-pubkey', pubkey] : [])]);
-
-  // 引導腳本與移除腳本
-  step('6. install and uninstall scripts');
-  writeScript('install/bootstrap/install.sh', 'install.sh');
-  writeScript('install/bootstrap/install.ps1', 'install.ps1');
-  writeScript('install/macos/uninstall.sh', 'uninstall.sh');
-  writeScript('install/windows/uninstall.ps1', 'uninstall.ps1');
-
-  // 擴充功能
-  step('7. extension packages');
-  run('npm', ['run', 'zip']);
-  copyFileSync(findOutput(`-${version}-chrome.zip`), join(uploadDir, `youtube-extension-${version}-chrome.zip`));
-  const xpiName = `youtube-extension-${version}-firefox.xpi`;
-  // web-ext lint：自行發佈（manifest 有 update_url），以 --self-hosted 檢查；有錯誤時停止。
-  const lintFirefox = () =>
-    run('npx', ['web-ext', 'lint', '--self-hosted', '--source-dir', join(root, '.output', 'firefox-mv3')]);
-  if (dry) {
-    run('npm', ['run', 'zip:firefox']);
-    lintFirefox();
-    copyFileSync(findOutput(`-${version}-firefox.zip`), join(uploadDir, xpiName));
-    console.log('(dry run: the Firefox package is NOT signed by Mozilla)');
-  } else if (prerelease) {
-    // 預先發行版本不送 Mozilla 簽署：AMO 同一個數字版本只能簽一次（plan 4.10、Q58）。
-    run('npm', ['run', 'build:firefox']);
-    lintFirefox();
-    console.log('(prerelease: the Firefox package is not signed or published)');
-  } else {
-    run('npm', ['run', 'build:firefox']);
-    lintFirefox();
-    run('node', [join(root, 'scripts', 'sign-firefox.mjs')]);
-    const signedDir = join(root, '.output', 'firefox-signed');
-    const xpis = readdirSync(signedDir)
-      .filter((f) => f.endsWith('.xpi'))
-      .map((f) => join(signedDir, f))
-      .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
-    if (!xpis.length) fail('web-ext sign did not produce an .xpi');
-    copyFileSync(xpis[0], join(uploadDir, xpiName));
-  }
-
-  // 第 5 步：Firefox 的更新資訊。版本號使用建置出的 manifest 中的版本（WXT 會把預先發行標記
-  // 從 manifest 的 version 去掉），必須與 .xpi 中的版本完全相同。
-  step('8. updates.json');
-  if (prerelease && !dry) {
-    console.log('(prerelease: no updates.json)');
-  } else {
-    const firefoxManifest = JSON.parse(readFileSync(join(root, '.output', 'firefox-mv3', 'manifest.json'), 'utf8'));
-    const gecko = firefoxManifest.browser_specific_settings?.gecko ?? {};
-    if (gecko.id !== GECKO_ID || gecko.update_url !== `https://github.com/${REPO}/releases/latest/download/updates.json`) {
-      fail('the Firefox manifest does not have the expected gecko id and update_url');
-    }
-    const updates = {
-      addons: {
-        [GECKO_ID]: {
-          updates: [
-            {
-              version: firefoxManifest.version,
-              update_link: `https://github.com/${REPO}/releases/download/${tag}/${xpiName}`,
-              update_hash: `sha256:${sha256(join(uploadDir, xpiName))}`,
-              update_info_url: `https://github.com/${REPO}/releases/tag/${tag}`,
-              applications: { gecko: { strict_min_version: gecko.strict_min_version } },
-            },
-          ],
-        },
+  const pkg = join(uploadDir, signFirefox ? xpiName : temporaryName);
+  const updates = {
+    addons: {
+      [GECKO_ID]: {
+        updates: [
+          {
+            version: firefoxManifest.version,
+            update_link: `https://github.com/${REPO}/releases/download/${tag}/${xpiName}`,
+            update_hash: `sha256:${sha256(pkg)}`,
+            update_info_url: `https://github.com/${REPO}/releases/tag/${tag}`,
+            applications: { gecko: { strict_min_version: gecko.strict_min_version } },
+          },
+        ],
       },
-    };
-    writeFileSync(join(uploadDir, 'updates.json'), `${JSON.stringify(updates, null, 2)}\n`);
-  }
+    },
+  };
+  const out = signFirefox ? join(uploadDir, 'updates.json') : join(distDir, 'updates.preview.json');
+  writeFileSync(out, `${JSON.stringify(updates, null, 2)}\n`);
+  if (!signFirefox) console.log(`(dry run: preview written to ${out}; not attached)`);
+} else {
+  console.log('(no signed Firefox package: no updates.json, 008 FR-52)');
+}
 
-  // Release 說明與 SHA256SUMS
-  step('9. release notes and SHA256SUMS');
-  const notes = readFileSync(join(root, 'release', 'notes-template.md'), 'utf8')
-    .replaceAll('{{version}}', version)
-    .replaceAll('{{tag}}', tag);
-  if (/\{\{\w+\}\}/.test(notes)) fail('unknown placeholder in release/notes-template.md');
-  writeFileSync(join(distDir, 'release-notes.md'), notes);
-  const files = readdirSync(uploadDir).filter((f) => f !== 'SHA256SUMS').sort();
-  writeFileSync(join(uploadDir, 'SHA256SUMS'), files.map((f) => `${sha256(join(uploadDir, f))}  ${f}\n`).join(''));
+// Release 說明與 SHA256SUMS
+step('8. release notes and SHA256SUMS');
+const notesTemplate = readFileSync(join(root, 'release', 'notes-template.md'), 'utf8');
+const firefoxNotes = signFirefox ? firefoxSignedNotes() : firefoxUnsignedNotes();
+const notes = notesTemplate
+  .replaceAll('{{firefoxSteps}}', firefoxNotes.en)
+  .replaceAll('{{firefoxStepsZh}}', firefoxNotes.zh)
+  .replaceAll('{{firefoxFiles}}', firefoxNotes.files)
+  .replaceAll('{{version}}', version)
+  .replaceAll('{{tag}}', tag);
+if (/\{\{\w+\}\}/.test(notes)) fail('unknown placeholder in release/notes-template.md');
+writeFileSync(join(distDir, 'release-notes.md'), notes);
+const files = readdirSync(uploadDir).filter((f) => f !== 'SHA256SUMS').sort();
+writeFileSync(join(uploadDir, 'SHA256SUMS'), files.map((f) => `${sha256(join(uploadDir, f))}  ${f}\n`).join(''));
 
-  step(dry ? 'dry run finished' : 'release files ready');
-  for (const f of readdirSync(uploadDir).sort()) {
-    console.log(`  ${f.padEnd(42)} ${statSync(join(uploadDir, f)).size} bytes`);
-  }
-  console.log(`  release-notes.md (${prerelease ? 'prerelease' : 'release'} ${tag})`);
-} finally {
-  rmSync(dryKey, { force: true });
+step(dry ? 'dry run finished' : 'release files ready');
+for (const f of readdirSync(uploadDir).sort()) {
+  console.log(`  ${f.padEnd(48)} ${statSync(join(uploadDir, f)).size} bytes`);
+}
+console.log(`  release-notes.md (${prerelease ? 'prerelease' : 'release'} ${tag}, Firefox ${signFirefox ? 'signed' : 'unsigned'})`);
+
+/** Firefox 已簽署時的說明（{{version}} 之後再代入）。 */
+function firefoxSignedNotes() {
+  return {
+    en:
+      '**Firefox / Zen (signed add-on):** updates install automatically. To update now, open `about:addons`, click the gear icon and choose **Check for Updates**.\n' +
+      'First install: download `youtube-extension-{{version}}-firefox.xpi` below and open it in Firefox or Zen.',
+    zh:
+      '**Firefox／Zen（簽署版）**：會自動更新。想立即更新：開啟 `about:addons`，按齒輪圖示選「檢查更新」。\n' +
+      '第一次安裝：下載下方的 `youtube-extension-{{version}}-firefox.xpi`，用 Firefox 或 Zen 開啟。',
+    files:
+      '| `youtube-extension-{{version}}-firefox.xpi` | Firefox / Zen add-on, signed by Mozilla |\n' +
+      '| `updates.json` | Firefox update information |',
+  };
+}
+
+/** Firefox 未簽署時的說明（008 FR-52）。 */
+function firefoxUnsignedNotes() {
+  return {
+    en:
+      '**Firefox / Zen:** this version is **not signed by Mozilla yet**, so it can only be loaded as a temporary add-on (it is removed when the browser restarts). ' +
+      'Download `youtube-extension-{{version}}-firefox-temporary.zip`, unzip it, open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and choose `manifest.json`. ' +
+      'Signed versions that update themselves will be attached to later releases.',
+    zh:
+      '**Firefox／Zen**：這個版本**尚未經 Mozilla 簽署**，只能以臨時附加元件載入（瀏覽器重新啟動後會被移除）。' +
+      '下載 `youtube-extension-{{version}}-firefox-temporary.zip` 並解壓縮，開啟 `about:debugging#/runtime/this-firefox`，按「載入臨時附加元件」，選擇 `manifest.json`。' +
+      '之後的版本會附上會自動更新的簽署版。',
+    files: '| `youtube-extension-{{version}}-firefox-temporary.zip` | Firefox / Zen add-on, **not signed** (temporary add-on only) |',
+  };
 }
 
 /** 複製腳本並代入版本標籤；PowerShell 腳本另外轉成 ASCII（scripts/ps1-ascii.mjs）。 */
