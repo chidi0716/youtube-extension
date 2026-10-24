@@ -340,7 +340,7 @@ install/
 
 **整體做法**：一行指令只下載一個很小的引導腳本；腳本只負責下載對應系統的小幫手並核對檢查碼，然後執行 `yte-host --install`。所有實際工作（下載 yt-dlp、deno、ffmpeg、核對、解壓、註冊瀏覽器）都在 Go 裡完成，方便測試且 macOS／Windows 共用。
 
-**發佈清單 `components.json`**（每個 GitHub Release 都附上，並附 `components.json.sig`；實際格式以 `specs/notes/T40-T43-install-and-release.md` 為準，下面是概念範例）：
+**發佈清單 `components.json`**（每個 GitHub Release 都附上；實際格式以 `specs/notes/T40-T43-install-and-release.md` 為準，下面是概念範例）：
 
 ```json
 {
@@ -363,17 +363,18 @@ install/
   - ffmpeg（含 ffprobe）：
     - macOS：Martin Riedl 的 FFmpeg Build Server（`ffmpeg.martin-riedl.de`）正式版本（非 snapshot），arm64 與 amd64 各自的 zip，以網站公布的 SHA256 比對。
     - Windows：`github.com/yt-dlp/FFmpeg-Builds`（yt-dlp 官方維護、專為 yt-dlp 調整）的固定版本 win64 GPL 版本；若沒有固定版本網址，改用 `github.com/BtbN/FFmpeg-Builds` 的固定版本。實作時確認並記錄在 `specs/notes/ffmpeg-source.md`。
-- **簽章**：Ed25519（Go 標準庫 `crypto/ed25519`）。`components.json.sig` 是對 `components.json` 原始位元組的簽章（base64）。公鑰內建在小幫手（`host/internal/release/pubkey.go`）。私鑰只存在 GitHub Secret `RELEASE_SIGNING_KEY`。新增 `host/cmd/yte-release`：`keygen`（印出公鑰、把私鑰寫到使用者指定的檔案）、`sign`、`verify`、`lock-check`。
+- **不使用自己的簽章**（008 FR-51，T49 移除原本的 Ed25519）：`host/cmd/yte-release` 保留 `lock-check`、`manifest`、`zip` 等不涉及金鑰的子指令。
 
 **信任鏈**：
 - 第一次安裝：引導腳本從同一個 Release 以 HTTPS 下載 `components.json`，核對小幫手的 sha256 後執行。這與「執行從 GitHub 下載的腳本」本身的信任來源相同（引導腳本無法在 macOS／Windows 內建工具中可靠地驗證 Ed25519）。
-- 小幫手執行 `--install` 與之後每一次更新，都先以內建公鑰驗證 `components.json.sig`，驗證失敗一律停止（008 SR-2）。
+- 小幫手執行 `--install` 與之後每一次更新，都只接受從本專案 GitHub（`github.com/chidi0716/youtube-extension/releases/`，含其轉址）以 HTTPS 取得的清單，並嚴格檢查格式與允許的網址；每個下載的檔案都必須符合清單中的 SHA256（008 SR-2）。
+- repo 開啟「不可變更版本」，版本發佈後清單與檔案不能被替換。
 - 小幫手自我更新時，新版本的檔案必須符合已驗證清單中的 sha256。
 
 **引導腳本**（`install/bootstrap/install.sh`、`install/bootstrap/install.ps1`，以發佈流程附在 Release）：
 - 偵測系統與晶片（Apple Silicon 在 Rosetta 下也選 arm64）。
 - 下載 `components.json` 與小幫手到暫存資料夾，核對 sha256；不符時停止。
-- 執行 `yte-host --install --manifest <components.json> --signature <components.json.sig>`，把輸出原樣顯示。
+- 執行 `yte-host --install --manifest <components.json>`，把輸出原樣顯示。
 - 腳本本身不需要 sudo／系統管理員，拒絕以 root 執行；PowerShell 版相容 Windows PowerShell 5.1（`Invoke-WebRequest -UseBasicParsing`、TLS 1.2）。
 - 舊的 `install/macos/install.sh`、`install/windows/install.ps1` 保留作為「手動安裝」（008 FR-16），改為呼叫 `--install --offline`（只註冊小幫手，沿用系統上已有的 yt-dlp／ffmpeg／deno）。
 
@@ -392,7 +393,7 @@ install/
 **自動更新**（`host/internal/updater`，狀態檔 `update-state.json` 放在安裝資料夾）：
 - `download` 指令成功建立工作後，若自動更新開啟且距上次檢查超過 24 小時，啟動分離的 `yte-host --update` 程序（與 `--run-job` 相同的分離方式），立即返回，不延遲下載。
 - `--update`：
-  1. 下載 `https://github.com/chidi0716/youtube-extension/releases/latest/download/components.json` 與 `.sig`，驗證簽章。
+  1. 下載 `https://github.com/chidi0716/youtube-extension/releases/latest/download/components.json`，檢查格式與允許的網址。
   2. 等到沒有進行中的工作（每 10 秒檢查一次，最多 6 小時）。
   3. yt-dlp：執行 `yt-dlp -U`（只限安裝資料夾中的 yt-dlp；套件管理工具安裝的不動）。
   4. deno、ffmpeg（只限安裝資料夾中的）：版本與清單不同時依清單下載替換。
@@ -423,15 +424,15 @@ install/
 
 - `.github/workflows/release.yml`，在推送 `v*` 標籤時執行：
   1. `npm ci`、`npm test`、`npm run compile`、`go test ./...`。
-  2. 建置 Chrome 版 zip 與 Firefox 版；Firefox 以 `web-ext sign --channel unlisted` 送簽署（Secrets：`AMO_JWT_ISSUER`、`AMO_JWT_SECRET`，上傳原始碼同 3.3.1）。
+  2. 建置 Chrome 版 zip 與 Firefox 版；Firefox 以 `web-ext sign --channel unlisted` 送簽署（Secrets：`AMO_JWT_ISSUER`、`AMO_JWT_SECRET`，上傳原始碼同 3.3.1）。**Secrets 尚未設定時略過簽署**，附上未簽署的 `youtube-extension-<版本>-firefox-temporary.zip`，不產生 `updates.json`，Release 說明加註「Firefox／Zen 版本尚未簽署，只能以臨時附加元件載入」（008 FR-52）。
   3. 建置三種小幫手。
-  4. 依 `release/components.lock.json` 產生並驗證 `components.json`，以 `RELEASE_SIGNING_KEY` 簽署。
+  4. 依 `release/components.lock.json` 產生並驗證 `components.json`。
   5. 產生 `updates.json`（Firefox 更新資訊，列出這個版本與 `.xpi` 的下載網址）。
-  6. 建立 GitHub Release，附上：引導腳本與移除腳本、三種小幫手、`components.json(.sig)`、Chrome zip、`.xpi`、`updates.json`、`SHA256SUMS`。說明文字以範本產生，包含各瀏覽器的更新步驟（Chrome：下載 zip、解壓覆蓋原資料夾、在擴充功能頁按重新載入）。
+  6. 建立 GitHub Release，附上：引導腳本與移除腳本、三種小幫手、`components.json`、Chrome zip、`.xpi`（或未簽署的 Firefox 套件）、`updates.json`（有簽署時）、`SHA256SUMS`。說明文字以範本產生，包含各瀏覽器的更新步驟（Chrome：下載 zip、解壓覆蓋原資料夾、在擴充功能頁按重新載入）。
 - Firefox manifest 加入 `browser_specific_settings.gecko.update_url: "https://github.com/chidi0716/youtube-extension/releases/latest/download/updates.json"`（Firefox 會跟隨轉址；實作時確認）。
-- 新增 `npm run release:dry`：在本機完成第 1、3、4（用臨時產生的測試金鑰）、5 步，輸出到 `release/dist/`，方便沒有 Secrets 時驗證。
+- 新增 `npm run release:dry`：在本機完成第 1、3、4、5 步，輸出到 `release/dist/`，方便沒有 Secrets 時驗證。
 - 預先發行版本（標籤含 `-`，例如 `v0.2.0-beta.1`）建立為 prerelease，不會被 `releases/latest` 取得，因此不觸發提醒與自動更新；預先發行版本**不送 Firefox 簽署**（AMO 同一個數字版本只能簽一次），需要給 Firefox 使用者測試時直接發正式的小版本。
-- README「維護者」章節：產生簽章金鑰、設定三個 Secrets、建立第一個版本的步驟。
+- README「維護者」章節：開啟「不可變更版本」、（之後）設定兩個 Mozilla Secrets、建立第一個版本的步驟。
 
 ## 5. 測試策略
 

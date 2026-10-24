@@ -397,7 +397,7 @@
 - **目前做法**：`tools.<工具> = { version, platforms: { <平台>: { version?, files: [ { url, sha256, archive?: "zip", name?（非壓縮檔時安裝的檔名）, extract?（zip 中要取出的檔名） } ] } } }`；`helper` 維持 plan 的格式。不認得的欄位一律拒絕；網址必須是允許清單中的固定版本網址（不能含 `/latest/`）。`release/components.lock.json` 使用同一個格式，另外每個檔案多一個 `checksums`（官方檢查碼檔案的網址），而且 lock 檔就記錄 SHA256（發佈時與官方檢查碼、實際下載的檔案三方比對），所以 `npm run release:dry` 不需要網路也能產生清單。完整說明見 `specs/notes/T40-T43-install-and-release.md`。
 - **請規格方確認**，並視需要更新 plan 4.9 的範例。
 
-### Q56 內建公鑰尚未設定（T40） — 待專案擁有者產生金鑰
+### Q56 內建公鑰尚未設定（T40） — 已回答：不使用自己的簽章（008 FR-51），由 T49 移除
 
 - **狀況**：簽章私鑰只能由專案擁有者產生並存到 GitHub Secret，實作方不能產生後提交。
 - **目前做法**：`host/internal/release/pubkey.go` 的 `PublicKeyBase64` 先留空字串。留空時小幫手的 `--install` 與自動更新一律以 `SIGNATURE_INVALID` 拒絕清單；發佈流程第一步以 `yte-release check-key` 確認 Secret 的私鑰與這個公鑰相符，不相符（或尚未設定）時停止發佈。`npm run release:dry` 以 `-ldflags -X` 換成臨時產生的測試公鑰。

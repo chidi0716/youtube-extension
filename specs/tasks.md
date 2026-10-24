@@ -160,6 +160,13 @@ T11 可以和階段 1、2 同時進行。
 - **T48 文件**（甲，最後做）：README（英文與繁中）的安裝章節改為一行指令、手動安裝、移除、維護者；白話說明文件 `docs/what-gets-installed.md` 與 `docs/what-gets-installed.zh-TW.md`（008 FR-40）；第三方授權列表。專案採用 MIT（根目錄 `LICENSE` 已由規格方加入），README 結尾加入授權章節。
 - **完成條件**：所有測試、`compile`、`build`、`build:firefox`、`build:host`、`release:dry`、`web-ext lint --self-hosted` 通過；008 驗收條件中能在容器內驗證的部分逐條自測，其餘列在 e2e-checklist。
 
+## 階段 8a：移除自己的簽章（008 FR-51、FR-52）
+
+- **T49 移除 Ed25519 簽章**：依 plan 4.9、4.10 的修改，移除 `components.json.sig`、內建公鑰、`--signature` 參數、`keygen`／`sign`／`verify`／`check-key`、發佈流程中的 `RELEASE_SIGNING_KEY`；錯誤代碼 `SIGNATURE_INVALID` 改為（或新增）清單無效時使用的代碼並同步擴充功能端的訊息；清單只接受本專案 GitHub 的網址（含轉址檢查）、SHA256 核對維持不變。
+- **T50 沒有 Mozilla 金鑰時照常發佈**（008 FR-52）：發佈流程偵測 `AMO_JWT_ISSUER`、`AMO_JWT_SECRET` 是否設定；未設定時略過簽署、附未簽署的套件、不產生 `updates.json`、Release 說明加註。
+- **T51 文件**：README（英文與繁中）「維護者」章節改為：開啟不可變更版本 → 建立版本標籤；Mozilla 金鑰列為之後的選用步驟。更新 `docs/what-gets-installed*.md`、`specs/notes/T40-T43-install-and-release.md`、e2e-checklist 第 10 節中與簽章相關的內容。
+- **完成條件**：同階段 8；全文搜尋確認沒有殘留的 `ed25519`、`.sig`、`RELEASE_SIGNING_KEY`、`PublicKeyBase64`。
+
 ## 階段 5：收尾
 
 - **T24 E2E 檢查清單**
